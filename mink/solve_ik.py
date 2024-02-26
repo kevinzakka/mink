@@ -102,5 +102,7 @@ def solve_ik(
     problem = build_ik(configuration, tasks, limits, dt)
     result = qpsolvers.solve_problem(problem=problem, solver=solver, **kwargs)
     dq = result.x
+    # NOTE(kevin): Maybe we should handle failure more gracefully, for example by
+    # returning 0 velocity?
     assert dq is not None
     return dq / dt

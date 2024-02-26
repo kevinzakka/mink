@@ -37,10 +37,14 @@ def main() -> None:
         frame_type="site",
         position_cost=1.0,
         orientation_cost=1.0,
+        lm_damping=1.0,
     )
+
+    posture_task = mink.PostureTask(cost=1.0)
 
     tasks = [
         end_effector_task,
+        posture_task,
     ]
 
     #
@@ -67,6 +71,9 @@ def main() -> None:
 
     limits = [
         configuration_limit,
+        # NOTE(kevin): The velocity limit slows down the convergence enormously
+        # and the behavior make the robot move each joint in a sequence rather than
+        # all at once.
         velocity_limit,
     ]
 
@@ -107,6 +114,11 @@ def main() -> None:
                 dt=dt,
                 solver=solver,
             )
+
+            # NOTE(kevin): While dq will respect the velocity limits, there is no
+            # guarantee that the underlying PD controller will. While one could use
+            # effort limits to indirectly enforce velocity limits, it's probably easier
+            # to just switch the actuator type to integrated velocity control.
 
             q = configuration.integrate(dq, dt)
             np.clip(q, *model.jnt_range.T, out=data.ctrl)

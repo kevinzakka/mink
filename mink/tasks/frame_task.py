@@ -29,18 +29,6 @@ class FrameTask(Task):
         gain: float = 1.0,
         lm_damping: float = 0.0,
     ) -> FrameTask:
-        """Define a new frame task.
-
-        Args:
-            model: Mujoco model.
-            frame_name: Name of the object whose frame is to be regulated. Must be a
-                body, geom, or site in the model.
-            frame_type: Type of the object whose frame is to be regulated. Must be
-                "body", "geom", or "site".
-            position_cost: Contribution of position errors to the normalized cost.
-            orientation_cost: Contribution of orientation errors to the normalized cost.
-            gain: Task gain in the [0, 1] range.
-        """
         assert 0 <= gain <= 1
 
         cost = np.zeros(6)
@@ -90,4 +78,4 @@ class FrameTask(Task):
             frame_name=self.frame_name,
             frame_type=self.frame_type,
         )
-        return T_WE.inverse().adjoint() @ jac
+        return -T_WE.inverse().adjoint() @ jac

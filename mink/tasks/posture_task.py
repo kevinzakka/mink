@@ -31,10 +31,10 @@ class PostureTask(Task):
             m=configuration.model,
             qvel=qvel,
             dt=1.0,
-            qpos1=configuration.q,
-            qpos2=self.target_q,
+            qpos1=self.target_q,
+            qpos2=configuration.q,
         )
         return qvel
 
     def compute_jacobian(self, configuration: Configuration) -> np.ndarray:
-        return np.eye(configuration.model.nv)
+        return -np.eye(configuration.model.nv)

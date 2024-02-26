@@ -30,7 +30,7 @@ class Task(abc.ABC):
 
     @abc.abstractmethod
     def compute_error(self, configuration: Configuration) -> np.ndarray:
-        """Compute the task error function."""
+        """Compute the task error function at the current configuration."""
 
     @abc.abstractmethod
     def compute_jacobian(self, configuration: Configuration) -> np.ndarray:
@@ -38,7 +38,7 @@ class Task(abc.ABC):
 
     def compute_qp_objective(self, configuration: Configuration) -> Objective:
         jacobian = self.compute_jacobian(configuration)
-        gain_error = self.gain * self.compute_error(configuration)
+        minus_gain_error = -self.gain * self.compute_error(configuration)
         weight = (
             np.eye(jacobian.shape[0])
             if self.cost is None
@@ -49,7 +49,7 @@ class Task(abc.ABC):
             )
         )
         weighted_jacobian = weight @ jacobian
-        weighted_error = weight @ gain_error
+        weighted_error = weight @ minus_gain_error
         mu = self.lm_damping * weighted_error @ weighted_error
         eye_tg = np.eye(configuration.model.nv)
         H = weighted_jacobian.T @ weighted_jacobian + mu * eye_tg
