@@ -40,7 +40,7 @@ def main() -> None:
         lm_damping=1.0,
     )
 
-    posture_task = mink.PostureTask(cost=1.0)
+    posture_task = mink.PostureTask.initialize(cost=1e-3)
 
     tasks = [
         end_effector_task,

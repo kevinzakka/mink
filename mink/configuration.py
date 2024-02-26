@@ -33,28 +33,28 @@ _TYPE_TO_XMAT_ATTRIBUTE = {
 class Configuration:
     model: mujoco.MjModel
     data: mujoco.MjData
+    q: np.ndarray
 
-    @property
-    def q(self) -> np.ndarray:
-        return self.data.qpos
-
-    def __post_init__(self) -> None:
-        self.update()
+    @staticmethod
+    def initialize(
+        model: mujoco.MjModel,
+        data: mujoco.MjData,
+    ) -> Configuration:
+        return Configuration(model, data, data.qpos)
 
     @staticmethod
     def initialize_from_keyframe(
         model: mujoco.MjModel,
         data: mujoco.MjData,
         keyframe_name: str,
-    ) -> "Configuration":
+    ) -> Configuration:
         keyframe_id = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_KEY, keyframe_name)
         if not 0 <= keyframe_id < model.nkey:
             raise ValueError(f"Keyframe '{keyframe_name}' not found")
         mujoco.mj_resetDataKeyframe(model, data, keyframe_id)
-        return Configuration(model, data)
+        return Configuration(model, data, data.qpos)
 
     def update(self) -> None:
-        """Forward kinematics."""
         mujoco.mj_kinematics(self.model, self.data)
         mujoco.mj_comPos(self.model, self.data)
 
@@ -82,7 +82,6 @@ class Configuration:
         )
 
     def integrate(self, velocity: np.ndarray, dt: float) -> np.ndarray:
-        """Integrate a velocity starting from the current configuration."""
         q = self.q.copy()
         mujoco.mj_integratePos(self.model, q, velocity, dt)
         return q

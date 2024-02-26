@@ -60,9 +60,8 @@ class SO3:
     @staticmethod
     def sample_uniform() -> SO3:
         u1, u2, u3 = np.random.uniform(
-            low=np.zeros(shape=(3,), dtype=np.float64),
+            low=np.zeros(shape=(3,)),
             high=np.array([1.0, 2.0 * np.pi, 2.0 * np.pi]),
-            shape=(3,),
         )
         a = np.sqrt(1.0 - u1)
         b = np.sqrt(u1)
@@ -72,7 +71,8 @@ class SO3:
                 a * np.cos(u2),
                 b * np.sin(u3),
                 b * np.cos(u3),
-            ]
+            ],
+            dtype=np.float64,
         )
         return SO3(wxyz=wxyz)
 
@@ -136,7 +136,8 @@ class SO3:
                     x0 * w1 + y0 * z1 - z0 * y1 + w0 * x1,
                     -x0 * z1 + y0 * w1 + z0 * x1 + w0 * y1,
                     x0 * y1 - y0 * x1 + z0 * w1 + w0 * z1,
-                ]
+                ],
+                dtype=np.float64,
             )
         )
 
@@ -192,9 +193,7 @@ class SE3:
     def sample_uniform() -> SE3:
         return SE3.from_rotation_and_translation(
             rotation=SO3.sample_uniform(),
-            translation=np.random.uniform(
-                -1.0, 1.0, size=(SE3.space_dim,), dtype=np.float64
-            ),
+            translation=np.random.uniform(-1.0, 1.0, size=(SE3.space_dim,)),
         )
 
     def rotation(self) -> SO3:

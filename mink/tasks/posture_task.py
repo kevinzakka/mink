@@ -16,6 +16,18 @@ class PostureTask(Task):
     lm_damping: float = 0.0
     target_q: Optional[np.ndarray] = None
 
+    @staticmethod
+    def initialize(
+        cost: float,
+        gain: float = 1.0,
+        lm_damping: float = 0.0,
+    ) -> PostureTask:
+        return PostureTask(
+            cost=float(cost),
+            gain=float(gain),
+            lm_damping=float(lm_damping),
+        )
+
     def set_target(self, target_q: np.ndarray) -> None:
         self.target_q = target_q
 

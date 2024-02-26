@@ -8,7 +8,6 @@ from mink.limits import Limit, Inequality
 
 @dataclass(frozen=True)
 class VelocityLimit(Limit):
-    model: mujoco.MjModel
     indices: np.ndarray
     projection_matrix: np.ndarray
     limit: np.ndarray
@@ -26,7 +25,6 @@ class VelocityLimit(Limit):
             indices.append(joint_id)
 
         return VelocityLimit(
-            model=model,
             indices=np.asarray(indices),
             projection_matrix=np.eye(model.nv)[indices],
             limit=np.asarray(list(joint2limit.values())),

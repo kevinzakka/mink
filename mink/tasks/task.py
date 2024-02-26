@@ -1,21 +1,16 @@
 import abc
-from typing import Iterable
+from typing import NamedTuple
 
 import numpy as np
-from dataclasses import dataclass
 
 from mink.configuration import Configuration
 
 
-@dataclass(frozen=True)
-class Objective:
+class Objective(NamedTuple):
     """Quadratic objective function in the form 0.5 x^T H x + c^T x."""
 
     H: np.ndarray
     c: np.ndarray
-
-    def __iter__(self) -> Iterable[np.ndarray]:
-        return iter((self.H, self.c))
 
 
 class Task(abc.ABC):

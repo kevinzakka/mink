@@ -1,4 +1,4 @@
-"""mjink: differential inverse kinematics for MuJoCo."""
+"""mink: MuJoCo differential inverse kinematics."""
 
 from mink.configuration import Configuration
 from mink.solve_ik import build_ik, solve_ik
