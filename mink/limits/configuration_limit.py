@@ -91,8 +91,8 @@ class ConfigurationLimit(Limit):
             model=model,
             indices=indices,
             projection_matrix=np.eye(model.nv)[indices],
-            upper_limits=model.jnt_range[indices, 0],
-            lower_limits=model.jnt_range[indices, 1],
+            upper_limits=model.jnt_range[:, 0],
+            lower_limits=model.jnt_range[:, 1],
             limit_gain=limit_gain,
         )
 
