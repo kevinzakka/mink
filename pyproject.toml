@@ -3,5 +3,4 @@ name = "mink"
 version = "0.0.0"
 dependencies = [
     "mujoco>=3.1.0",
-    "qpsolvers[wheels_only]",
 ]

@@ -3,7 +3,7 @@ from typing import Sequence
 import numpy as np
 import mujoco
 
-from mink.limits import Limit, Inequality
+from mink.limits import Limit, BoxConstraint
 
 _SUPPORTED_JOINT_TYPES = {mujoco.mjtJoint.mjJNT_HINGE, mujoco.mjtJoint.mjJNT_SLIDE}
 _INVALID_JOINT_ERROR = "Joint with name {} does not exist."
@@ -96,10 +96,10 @@ class ConfigurationLimit(Limit):
             limit_gain=limit_gain,
         )
 
-    def compute_qp_inequalities(self, q: np.ndarray, dt: float) -> Inequality:
+    def compute_qp_inequalities(self, q: np.ndarray, dt: float) -> BoxConstraint:
         del dt  # Unused.
+
         delta_q_max = np.zeros(self.model.nv)
-        delta_q_min = np.zeros(self.model.nv)
         mujoco.mj_differentiatePos(
             m=self.model,
             qvel=delta_q_max,
@@ -107,6 +107,9 @@ class ConfigurationLimit(Limit):
             qpos1=self.upper_limits,
             qpos2=q,
         )
+        upper = self.limit_gain * delta_q_max[self.indices]
+
+        delta_q_min = np.zeros(self.model.nv)
         mujoco.mj_differentiatePos(
             m=self.model,
             qvel=delta_q_min,
@@ -114,8 +117,6 @@ class ConfigurationLimit(Limit):
             qpos1=self.lower_limits,
             qpos2=q,
         )
-        p_max = self.limit_gain * delta_q_max[self.indices]
-        p_min = self.limit_gain * delta_q_min[self.indices]
-        G = np.vstack([self.projection_matrix, -self.projection_matrix])
-        h = np.hstack([p_max, -p_min])
-        return Inequality(G=G, h=h)
+        lower = self.limit_gain * delta_q_min[self.indices]
+
+        return BoxConstraint(lower=lower, upper=upper)

@@ -5,28 +5,28 @@ import abc
 import numpy as np
 
 
-class Inequality(NamedTuple):
-    """Linear inequality constraint in the form Gx <= h."""
+class BoxConstraint(NamedTuple):
+    """Box constraint of the form lower <= x <= upper."""
 
-    G: Optional[np.ndarray] = None
-    h: Optional[np.ndarray] = None
+    lower: Optional[np.ndarray] = None
+    upper: Optional[np.ndarray] = None
 
     def inactive(self) -> bool:
-        return self.G is None
+        return self.lower is None and self.upper is None
 
 
 class Limit(abc.ABC):
     """Abstract base class for kinematic limits."""
 
     @abc.abstractmethod
-    def compute_qp_inequalities(self, q: np.ndarray, dt: float) -> Inequality:
-        """Compute limit as linearized QP inequalities.
+    def compute_qp_inequalities(self, q: np.ndarray, dt: float) -> BoxConstraint:
+        """Compute limit as a box constraint.
 
         Args:
             q: Configuration of the robot.
             dt: Integration time step in seconds.
 
         Returns:
-            An instance of Inequality representing the inequality constraint as
-            Gx <= h.
+            An instance of BoxConstraint representing box constraints of the form
+            lower <= x <= upper.
         """

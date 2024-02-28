@@ -4,7 +4,6 @@ import numpy as np
 import mink
 from pathlib import Path
 import time
-import qpsolvers
 
 _HERE = Path(__file__).resolve().parent
 _XML_PATH = _HERE / "universal_robots_ur5e" / "scene.xml"
@@ -40,11 +39,11 @@ def main() -> None:
         lm_damping=1.0,
     )
 
-    posture_task = mink.PostureTask.initialize(cost=1e-3)
+    # posture_task = mink.PostureTask.initialize(cost=1e-3)
 
     tasks = [
         end_effector_task,
-        posture_task,
+        # posture_task,
     ]
 
     #
@@ -85,12 +84,6 @@ def main() -> None:
     for task in tasks:
         task.set_target_from_configuration(configuration)
 
-    # Select QP solver
-    solver = qpsolvers.available_solvers[0]
-    if "quadprog" in qpsolvers.available_solvers:
-        solver = "quadprog"
-    print(f"Using {solver} solver")
-
     with mujoco.viewer.launch_passive(
         model=model, data=data, show_left_ui=False, show_right_ui=False
     ) as viewer:
@@ -101,27 +94,23 @@ def main() -> None:
         while viewer.is_running():
             step_start = time.time()
 
+            # Update task target.
             new_end_effector_target = mink.SE3.from_rotation_and_translation(
                 rotation=mink.SO3(wxyz=data.mocap_quat[0]),
                 translation=data.mocap_pos[0],
             )
             end_effector_task.set_target(new_end_effector_target)
 
+            # Solve IK.
             dq = mink.solve_ik(
                 configuration=configuration,
                 tasks=tasks,
                 limits=limits,
                 dt=dt,
-                solver=solver,
+                damping=1e-8,
             )
+            data.ctrl[:] = configuration.integrate(dq, dt)
 
-            # NOTE(kevin): While dq will respect the velocity limits, there is no
-            # guarantee that the underlying PD controller will. While one could use
-            # effort limits to indirectly enforce velocity limits, it's probably easier
-            # to just switch the actuator type to integrated velocity control.
-
-            q = configuration.integrate(dq, dt)
-            np.clip(q, *model.jnt_range.T, out=data.ctrl)
             mujoco.mj_step(model, data)
 
             viewer.sync()

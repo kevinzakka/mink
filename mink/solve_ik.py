@@ -1,12 +1,60 @@
 """Build and solve the inverse kinematics problem."""
 
+from __future__ import annotations
+
 from typing import Sequence
 import numpy as np
-import qpsolvers
 
 from mink.configuration import Configuration
 from mink.tasks import Task, Objective
-from mink.limits import Limit, Inequality
+from mink.limits import Limit, BoxConstraint
+
+import mujoco
+from dataclasses import dataclass
+
+
+class IKFailure(Exception):
+    """Raised when the inverse kinematics problem cannot be solved."""
+
+
+@dataclass(frozen=True)
+class Problem:
+    H: np.ndarray
+    c: np.ndarray
+    lower: np.ndarray
+    upper: np.ndarray
+    n: int
+    dq: np.ndarray
+    R: np.ndarray
+    index: np.ndarray
+
+    @staticmethod
+    def initialize(
+        configuration: Configuration,
+        H: np.ndarray,
+        c: np.ndarray,
+        lower: np.ndarray,
+        upper: np.ndarray,
+    ) -> Problem:
+        n = configuration.model.nv
+        dq = np.zeros(n)
+        R = np.zeros((n, n + 7))
+        index = np.zeros(n, np.int32)
+        return Problem(H, c, lower, upper, n, dq, R, index)
+
+    def solve(self) -> np.ndarray:
+        rank = mujoco.mju_boxQP(
+            res=self.dq,
+            R=self.R,
+            index=self.index,
+            H=self.H,
+            g=self.c,
+            lower=self.lower,
+            upper=self.upper,
+        )
+        if rank == -1:
+            raise IKFailure("QP solver failed")
+        return self.dq
 
 
 def _compute_qp_objective(
@@ -43,13 +91,12 @@ def _compute_qp_inequalities(
     configuration: Configuration,
     limits: Sequence[Limit],
     dt: float,
-) -> Inequality:
-    """Compute the inequality constraints for the inverse kinematics problem.
+) -> BoxConstraint:
+    """Compute the box constraints for the inverse kinematics problem.
 
-    The inequality constraints are affine functions of the joint velocities and are of
-    the form:
+    The box constraints are of the form:
 
-        G x <= h
+        lower <= x <= upper
 
     where x is the output of inverse kinematics.
 
@@ -58,22 +105,20 @@ def _compute_qp_inequalities(
         dt: The integration time step in seconds.
 
     Returns:
-        The inequality constraints.
+        The box constraints.
     """
     q = configuration.q
-    G_list = []
-    h_list = []
+    lower_limits = []
+    upper_limits = []
     for limit in limits:
         inequality = limit.compute_qp_inequalities(q, dt)
         if inequality.inactive():
             continue
-        G_list.append(inequality.G)
-        h_list.append(inequality.h)
-    if not G_list:
-        return Inequality()
-    G = np.vstack(G_list)
-    h = np.hstack(h_list)
-    return Inequality(G, h)
+        lower_limits.append(inequality.lower)
+        upper_limits.append(inequality.upper)
+    lower = np.maximum.reduce(lower_limits)
+    upper = np.minimum.reduce(upper_limits)
+    return BoxConstraint(lower, upper)
 
 
 def build_ik(
@@ -82,12 +127,11 @@ def build_ik(
     limits: Sequence[Limit],
     dt: float,
     damping: float = 1e-12,
-) -> qpsolvers.Problem:
+) -> Problem:
     """Build a Quadratic Program (QP) for the current configuration and tasks."""
     P, q = _compute_qp_objective(configuration, tasks, damping)
-    G, h = _compute_qp_inequalities(configuration, limits, dt)
-    problem = qpsolvers.Problem(P=P, q=q, G=G, h=h)
-    return problem
+    lower, upper = _compute_qp_inequalities(configuration, limits, dt)
+    return Problem.initialize(configuration, P, q, lower, upper)
 
 
 def solve_ik(
@@ -95,15 +139,10 @@ def solve_ik(
     tasks: Sequence[Task],
     limits: Sequence[Limit],
     dt: float,
-    solver: str,
     damping: float = 1e-12,
-    **kwargs,
 ) -> np.ndarray:
     """Compute a velocity tangent to the current configuration."""
     problem = build_ik(configuration, tasks, limits, dt, damping)
-    result = qpsolvers.solve_problem(problem=problem, solver=solver, **kwargs)
-    dq = result.x
-    # NOTE(kevin): Maybe we should handle failure more gracefully, for example by
-    # returning 0 velocity?
-    assert dq is not None
-    return dq / dt
+    dq = problem.solve()
+    velocity = dq / dt
+    return velocity

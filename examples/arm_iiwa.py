@@ -1,10 +1,8 @@
 import mujoco
 import mujoco.viewer
-import numpy as np
 import mink
 from pathlib import Path
 import time
-import qpsolvers
 
 _HERE = Path(__file__).resolve().parent
 _XML_PATH = _HERE / "kuka_iiwa_14" / "scene.xml"
@@ -30,10 +28,10 @@ def main() -> None:
         frame_type="site",
         position_cost=1.0,
         orientation_cost=1.0,
-        lm_damping=1.0,
+        lm_damping=1e-3,
     )
 
-    posture_task = mink.PostureTask.initialize(cost=1e-3)
+    posture_task = mink.PostureTask.initialize(cost=1e-1)
 
     tasks = [
         end_effector_task,
@@ -62,12 +60,6 @@ def main() -> None:
     for task in tasks:
         task.set_target_from_configuration(configuration)
 
-    # Select QP solver
-    solver = qpsolvers.available_solvers[0]
-    if "quadprog" in qpsolvers.available_solvers:
-        solver = "quadprog"
-    print(f"Using {solver} solver")
-
     with mujoco.viewer.launch_passive(
         model=model, data=data, show_left_ui=False, show_right_ui=False
     ) as viewer:
@@ -89,11 +81,10 @@ def main() -> None:
                 tasks=tasks,
                 limits=limits,
                 dt=dt,
-                solver=solver,
+                damping=1e-8,
             )
+            data.ctrl[:] = configuration.integrate(dq, dt)
 
-            q = configuration.integrate(dq, dt)
-            np.clip(q, *model.jnt_range.T, data.ctrl)
             mujoco.mj_step(model, data)
 
             viewer.sync()
