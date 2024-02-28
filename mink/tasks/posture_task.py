@@ -43,8 +43,8 @@ class PostureTask(Task):
             m=configuration.model,
             qvel=qvel,
             dt=1.0,
-            qpos1=self.target_q,
-            qpos2=configuration.q,
+            qpos1=configuration.q,
+            qpos2=self.target_q,
         )
         return qvel
 

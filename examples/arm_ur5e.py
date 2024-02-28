@@ -27,6 +27,11 @@ def main() -> None:
         "wrist_3",
     ]
 
+    keyframe_name = "home"
+    configuration = mink.Configuration.initialize_from_keyframe(
+        model=model, data=data, keyframe_name=keyframe_name
+    )
+
     #
     # Tasks.
     #
@@ -39,11 +44,12 @@ def main() -> None:
         lm_damping=1.0,
     )
 
-    # posture_task = mink.PostureTask.initialize(cost=1e-3)
+    posture_task = mink.PostureTask.initialize(cost=1e-3)
+    posture_task.set_target(model.key(keyframe_name).qpos)
 
     tasks = [
         end_effector_task,
-        # posture_task,
+        posture_task,
     ]
 
     #
@@ -72,17 +78,9 @@ def main() -> None:
         configuration_limit,
         # NOTE(kevin): The velocity limit slows down the convergence enormously
         # and the behavior make the robot move each joint in a sequence rather than
-        # all at once.
-        velocity_limit,
+        # all at once. Commenting out until we can figure out why.
+        # velocity_limit,
     ]
-
-    keyframe_name = "home"
-    configuration = mink.Configuration.initialize_from_keyframe(
-        model=model, data=data, keyframe_name=keyframe_name
-    )
-
-    for task in tasks:
-        task.set_target_from_configuration(configuration)
 
     with mujoco.viewer.launch_passive(
         model=model, data=data, show_left_ui=False, show_right_ui=False
@@ -95,11 +93,11 @@ def main() -> None:
             step_start = time.time()
 
             # Update task target.
-            new_end_effector_target = mink.SE3.from_rotation_and_translation(
+            end_effector_target = mink.SE3.from_rotation_and_translation(
                 rotation=mink.SO3(wxyz=data.mocap_quat[0]),
                 translation=data.mocap_pos[0],
             )
-            end_effector_task.set_target(new_end_effector_target)
+            end_effector_task.set_target(end_effector_target)
 
             # Solve IK.
             dq = mink.solve_ik(
