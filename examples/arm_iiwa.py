@@ -31,7 +31,7 @@ def main() -> None:
         frame_type="site",
         position_cost=1.0,
         orientation_cost=1.0,
-        lm_damping=1e-3,
+        lm_damping=1.0,
     )
 
     posture_task = mink.PostureTask.initialize(cost=1e-3)
@@ -74,15 +74,15 @@ def main() -> None:
             )
             end_effector_task.set_target(effector_target)
 
-            dq = mink.solve_ik(
+            velocity = mink.solve_ik(
                 configuration=configuration,
                 tasks=tasks,
                 limits=limits,
                 dt=dt,
                 damping=1e-8,
             )
-            data.ctrl[:] = configuration.integrate(dq, dt)
 
+            data.ctrl[:] = configuration.integrate(velocity, dt)
             mujoco.mj_step(model, data)
 
             viewer.sync()

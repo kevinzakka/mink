@@ -19,7 +19,7 @@ class Task(abc.ABC):
     Subclasses must implement `compute_error` and `compute_jacobian` methods.
     """
 
-    cost: np.ndarray
+    cost: np.ndarray | float | None
     gain: float
     lm_damping: float
 
@@ -31,18 +31,16 @@ class Task(abc.ABC):
     def compute_jacobian(self, configuration: Configuration) -> np.ndarray:
         """Compute the task Jacobian at the current configuration."""
 
+    def _construct_weight(self, n: int) -> np.ndarray:
+        if self.cost is None:
+            return np.eye(n)
+        diag = [self.cost] * n if isinstance(self.cost, float) else self.cost
+        return np.diag(diag)
+
     def compute_qp_objective(self, configuration: Configuration) -> Objective:
         jacobian = self.compute_jacobian(configuration)
         minus_gain_error = -self.gain * self.compute_error(configuration)
-        weight = (
-            np.eye(jacobian.shape[0])
-            if self.cost is None
-            else np.diag(
-                [self.cost] * jacobian.shape[0]
-                if isinstance(self.cost, float)
-                else self.cost
-            )
-        )
+        weight = self._construct_weight(jacobian.shape[0])
         weighted_jacobian = weight @ jacobian
         weighted_error = weight @ minus_gain_error
         mu = self.lm_damping * weighted_error @ weighted_error

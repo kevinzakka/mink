@@ -107,15 +107,16 @@ def _compute_qp_inequalities(
     Returns:
         The box constraints.
     """
-    q = configuration.q
     lower_limits = []
     upper_limits = []
     for limit in limits:
-        inequality = limit.compute_qp_inequalities(q, dt)
+        inequality = limit.compute_qp_inequalities(configuration.q, dt)
         if inequality.inactive():
             continue
         lower_limits.append(inequality.lower)
         upper_limits.append(inequality.upper)
+    if not lower_limits:
+        return BoxConstraint()
     lower = np.maximum.reduce(lower_limits)
     upper = np.minimum.reduce(upper_limits)
     return BoxConstraint(lower, upper)
@@ -129,9 +130,9 @@ def build_ik(
     damping: float = 1e-12,
 ) -> Problem:
     """Build a Quadratic Program (QP) for the current configuration and tasks."""
-    P, q = _compute_qp_objective(configuration, tasks, damping)
+    H, c = _compute_qp_objective(configuration, tasks, damping)
     lower, upper = _compute_qp_inequalities(configuration, limits, dt)
-    return Problem.initialize(configuration, P, q, lower, upper)
+    return Problem.initialize(configuration, H, c, lower, upper)
 
 
 def solve_ik(
@@ -144,5 +145,4 @@ def solve_ik(
     """Compute a velocity tangent to the current configuration."""
     problem = build_ik(configuration, tasks, limits, dt, damping)
     dq = problem.solve()
-    velocity = dq / dt
-    return velocity
+    return dq / dt
