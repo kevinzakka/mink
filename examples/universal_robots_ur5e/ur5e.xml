@@ -109,9 +109,7 @@
                   <joint name="wrist_3"/>
                   <geom material="linkgray" mesh="wrist3" class="visual"/>
                   <geom class="eef_collision" pos="0 0.08 0" quat="1 1 0 0" size="0.04 0.02"/>
-                  <body name="attachment" pos="0 0.1 0" quat="-1 1 1 1">
-                    <site name="attachment_site" rgba="1 0 0 1" size="0.01" group="1"/>
-                  </body>
+                  <site name="attachment_site" size="0.01" pos="0 0.1 0" quat="-1 1 1 1" rgba="1 0 0 1" group="1"/>
                 </body>
               </body>
             </body>

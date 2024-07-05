@@ -28,6 +28,10 @@ class Problem:
     R: np.ndarray
     index: np.ndarray
 
+    def __post_init__(self) -> None:
+        assert self.H.shape == (self.n, self.n)
+        # assert self.lower.shape == self.upper.shape == (self.n,)
+
     @staticmethod
     def initialize(
         configuration: Configuration,
@@ -107,10 +111,12 @@ def _compute_qp_inequalities(
     Returns:
         The box constraints.
     """
+    q = configuration.q
+    dq = configuration.dq
     lower_limits = []
     upper_limits = []
     for limit in limits:
-        inequality = limit.compute_qp_inequalities(configuration.q, dt)
+        inequality = limit.compute_qp_inequalities(q, dq, dt)
         if inequality.inactive():
             continue
         lower_limits.append(inequality.lower)

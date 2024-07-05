@@ -14,6 +14,11 @@ class VelocityLimit(Limit):
     m/s for slide joints and rad/s for hinge joints. The array should be ordered
     according to the joint indices in the robot model."""
 
-    def compute_qp_inequalities(self, q: np.ndarray, dt: float) -> BoxConstraint:
-        del q  # Unused.
+    def compute_qp_inequalities(
+        self,
+        q: np.ndarray,
+        dq: np.ndarray,
+        dt: float,
+    ) -> BoxConstraint:
+        del q, dq  # Unused.
         return BoxConstraint(lower=-dt * self.limit, upper=dt * self.limit)

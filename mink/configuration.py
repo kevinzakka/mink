@@ -34,13 +34,14 @@ class Configuration:
     model: mujoco.MjModel
     data: mujoco.MjData
     q: np.ndarray
+    dq: np.ndarray
 
     @staticmethod
     def initialize(
         model: mujoco.MjModel,
         data: mujoco.MjData,
     ) -> Configuration:
-        return Configuration(model, data, data.qpos)
+        return Configuration(model, data, data.qpos, data.qvel)
 
     @staticmethod
     def initialize_from_keyframe(
@@ -52,7 +53,7 @@ class Configuration:
         if not 0 <= keyframe_id < model.nkey:
             raise ValueError(f"Keyframe '{keyframe_name}' not found")
         mujoco.mj_resetDataKeyframe(model, data, keyframe_id)
-        return Configuration(model, data, data.qpos)
+        return Configuration(model, data, data.qpos, data.qvel)
 
     def update(self) -> None:
         mujoco.mj_kinematics(self.model, self.data)

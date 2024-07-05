@@ -19,11 +19,17 @@ class Limit(abc.ABC):
     """Abstract base class for kinematic limits."""
 
     @abc.abstractmethod
-    def compute_qp_inequalities(self, q: np.ndarray, dt: float) -> BoxConstraint:
+    def compute_qp_inequalities(
+        self,
+        q: np.ndarray,
+        dq: np.ndarray,
+        dt: float,
+    ) -> BoxConstraint:
         """Compute limit as a box constraint.
 
         Args:
             q: Configuration of the robot.
+            dq: Joint velocities of the robot.
             dt: Integration time step in seconds.
 
         Returns:

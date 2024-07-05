@@ -1,22 +1,20 @@
 import mujoco
 import mujoco.viewer
-import numpy as np
 import mink
-from pathlib import Path
+from mink import lie
 import time
+from pathlib import Path
 
-_HERE = Path(__file__).resolve().parent
-_XML_PATH = _HERE / "universal_robots_ur5e" / "scene.xml"
+_HERE = Path(__file__).parent
+_XML = _HERE / "universal_robots_ur5e" / "scene.xml"
 
 
 def main() -> None:
-    model = mujoco.MjModel.from_xml_path(_XML_PATH.as_posix())
+    model = mujoco.MjModel.from_xml_path(_XML.as_posix())
     data = mujoco.MjData(model)
 
     dt = 0.002
     model.opt.timestep = dt
-
-    model.body_gravcomp[:] = 1.0
 
     joints = [
         "shoulder_pan",
@@ -41,15 +39,10 @@ def main() -> None:
         frame_type="site",
         position_cost=1.0,
         orientation_cost=1.0,
-        # lm_damping=1.0,
     )
-
-    posture_task = mink.PostureTask.initialize(cost=1e-3)
-    posture_task.set_target(model.key(keyframe_name).qpos)
 
     tasks = [
         end_effector_task,
-        posture_task,
     ]
 
     #
@@ -59,45 +52,44 @@ def main() -> None:
     configuration_limit = mink.ConfigurationLimit.initialize(
         model=model,
         joints=joints,
-        limit_gain=0.5,
-    )
-
-    velocity_limit = mink.VelocityLimit(
-        limit=np.deg2rad(180) * np.ones_like(configuration.q),
+        limit_gain=0.95,
     )
 
     limits = [
         configuration_limit,
-        velocity_limit,
     ]
 
     with mujoco.viewer.launch_passive(
         model=model, data=data, show_left_ui=False, show_right_ui=False
     ) as viewer:
-        mujoco.mj_resetDataKeyframe(model, data, model.key(keyframe_name).id)
+        mujoco.mj_resetDataKeyframe(model, data, 0)
+        mujoco.mj_forward(model, data)
+        data.mocap_pos[0] = data.site("attachment_site").xpos.copy()
+        mujoco.mju_mat2Quat(
+            data.mocap_quat[0], data.site("attachment_site").xmat.copy()
+        )
+
         mujoco.mjv_defaultFreeCamera(model, viewer.cam)
+
         viewer.opt.frame = mujoco.mjtFrame.mjFRAME_SITE
 
         while viewer.is_running():
             step_start = time.time()
 
-            # Update task target.
-            end_effector_target = mink.SE3.from_rotation_and_translation(
-                rotation=mink.SO3(wxyz=data.mocap_quat[0]),
+            end_effector_target = lie.SE3.from_rotation_and_translation(
+                rotation=lie.SO3(data.mocap_quat[0]),
                 translation=data.mocap_pos[0],
             )
             end_effector_task.set_target(end_effector_target)
 
-            # Solve IK.
             velocity = mink.solve_ik(
                 configuration=configuration,
                 tasks=tasks,
                 limits=limits,
                 dt=dt,
-                damping=1e-8,
             )
 
-            data.ctrl[:] = configuration.integrate(velocity, dt)
+            data.ctrl = configuration.integrate(velocity, dt)
             mujoco.mj_step(model, data)
 
             viewer.sync()

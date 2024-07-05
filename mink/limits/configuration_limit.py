@@ -53,8 +53,6 @@ class ConfigurationLimit(Limit):
     model: mujoco.MjModel
     indices: np.ndarray
     projection_matrix: np.ndarray
-    upper_limits: np.ndarray
-    lower_limits: np.ndarray
     limit_gain: float
 
     @staticmethod
@@ -64,6 +62,7 @@ class ConfigurationLimit(Limit):
         limit_gain: float = 0.5,
     ) -> "ConfigurationLimit":
         """Initialize configuration limits.
+
 
         Configuration limits are automatically extracted from the model.
 
@@ -91,32 +90,41 @@ class ConfigurationLimit(Limit):
             model=model,
             indices=indices,
             projection_matrix=np.eye(model.nv)[indices],
-            lower_limits=model.jnt_range[:, 0],
-            upper_limits=model.jnt_range[:, 1],
             limit_gain=limit_gain,
         )
 
-    def compute_qp_inequalities(self, q: np.ndarray, dt: float) -> BoxConstraint:
-        del dt  # Unused.
+    def compute_qp_inequalities(
+        self,
+        q: np.ndarray,
+        dq: np.ndarray,
+        dt: float,
+    ) -> BoxConstraint:
+        del dq, dt  # Unused.
 
         delta_q_max = np.zeros(self.model.nv)
+        qpos2 = np.zeros(self.model.nq)
+        qpos2[:6] = np.inf
+        qpos2[6:] = self.model.jnt_range[:, 1]
         mujoco.mj_differentiatePos(
             m=self.model,
             qvel=delta_q_max,
             dt=1.0,
             qpos1=q,
-            qpos2=self.upper_limits,
+            qpos2=qpos2,
         )
-        upper = self.limit_gain * delta_q_max[self.indices]
 
         delta_q_min = np.zeros(self.model.nv)
+        qpos2 = np.zeros(self.model.nq)
+        qpos2[:6] = -np.inf
+        qpos2[6:] = self.model.jnt_range[:, 0]
         mujoco.mj_differentiatePos(
             m=self.model,
             qvel=delta_q_min,
             dt=1.0,
             qpos1=q,
-            qpos2=self.lower_limits,
+            qpos2=qpos2,
         )
-        lower = self.limit_gain * delta_q_min[self.indices]
 
+        upper = self.limit_gain * delta_q_max
+        lower = self.limit_gain * delta_q_min
         return BoxConstraint(lower=lower, upper=upper)

@@ -29,7 +29,7 @@ class PostureTask(Task):
         )
 
     def set_target(self, target_q: np.ndarray) -> None:
-        self.target_q = target_q
+        self.target_q = target_q.copy()
 
     def set_target_from_configuration(self, configuration: Configuration) -> None:
         self.set_target(configuration.q)
