@@ -43,8 +43,7 @@ class Configuration:
     def update(self, lights: bool = False) -> None:
         mujoco.mj_kinematics(self.model, self.data)
         mujoco.mj_comPos(self.model, self.data)
-        if lights:
-            mujoco.mj_camlight(self.model, self.data)
+        mujoco.mj_camlight(self.model, self.data)
 
     def get_frame_jacobian(self, frame_name: str, frame_type: str) -> np.ndarray:
         assert frame_type in _SUPPORTED_OBJ_TYPES

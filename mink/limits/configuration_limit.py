@@ -7,16 +7,26 @@ _SUPPORTED_JOINT_TYPES = {mujoco.mjtJoint.mjJNT_HINGE, mujoco.mjtJoint.mjJNT_SLI
 
 
 class ConfigurationLimit(Limit):
-    def __init__(self, model: mujoco.MjModel, limit_gain: float = 0.5):
+    def __init__(
+        self,
+        model: mujoco.MjModel,
+        limit_gain: float = 0.95,
+        min_distance_from_limits: float = 0.0,
+    ):
         """Initialize configuration limits.
 
         Args:
             model: MuJoCo model.
-            limit_gain: Gain factor between 0 and 1 that determines the percentage of
-                maximum velocity allowed in each timestep.
+            limit_gain: Gain factor in (0, 1] that determines how fast each joint is
+                allowed to move towards the joint limits at each timestep. Values lower
+                ttan 1 are safer but may make the joints move slowly.
+            min_distance_from_limits: Offset in meters (slide joints) or radians
+                (hinge joints) to be added to the limits. Positive values decrease the
+                range of motion, negative values increase it (i.e. negative values
+                allow penetration).
         """
-        if not 0.0 < limit_gain < 1.0:
-            raise ValueError("Limit gain must be in the range (0, 1).")
+        if not 0.0 < limit_gain <= 1.0:
+            raise ValueError("Limit gain must be in the range (0, 1].")
 
         lower = np.full(model.nq, -np.inf)
         upper = np.full(model.nq, np.inf)
@@ -25,8 +35,8 @@ class ConfigurationLimit(Limit):
             if jnt_type not in _SUPPORTED_JOINT_TYPES or not model.jnt_limited[jnt]:
                 continue
             padr = model.jnt_qposadr[jnt]
-            lower[padr : padr + 1] = model.jnt_range[jnt, 0]
-            upper[padr : padr + 1] = model.jnt_range[jnt, 1]
+            lower[padr : padr + 1] = model.jnt_range[jnt, 0] + min_distance_from_limits
+            upper[padr : padr + 1] = model.jnt_range[jnt, 1] - min_distance_from_limits
 
         free_indices = []
         for jnt in range(model.njnt):

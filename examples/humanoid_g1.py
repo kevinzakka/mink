@@ -72,7 +72,7 @@ if __name__ == "__main__":
     ) as viewer:
         # Initialize to the home keyframe.
         mujoco.mj_resetDataKeyframe(model, data, model.key("stand").id)
-        configuration.update(lights=True)
+        configuration.update()
         for task in tasks:
             task.set_target_from_configuration(configuration)
 

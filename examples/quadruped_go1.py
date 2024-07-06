@@ -57,7 +57,7 @@ if __name__ == "__main__":
     ) as viewer:
         # Initialize to the home keyframe.
         mujoco.mj_resetDataKeyframe(model, data, model.key("home").id)
-        configuration.update(lights=True)
+        configuration.update()
         posture_task.set_target_from_configuration(configuration)
 
         # Initialize mocap bodies at their respective targetees.

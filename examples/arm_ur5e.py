@@ -4,6 +4,7 @@ import numpy as np
 import mink
 from pathlib import Path
 from loop_rate_limiters import RateLimiter
+from mink.utils import set_mocap_pose_from_site
 
 _HERE = Path(__file__).parent
 _XML = _HERE / "universal_robots_ur5e" / "scene.xml"
@@ -44,8 +45,8 @@ if __name__ == "__main__":
         configuration.update()
 
         # Initialize the mocap target at the end-effector site.
-        data.mocap_pos[0] = data.site("attachment_site").xpos
-        mujoco.mju_mat2Quat(data.mocap_quat[0], data.site("attachment_site").xmat)
+        mocap_id = model.body("target").mocapid[0]
+        set_mocap_pose_from_site(model, data, "target", "attachment_site")
 
         # Initialize the free camera.
         mujoco.mjv_defaultFreeCamera(model, viewer.cam)
@@ -55,7 +56,7 @@ if __name__ == "__main__":
         sim_steps_per_control_steps = int(np.ceil(dt / model.opt.timestep))
         while viewer.is_running():
             # Update task target.
-            end_effector_task.set_target_from_mocap(data, 0)
+            end_effector_task.set_target_from_mocap(data, mocap_id)
 
             # Compute velocity, integrate into position targets and set control signal.
             velocity = mink.solve_ik(
