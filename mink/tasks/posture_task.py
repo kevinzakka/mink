@@ -1,32 +1,22 @@
-from __future__ import annotations
-from dataclasses import dataclass
 import numpy as np
 from mink.tasks import Task
-from typing import Optional
 from mink.configuration import Configuration
 import mujoco
 
 
-@dataclass
 class PostureTask(Task):
     """Regulate joint angles to a desired posture."""
 
-    cost: float
-    gain: float = 1.0
-    lm_damping: float = 0.0
-    target_q: Optional[np.ndarray] = None
-
-    @staticmethod
-    def initialize(
+    def __init__(
+        self,
         cost: float,
         gain: float = 1.0,
         lm_damping: float = 0.0,
-    ) -> PostureTask:
-        return PostureTask(
-            cost=float(cost),
-            gain=float(gain),
-            lm_damping=float(lm_damping),
-        )
+        target_q: np.ndarray | None = None,
+    ):
+        self.target_q = target_q
+
+        super().__init__(cost=cost, gain=gain, lm_damping=lm_damping)
 
     def set_target(self, target_q: np.ndarray) -> None:
         self.target_q = target_q.copy()

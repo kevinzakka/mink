@@ -1,130 +1,74 @@
-from dataclasses import dataclass
-from typing import Sequence
 import numpy as np
 import mujoco
 
 from mink.limits import Limit, BoxConstraint
 
 _SUPPORTED_JOINT_TYPES = {mujoco.mjtJoint.mjJNT_HINGE, mujoco.mjtJoint.mjJNT_SLIDE}
-_INVALID_JOINT_ERROR = "Joint with name {} does not exist."
-_UNSUPPORTED_JOINT_ERROR = (
-    "Only 1 DoF joints (hinge and slider) are supported at the moment. Joint with name "
-    "{} is not a 1 DoF joint (type {})."
-)
 
 
-def _get_joint_ids(
-    model: mujoco.MjModel,
-    joints: Sequence[str],
-) -> np.ndarray:
-    """Get the joint IDs from a sequence of joint names.
-
-    Joints must be 1 DoF, i.e., hinge or slider joints.
-    """
-    joint_ids: list[int] = []
-    for joint in joints:
-        joint_id = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_JOINT, joint)
-        if joint_id == -1:
-            raise ValueError(_INVALID_JOINT_ERROR.format(joint))
-        joint_type = model.jnt_type[joint_id]
-        if joint_type not in _SUPPORTED_JOINT_TYPES:
-            raise ValueError(_UNSUPPORTED_JOINT_ERROR.format(joint, joint_type))
-        joint_ids.append(joint_id)
-    return np.array(joint_ids)
-
-
-@dataclass(frozen=True)
 class ConfigurationLimit(Limit):
-    """A subspace of joint velocities restricted to joints with position limits.
-
-    Currently only 1 DoF joints are supported, aka hinge and slider joints.
-
-    Attributes:
-        model: MuJoCo model.
-        indices: Indices of joints with configuration limits.
-        projection_matrix: Projection from tangent space to subspace with
-            configuration-limited joints.
-        upper_limits: Upper position limits for each joint.
-        lower_limits: Lower position limits for each joint.
-        limit_gain: Gain factor between 0 and 1 that defines how fast each joint is
-            allowed to move towards its limit in each integration step.
-    """
-
-    model: mujoco.MjModel
-    indices: np.ndarray
-    projection_matrix: np.ndarray
-    limit_gain: float
-
-    @staticmethod
-    def initialize(
-        model: mujoco.MjModel,
-        joints: Sequence[str],
-        limit_gain: float = 0.5,
-    ) -> "ConfigurationLimit":
+    def __init__(self, model: mujoco.MjModel, limit_gain: float = 0.5):
         """Initialize configuration limits.
-
-
-        Configuration limits are automatically extracted from the model.
 
         Args:
             model: MuJoCo model.
-            joints: Sequence of joint names to be configuration-limited. Joints must be
-                1 DoF, i.e., hinge or slider joints.
             limit_gain: Gain factor between 0 and 1 that determines the percentage of
                 maximum velocity allowed in each timestep.
         """
         if not 0.0 < limit_gain < 1.0:
             raise ValueError("Limit gain must be in the range (0, 1).")
 
-        indices = _get_joint_ids(model, joints)
-        for idx in indices:
-            is_limited = model.jnt_limited[idx]
-            if not is_limited:
-                jnt_name = mujoco.mj_id2name(model, mujoco.mjtObj.mjOBJ_JOINT, idx)
-                raise ValueError(
-                    f"Joint {jnt_name} does not have limits. This constraint "
-                    "can only be defined for 1 DoF joints with limits."
-                )
+        lower = np.full(model.nq, -np.inf)
+        upper = np.full(model.nq, np.inf)
+        for jnt in range(model.njnt):
+            jnt_type = model.jnt_type[jnt]
+            if jnt_type not in _SUPPORTED_JOINT_TYPES or not model.jnt_limited[jnt]:
+                continue
+            padr = model.jnt_qposadr[jnt]
+            lower[padr : padr + 1] = model.jnt_range[jnt, 0]
+            upper[padr : padr + 1] = model.jnt_range[jnt, 1]
 
-        return ConfigurationLimit(
-            model=model,
-            indices=indices,
-            projection_matrix=np.eye(model.nv)[indices],
-            limit_gain=limit_gain,
-        )
+        free_indices = []
+        for jnt in range(model.njnt):
+            if model.jnt_type[jnt] == mujoco.mjtJoint.mjJNT_FREE:
+                vadr = model.jnt_dofadr[jnt]
+                free_indices.extend(np.arange(vadr, vadr + 7))
+        free_indices = np.asarray(free_indices, dtype=int)
+
+        self.free_indices = free_indices
+        self.lower = lower
+        self.upper = upper
+        self.model = model
+        self.limit_gain = limit_gain
 
     def compute_qp_inequalities(
         self,
         q: np.ndarray,
-        dq: np.ndarray,
         dt: float,
     ) -> BoxConstraint:
-        del dq, dt  # Unused.
+        del dt  # Unused.
 
         delta_q_max = np.zeros(self.model.nv)
-        qpos2 = np.zeros(self.model.nq)
-        qpos2[:6] = np.inf
-        qpos2[6:] = self.model.jnt_range[:, 1]
         mujoco.mj_differentiatePos(
             m=self.model,
             qvel=delta_q_max,
             dt=1.0,
             qpos1=q,
-            qpos2=qpos2,
+            qpos2=self.upper,
         )
+        delta_q_max[self.free_indices] = np.inf
 
         delta_q_min = np.zeros(self.model.nv)
-        qpos2 = np.zeros(self.model.nq)
-        qpos2[:6] = -np.inf
-        qpos2[6:] = self.model.jnt_range[:, 0]
         mujoco.mj_differentiatePos(
             m=self.model,
             qvel=delta_q_min,
             dt=1.0,
             qpos1=q,
-            qpos2=qpos2,
+            qpos2=self.lower,
         )
+        delta_q_min[self.free_indices] = -np.inf
 
-        upper = self.limit_gain * delta_q_max
-        lower = self.limit_gain * delta_q_min
-        return BoxConstraint(lower=lower, upper=upper)
+        return BoxConstraint(
+            lower=self.limit_gain * delta_q_min,
+            upper=self.limit_gain * delta_q_max,
+        )

@@ -1,5 +1,5 @@
 import abc
-from typing import NamedTuple
+from typing import NamedTuple, Sequence
 
 import numpy as np
 
@@ -19,9 +19,18 @@ class Task(abc.ABC):
     Subclasses must implement `compute_error` and `compute_jacobian` methods.
     """
 
-    cost: np.ndarray | float | None
-    gain: float
-    lm_damping: float
+    def __init__(
+        self,
+        cost: float | Sequence[float] | None = None,
+        gain: float = 1.0,
+        lm_damping: float = 0.0,
+    ):
+        if not 0.0 <= gain <= 1.0:
+            raise ValueError("`gain` must be in the range (0, 1).")
+
+        self.cost = cost
+        self.gain = gain
+        self.lm_damping = lm_damping
 
     @abc.abstractmethod
     def compute_error(self, configuration: Configuration) -> np.ndarray:

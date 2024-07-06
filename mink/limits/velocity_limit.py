@@ -17,8 +17,7 @@ class VelocityLimit(Limit):
     def compute_qp_inequalities(
         self,
         q: np.ndarray,
-        dq: np.ndarray,
         dt: float,
     ) -> BoxConstraint:
-        del q, dq  # Unused.
+        del q  # Unused.
         return BoxConstraint(lower=-dt * self.limit, upper=dt * self.limit)

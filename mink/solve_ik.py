@@ -28,10 +28,6 @@ class Problem:
     R: np.ndarray
     index: np.ndarray
 
-    def __post_init__(self) -> None:
-        assert self.H.shape == (self.n, self.n)
-        # assert self.lower.shape == self.upper.shape == (self.n,)
-
     @staticmethod
     def initialize(
         configuration: Configuration,
@@ -39,9 +35,10 @@ class Problem:
         c: np.ndarray,
         lower: np.ndarray,
         upper: np.ndarray,
+        prev_sol: np.ndarray | None,
     ) -> Problem:
         n = configuration.model.nv
-        dq = np.zeros(n)
+        dq = np.zeros(n) if prev_sol is None else prev_sol
         R = np.zeros((n, n + 7))
         index = np.zeros(n, np.int32)
         return Problem(H, c, lower, upper, n, dq, R, index)
@@ -112,11 +109,10 @@ def _compute_qp_inequalities(
         The box constraints.
     """
     q = configuration.q
-    dq = configuration.dq
     lower_limits = []
     upper_limits = []
     for limit in limits:
-        inequality = limit.compute_qp_inequalities(q, dq, dt)
+        inequality = limit.compute_qp_inequalities(q, dt)
         if inequality.inactive():
             continue
         lower_limits.append(inequality.lower)
@@ -134,11 +130,12 @@ def build_ik(
     limits: Sequence[Limit],
     dt: float,
     damping: float = 1e-12,
+    prev_sol: np.ndarray | None = None,
 ) -> Problem:
     """Build a Quadratic Program (QP) for the current configuration and tasks."""
     H, c = _compute_qp_objective(configuration, tasks, damping)
     lower, upper = _compute_qp_inequalities(configuration, limits, dt)
-    return Problem.initialize(configuration, H, c, lower, upper)
+    return Problem.initialize(configuration, H, c, lower, upper, prev_sol)
 
 
 def solve_ik(
@@ -147,8 +144,9 @@ def solve_ik(
     limits: Sequence[Limit],
     dt: float,
     damping: float = 1e-12,
+    prev_sol: np.ndarray | None = None,
 ) -> np.ndarray:
     """Compute a velocity tangent to the current configuration."""
-    problem = build_ik(configuration, tasks, limits, dt, damping)
+    problem = build_ik(configuration, tasks, limits, dt, damping, prev_sol)
     dq = problem.solve()
     return dq / dt

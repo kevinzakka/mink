@@ -1,51 +1,43 @@
-from __future__ import annotations
-
-from dataclasses import dataclass
-from typing import Optional
+import mujoco
 import numpy as np
 
-from mink.lie import SE3
+from mink.lie import SE3, SO3
 from mink.tasks import Task
 from mink.configuration import Configuration
 
 
-@dataclass
 class FrameTask(Task):
     """Regulate the pose of a robot frame in the world frame."""
 
-    frame_name: str
-    frame_type: str
-    cost: np.ndarray
-    gain: float
-    lm_damping: float
-    T_WT: Optional[SE3]
-
-    @staticmethod
-    def initialize(
+    def __init__(
+        self,
         frame_name: str,
         frame_type: str,
         position_cost: float,
         orientation_cost: float,
         gain: float = 1.0,
         lm_damping: float = 0.0,
-    ) -> FrameTask:
-        assert 0 <= gain <= 1
-
+    ):
         cost = np.zeros(6)
         cost[:3] = position_cost
         cost[3:] = orientation_cost
 
-        return FrameTask(
-            frame_name=frame_name,
-            frame_type=frame_type,
-            cost=cost,
-            gain=gain,
-            lm_damping=lm_damping,
-            T_WT=None,
+        super().__init__(cost=cost, gain=gain, lm_damping=lm_damping)
+
+        self.frame_name = frame_name
+        self.frame_type = frame_type
+        self.world_T_target = None
+
+    def set_target_from_mocap(self, data: mujoco.MjData, mocap_id: int) -> None:
+        self.set_target(
+            SE3.from_rotation_and_translation(
+                rotation=SO3(data.mocap_quat[mocap_id]),
+                translation=data.mocap_pos[mocap_id],
+            )
         )
 
-    def set_target(self, T_WT: SE3) -> None:
-        self.T_WT = T_WT
+    def set_target(self, world_T_target: SE3) -> None:
+        self.world_T_target = world_T_target
 
     def set_target_from_configuration(self, configuration: Configuration) -> None:
         self.set_target(
@@ -56,26 +48,26 @@ class FrameTask(Task):
         )
 
     def compute_error(self, configuration: Configuration) -> np.ndarray:
-        if self.T_WT is None:
+        if self.world_T_target is None:
             raise ValueError("Target transform in world frame not set.")
 
-        T_WE = configuration.get_transform_frame_to_world(
+        world_T_frame = configuration.get_transform_frame_to_world(
             frame_name=self.frame_name,
             frame_type=self.frame_type,
         )
-        T_ET = T_WE.inverse() @ self.T_WT
-        return T_ET.log()
+        frame_T_target = world_T_frame.inverse() @ self.world_T_target
+        return frame_T_target.log()
 
     def compute_jacobian(self, configuration: Configuration) -> np.ndarray:
-        if self.T_WT is None:
+        if self.world_T_target is None:
             raise ValueError("Target transform in world frame not set.")
 
         jac = configuration.get_frame_jacobian(
             frame_name=self.frame_name,
             frame_type=self.frame_type,
         )
-        T_WE = configuration.get_transform_frame_to_world(
+        world_T_frame = configuration.get_transform_frame_to_world(
             frame_name=self.frame_name,
             frame_type=self.frame_type,
         )
-        return -T_WE.inverse().adjoint() @ jac
+        return -world_T_frame.inverse().adjoint() @ jac

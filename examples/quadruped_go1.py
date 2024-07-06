@@ -1,142 +1,88 @@
 import mujoco
 import mujoco.viewer
 import mink
-from mink import lie
-import time
 from pathlib import Path
+import numpy as np
+from loop_rate_limiters import RateLimiter
+from mink.utils import set_mocap_pose_from_site, set_mocap_pose_from_body
 
 _HERE = Path(__file__).parent
 _XML = _HERE / "unitree_go1" / "scene.xml"
 
 
-def main() -> None:
+if __name__ == "__main__":
     model = mujoco.MjModel.from_xml_path(_XML.as_posix())
-    data = mujoco.MjData(model)
-
-    dt = 0.002
-    model.opt.timestep = dt
-
-    keyframe_name = "home"
-    configuration = mink.Configuration.initialize_from_keyframe(
-        model=model, data=data, keyframe_name=keyframe_name
-    )
-
-    joints = [
-        "FR_hip_joint",
-        "FR_thigh_joint",
-        "FR_calf_joint",
-        "FL_hip_joint",
-        "FL_thigh_joint",
-        "FL_calf_joint",
-        "RR_hip_joint",
-        "RR_thigh_joint",
-        "RR_calf_joint",
-        "RL_hip_joint",
-        "RL_thigh_joint",
-        "RL_calf_joint",
-    ]
 
     feet = ["FL", "FR", "RR", "RL"]
 
-    #
-    # Limits.
-    #
-
-    configuration_limit = mink.ConfigurationLimit.initialize(
-        model=model,
-        joints=joints,
-        limit_gain=0.5,
-    )
-
     limits = [
-        configuration_limit,
+        mink.ConfigurationLimit(model=model),
     ]
 
     #
     # Tasks.
     #
 
-    base_task = mink.FrameTask.initialize(
+    base_task = mink.FrameTask(
         frame_name="trunk",
         frame_type="body",
         position_cost=1.0,
         orientation_cost=1.0,
     )
 
-    posture_task = mink.PostureTask.initialize(cost=1e-5)
+    posture_task = mink.PostureTask(cost=1e-5)
 
     feet_tasks = []
     for foot in feet:
-        task = mink.FrameTask.initialize(
+        task = mink.FrameTask(
             frame_name=foot,
             frame_type="site",
             position_cost=1.0,
             orientation_cost=0.0,
-            lm_damping=1e-5,
         )
         feet_tasks.append(task)
 
     tasks = [base_task, posture_task, *feet_tasks]
 
+    configuration = mink.Configuration(model)
     for task in tasks:
         task.set_target_from_configuration(configuration)
+
+    model = configuration.model
+    data = configuration.data
+    velocity = None
 
     with mujoco.viewer.launch_passive(
         model=model, data=data, show_left_ui=False, show_right_ui=False
     ) as viewer:
-        mujoco.mj_resetDataKeyframe(model, data, 0)
-        mujoco.mj_forward(model, data)
-        posture_task.set_target(data.qpos.copy())
+        # Initialize to the home keyframe.
+        mujoco.mj_resetDataKeyframe(model, data, model.key("home").id)
+        configuration.update(lights=True)
+        posture_task.set_target_from_configuration(configuration)
 
+        # Initialize mocap bodies at their respective targetees.
         for foot in feet:
-            data.mocap_pos[model.body(f"{foot}_target").mocapid[0]] = data.site(
-                foot
-            ).xpos.copy()
-            mujoco.mju_mat2Quat(
-                data.mocap_quat[model.body(f"{foot}_target").mocapid[0]],
-                data.site_xmat[data.site(foot).id].copy(),
-            )
+            set_mocap_pose_from_site(model, data, f"{foot}_target", foot)
+        set_mocap_pose_from_body(model, data, "trunk_target", "trunk")
 
-        data.mocap_pos[0] = data.xpos[model.body("trunk").id].copy()
-        mujoco.mju_mat2Quat(
-            data.mocap_quat[0], data.xmat[model.body("trunk").id].copy()
-        )
-
+        # Initialize the free camera.
         mujoco.mjv_defaultFreeCamera(model, viewer.cam)
 
+        rate = RateLimiter(frequency=500.0)
+        dt = rate.period
+        sim_steps_per_control_steps = int(np.ceil(dt / model.opt.timestep))
         while viewer.is_running():
-            step_start = time.time()
+            # Update task targets.
+            base_task.set_target_from_mocap(data, 0)
+            for i, task in enumerate(feet_tasks):
+                mocap_id = model.body(f"{feet[i]}_target").mocapid[0]
+                task.set_target_from_mocap(data, mocap_id)
 
-            base_target = lie.SE3.from_rotation_and_translation(
-                rotation=lie.SO3(data.mocap_quat[0]),
-                translation=data.mocap_pos[0],
-            )
-            base_task.set_target(base_target)
-
-            for i, foot in enumerate(feet):
-                foot_target = lie.SE3.from_rotation_and_translation(
-                    rotation=lie.SO3(
-                        data.mocap_quat[model.body(f"{foot}_target").mocapid[0]]
-                    ),
-                    translation=data.mocap_pos[model.body(f"{foot}_target").mocapid[0]],
-                )
-                feet_tasks[i].set_target(foot_target)
-
-            velocity = mink.solve_ik(
-                configuration=configuration,
-                tasks=tasks,
-                limits=[],
-                dt=dt,
-            )
-            print(velocity)
+            # Compute velocity, integrate and set control signal.
+            velocity = mink.solve_ik(configuration, tasks, limits, dt, 1e-5, velocity)
             data.ctrl = configuration.integrate(velocity, dt)[7:]
-            mujoco.mj_step(model, data)
+            mujoco.mj_step(model, data, sim_steps_per_control_steps)
 
+            # Visualize at fixed FPS.
             viewer.sync()
-            time_until_next_step = dt - (time.time() - step_start)
-            if time_until_next_step > 0:
-                time.sleep(time_until_next_step)
-
-
-if __name__ == "__main__":
-    main()
+            rate.sleep()

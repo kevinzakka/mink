@@ -8,7 +8,6 @@ from mink.limits import (
     BoxConstraint,
     Limit,
     VelocityLimit,
-    AccelerationLimit,
 )
 from mink.lie import SO3, SE3
 
@@ -23,7 +22,6 @@ __all__ = (
     "Objective",
     "ConfigurationLimit",
     "VelocityLimit",
-    "AccelerationLimit",
     "BoxConstraint",
     "Limit",
     "SO3",

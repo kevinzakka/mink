@@ -1,7 +1,3 @@
-from __future__ import annotations
-
-from dataclasses import dataclass
-from typing import Optional
 import numpy as np
 import mujoco
 
@@ -9,35 +5,27 @@ from mink.tasks import Task
 from mink.configuration import Configuration
 
 
-@dataclass
 class ComTask(Task):
-
-    target_com: Optional[np.ndarray]
-    cost: np.ndarray
-    gain: float
-    lm_damping: float
-
-    @staticmethod
-    def initialize(
-        cost: float,
+    def __init__(
+        self,
+        cost: np.ndarray,
         gain: float = 1.0,
         lm_damping: float = 0.0,
-    ) -> ComTask:
-        assert 0 <= gain <= 1
+        target_com: np.ndarray | None = None,
+    ):
+        super().__init__(cost=np.full((3,), cost), gain=gain, lm_damping=lm_damping)
 
-        return ComTask(
-            target_com=None,
-            cost=np.full((3,), cost),
-            gain=gain,
-            lm_damping=lm_damping,
-        )
+        self.target_com = target_com
 
     def set_target(self, target_com: np.ndarray) -> None:
         self.target_com = target_com.copy()
 
     def set_target_from_configuration(self, configuration: Configuration) -> None:
-        desired_com = configuration.data.subtree_com[0]
+        desired_com = configuration.data.subtree_com[1]
         self.set_target(desired_com)
+
+    def set_target_from_mocap(self, data: mujoco.MjData, mocap_id: int) -> None:
+        self.set_target(data.mocap_pos[mocap_id])
 
     def compute_error(self, configuration: Configuration) -> np.ndarray:
         if self.target_com is None:

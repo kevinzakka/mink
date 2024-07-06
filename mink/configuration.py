@@ -1,5 +1,4 @@
 from __future__ import annotations
-from dataclasses import dataclass
 import numpy as np
 import mujoco
 from mink.lie import SE3, SO3
@@ -29,35 +28,23 @@ _TYPE_TO_XMAT_ATTRIBUTE = {
 }
 
 
-@dataclass(frozen=True)
 class Configuration:
-    model: mujoco.MjModel
-    data: mujoco.MjData
-    q: np.ndarray
-    dq: np.ndarray
-
-    @staticmethod
-    def initialize(
+    def __init__(
+        self,
         model: mujoco.MjModel,
-        data: mujoco.MjData,
-    ) -> Configuration:
-        return Configuration(model, data, data.qpos, data.qvel)
+        q: np.ndarray | None = None,
+    ):
+        self.model = model
+        self.data = mujoco.MjData(model)
+        if q is not None:
+            self.data.qpos = q
+        self.update()
 
-    @staticmethod
-    def initialize_from_keyframe(
-        model: mujoco.MjModel,
-        data: mujoco.MjData,
-        keyframe_name: str,
-    ) -> Configuration:
-        keyframe_id = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_KEY, keyframe_name)
-        if not 0 <= keyframe_id < model.nkey:
-            raise ValueError(f"Keyframe '{keyframe_name}' not found")
-        mujoco.mj_resetDataKeyframe(model, data, keyframe_id)
-        return Configuration(model, data, data.qpos, data.qvel)
-
-    def update(self) -> None:
+    def update(self, lights: bool = False) -> None:
         mujoco.mj_kinematics(self.model, self.data)
         mujoco.mj_comPos(self.model, self.data)
+        if lights:
+            mujoco.mj_camlight(self.model, self.data)
 
     def get_frame_jacobian(self, frame_name: str, frame_type: str) -> np.ndarray:
         assert frame_type in _SUPPORTED_OBJ_TYPES
@@ -83,10 +70,14 @@ class Configuration:
         )
 
     def integrate(self, velocity: np.ndarray, dt: float) -> np.ndarray:
-        q = self.q.copy()
+        q = self.data.qpos.copy()
         mujoco.mj_integratePos(self.model, q, velocity, dt)
         return q
 
-    def integrate_in_place(self, velocity: np.ndarray, dt: float) -> None:
-        mujoco.mj_integratePos(self.model, self.q, velocity, dt)
+    def integrate_inplace(self, velocity: np.ndarray, dt: float) -> None:
+        mujoco.mj_integratePos(self.model, self.data.qpos, velocity, dt)
         self.update()
+
+    @property
+    def q(self) -> np.ndarray:
+        return self.data.qpos.copy()
