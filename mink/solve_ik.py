@@ -7,56 +7,57 @@ import numpy as np
 
 from mink.configuration import Configuration
 from mink.tasks import Task, Objective
-from mink.limits import Limit, Constraint, CollisionAvoidanceLimit
+from mink.limits import Limit, BoxConstraint, CollisionAvoidanceLimit
 
-# import mujoco
-# from dataclasses import dataclass
-import qpsolvers
+import mujoco
+from dataclasses import dataclass
+# import qpsolvers
 
 
 class IKFailure(Exception):
     """Raised when the inverse kinematics problem cannot be solved."""
 
 
-# @dataclass(frozen=True)
-# class Problem:
-#     H: np.ndarray
-#     c: np.ndarray
-#     lower: np.ndarray
-#     upper: np.ndarray
-#     n: int
-#     dq: np.ndarray
-#     R: np.ndarray
-#     index: np.ndarray
+@dataclass(frozen=True)
+class Problem:
+    H: np.ndarray
+    c: np.ndarray
+    lower: np.ndarray
+    upper: np.ndarray
+    n: int
+    dq: np.ndarray
+    R: np.ndarray
+    index: np.ndarray
 
-#     @staticmethod
-#     def initialize(
-#         configuration: Configuration,
-#         H: np.ndarray,
-#         c: np.ndarray,
-#         lower: np.ndarray,
-#         upper: np.ndarray,
-#         prev_sol: np.ndarray | None,
-#     ) -> Problem:
-#         n = configuration.model.nv
-#         dq = np.zeros(n) if prev_sol is None else prev_sol
-#         R = np.zeros((n, n + 7))
-#         index = np.zeros(n, np.int32)
-#         return Problem(H, c, lower, upper, n, dq, R, index)
+    @staticmethod
+    def initialize(
+        # configuration: Configuration,
+        n: int,
+        H: np.ndarray,
+        c: np.ndarray,
+        lower: np.ndarray,
+        upper: np.ndarray,
+        prev_sol: np.ndarray | None,
+    ) -> Problem:
+        # n = configuration.model.nv
+        dq = np.zeros(n) if prev_sol is None else prev_sol
+        R = np.zeros((n, n + 7))
+        index = np.zeros(n, np.int32)
+        return Problem(H, c, lower, upper, n, dq, R, index)
 
-#     def solve(self) -> np.ndarray:
-#         rank = mujoco.mju_boxQP(
-#             res=self.dq,
-#             R=self.R,
-#             index=self.index,
-#             H=self.H,
-#             g=self.c,
-#             lower=self.lower,
-#             upper=self.upper,
-#         )
-#         if rank == -1:
-#             raise IKFailure("QP solver failed")
-#         return self.dq
+    def solve(self) -> np.ndarray:
+        rank = mujoco.mju_boxQP(
+            res=self.dq,
+            R=self.R,
+            index=self.index,
+            H=self.H,
+            g=self.c,
+            lower=self.lower,
+            upper=self.upper,
+        )
+        if rank == -1:
+            raise IKFailure("QP solver failed")
+        return self.dq
 
 
 def _compute_qp_objective(
@@ -93,7 +94,7 @@ def _compute_qp_inequalities(
     configuration: Configuration,
     limits: Sequence[Limit],
     dt: float,
-) -> Constraint:
+) -> BoxConstraint:
     """Compute the box constraints for the inverse kinematics problem.
 
     The box constraints are of the form:
@@ -110,29 +111,54 @@ def _compute_qp_inequalities(
         The box constraints.
     """
     q = configuration.q
-    # lower_limits = []
-    # upper_limits = []
-    G_list = []
-    h_list = []
+    lower_limits = []
+    upper_limits = []
     for limit in limits:
         if isinstance(limit, CollisionAvoidanceLimit):
-            inequality = limit.compute_qp_inequalities(configuration.data, q, dt)
-        else:
-            inequality = limit.compute_qp_inequalities(q, dt)
-        # if inequality.inactive():
-        # continue
-        # lower_limits.append(inequality.lower)
-        # upper_limits.append(inequality.upper)
-        G_list.append(inequality.G)
-        h_list.append(inequality.h)
-    # if not lower_limits:
-    # return BoxConstraint()
-    if not G_list:
-        return None, None
-    # lower = np.maximum.reduce(lower_limits)
-    # upper = np.minimum.reduce(upper_limits)
-    # return BoxConstraint(lower, upper)
-    return np.vstack(G_list), np.hstack(h_list)
+            continue
+        inequality = limit.compute_qp_inequalities(q, dt)
+        if inequality.inactive():
+            continue
+        lower_limits.append(inequality.lower)
+        upper_limits.append(inequality.upper)
+    if not lower_limits:
+        return BoxConstraint()
+    lower = np.maximum.reduce(lower_limits)
+    upper = np.minimum.reduce(upper_limits)
+    return BoxConstraint(lower, upper)
+
+
+# def build_ik_dual(
+#     configuration: Configuration,
+#     tasks: Sequence[Task],
+#     limits: Sequence[Limit],
+#     dt: float,
+#     damping: float = 1e-12,
+#     prev_sol: np.ndarray | None = None,
+# ) -> Problem:
+#     """Build a Quadratic Program (QP) for the current configuration and tasks."""
+#     H, c = _compute_qp_objective(configuration, tasks, damping)
+#     limits_subset = [
+#         limit for limit in limits if not isinstance(limit, CollisionAvoidanceLimit)
+#     ]
+#     lower, upper = _compute_qp_inequalities(configuration, limits_subset, dt)
+#     limit = None
+#     for l in limits:
+#         if isinstance(l, CollisionAvoidanceLimit):
+#             limit = l
+#             break
+#     assert limit is not None
+#     _, D, N = limit.compute_qp_inequalities(configuration.data, configuration.q, dt)
+#     N = np.vstack([N, np.eye(upper.shape[0], c.shape[0]), -np.eye(upper.shape[0], c.shape[0])])
+#     D = np.hstack([D, upper, -lower])
+#     H_inv = np.linalg.pinv(H)
+#     Q = N @ H_inv @ N.T
+#     b = N @ H_inv.T @ c + D
+#     low = np.zeros((b.shape[0],))
+#     problem = Problem.initialize(b.shape[0], Q, b, low, np.full_like(low, np.inf), prev_sol)
+#     lam = problem.solve()
+#     dq = -H_inv @ (c + N.T @ lam)
+#     return dq, lam
 
 
 def build_ik(
@@ -141,16 +167,57 @@ def build_ik(
     limits: Sequence[Limit],
     dt: float,
     damping: float = 1e-12,
-    # prev_sol: np.ndarray | None = None,
-) -> qpsolvers.Problem:
+    prev_sol: np.ndarray | None = None,
+) -> Problem:
     """Build a Quadratic Program (QP) for the current configuration and tasks."""
     H, c = _compute_qp_objective(configuration, tasks, damping)
-    # lower, upper = _compute_qp_inequalities(configuration, limits, dt)
-    G, h = _compute_qp_inequalities(configuration, limits, dt)
-    # from ipdb import set_trace; set_trace()
-    problem = qpsolvers.Problem(H, c, G, h)
-    return problem
-    # return Problem.initialize(configuration, H, c, lower, upper, prev_sol)
+    lower, upper = _compute_qp_inequalities(configuration, limits, dt)
+
+    limit = None
+    for l in limits:
+        if isinstance(l, CollisionAvoidanceLimit):
+            limit = l
+            break
+    assert limit is not None
+    A, b = limit.compute_qp_inequalities(configuration.data, configuration.q, dt)
+
+    def compute_qp_modifications(Q, c, A, b, lam):
+        m = A.shape[0]
+        Q_prime = Q.copy()
+        c_prime = c.copy()
+        for i in range(m):
+            if np.isfinite(b[i]):
+                a_i_outer = np.outer(A[i], A[i])
+                Q_prime += lam * a_i_outer
+                c_prime -= 2 * lam * b[i] * A[i]
+        return Q_prime, c_prime
+
+    lam = 1e-3
+    lambda_max = 1e4
+    successful = False
+    tolerance = 1e-8
+    lambda_increment_factor = 10
+    while lam <= lambda_max:
+        H_prime, c_prime = compute_qp_modifications(H, c, A, b, lam)
+        problem = Problem.initialize(
+            n=H_prime.shape[0],
+            H=H_prime,
+            c=c_prime,
+            lower=lower,
+            upper=upper,
+            prev_sol=prev_sol
+        )
+        solution = problem.solve()
+        constraint_violations = np.maximum(0, A @ solution - b)
+        max_violation = np.max(constraint_violations)
+        if max_violation < tolerance:
+            successful = True
+            print(f"Constraints are satisfactorily met")
+            break
+        lam *= lambda_increment_factor
+    if not successful:
+        raise RuntimeError("Failed to meet constraints within the lambda range.")
+    return solution
 
 
 def solve_ik(
@@ -158,15 +225,17 @@ def solve_ik(
     tasks: Sequence[Task],
     limits: Sequence[Limit],
     dt: float,
-    solver: str,
+    # solver: str,
     damping: float = 1e-12,
-    # prev_sol: np.ndarray | None = None,
-    **kwargs,
+    prev_sol: np.ndarray | None = None,
+    # **kwargs,
 ) -> np.ndarray:
     """Compute a velocity tangent to the current configuration."""
-    problem = build_ik(configuration, tasks, limits, dt, damping)
-    result = qpsolvers.solve_problem(problem, solver=solver, **kwargs)
+    # dq, lam = build_ik(configuration, tasks, limits, dt, damping, prev_sol)
+    # result = qpsolvers.solve_problem(problem, solver=solver, **kwargs)
+    # dq = result.x
+    # assert dq is not None
+    # return dq / dt, lam
+    dq = build_ik(configuration, tasks, limits, dt, damping, prev_sol)
     # dq = problem.solve()
-    dq = result.x
-    assert dq is not None
     return dq / dt

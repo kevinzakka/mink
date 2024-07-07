@@ -5,10 +5,10 @@ from mink.solve_ik import build_ik, solve_ik
 from mink.tasks import FrameTask, PostureTask, Task, Objective, ComTask
 from mink.limits import (
     ConfigurationLimit,
-    Constraint,
+    BoxConstraint,
     Limit,
     VelocityLimit,
-    CollisionAvoidanceLimit,
+    CollisionAvoidanceLimit
 )
 from mink.lie import SO3, SE3
 
@@ -23,9 +23,9 @@ __all__ = (
     "Objective",
     "ConfigurationLimit",
     "VelocityLimit",
-    "CollisionAvoidanceLimit",
-    "Constraint",
+    "BoxConstraint",
     "Limit",
     "SO3",
     "SE3",
+    "CollisionAvoidanceLimit",
 )

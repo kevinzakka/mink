@@ -52,14 +52,8 @@ if __name__ == "__main__":
         hand_tasks.append(task)
     tasks.extend(hand_tasks)
 
-    collision_pairs = [
-        # (["wrist_3_link"], ["floor", "wall"]),
-        (["wrist_2_link_1", "wrist_2_link_2"], ["floor", "wall"]),
-    ]
-
     limits = [
         mink.ConfigurationLimit(model=model),
-        mink.CollisionAvoidanceLimit(model=model, geom_pairs=collision_pairs),
     ]
 
     com_mid = model.body("com_target").mocapid[0]

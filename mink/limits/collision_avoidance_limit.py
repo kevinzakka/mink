@@ -1,9 +1,9 @@
 from dataclasses import dataclass
-from typing import List, Sequence
+from typing import Sequence
 import numpy as np
 import mujoco
 
-from mink.limits import Limit, Constraint
+from mink.limits import Limit, BoxConstraint
 
 
 @dataclass(frozen=True)
@@ -51,6 +51,7 @@ class CollisionAvoidanceLimit(Limit):
         self.minimum_distance_from_collisions = minimum_distance_from_collisions
         self.collision_detection_distance = collision_detection_distance
         self.bound_relaxation = 0.0
+        print(self.minimum_distance_from_collisions)
 
         # Convert pairs of geom strings into pairs of geom IDs.
         geom_id_pairs = []
@@ -68,9 +69,10 @@ class CollisionAvoidanceLimit(Limit):
         data: mujoco.MjData,
         q: np.ndarray,
         dt: float,
-    ) -> Constraint:
+    ):
         del q  # Unused.
         upper_bound = np.full((self.max_num_contacts,), np.inf)
+        lower_bound = np.full((self.model.nv,), -np.inf)
         coefficient_matrix = np.zeros((self.max_num_contacts, self.model.nv))
         for idx, (geom1_id, geom2_id) in enumerate(self.geom_id_pairs):
             fromto = np.empty(6)
@@ -86,7 +88,8 @@ class CollisionAvoidanceLimit(Limit):
                 upper_bound[idx] = self.bound_relaxation
             jac = self._compute_contact_normal_jacobian(data, contact)
             coefficient_matrix[idx] = -jac
-        return Constraint(G=coefficient_matrix, h=upper_bound)
+        # return lower_bound, upper_bound, coefficient_matrix
+        return coefficient_matrix, upper_bound
 
     def _compute_contact_normal_jacobian(self, data: mujoco.MjData, contact: Contact):
         geom1_body = self.model.geom_bodyid[contact.geom1]

@@ -1,5 +1,6 @@
 import mujoco
 import mujoco.viewer
+import numpy as np
 import mink
 from pathlib import Path
 from loop_rate_limiters import RateLimiter
@@ -34,13 +35,13 @@ if __name__ == "__main__":
 
     limits = [
         mink.ConfigurationLimit(model=model),
-        # mink.CollisionAvoidanceLimit(model=model, geom_pairs=collision_pairs),
+        mink.VelocityLimit(np.deg2rad(180) * np.ones_like(configuration.q)),
+        mink.CollisionAvoidanceLimit(model=model, geom_pairs=collision_pairs),
     ]
 
     mid = model.body("target").mocapid[0]
     model = configuration.model
     data = configuration.data
-    solver = "quadprog"
 
     with mujoco.viewer.launch_passive(
         model=model, data=data, show_left_ui=False, show_right_ui=False
@@ -55,12 +56,14 @@ if __name__ == "__main__":
 
         rate = RateLimiter(frequency=500.0)
         vel = None
+        # lam = None
         while viewer.is_running():
             # Update task target.
             end_effector_task.set_target_from_mocap(data, mid)
 
             # Compute velocity and integrate into the next configuration.
-            vel = mink.solve_ik(configuration, tasks, limits, rate.dt, solver, 1e-3)
+            # vel, lam = mink.solve_ik(configuration, tasks, limits, rate.dt, 1e-12, lam)
+            vel = mink.solve_ik(configuration, tasks, limits, rate.dt, prev_sol=vel)
             configuration.integrate_inplace(vel, rate.dt)
 
             # Visualize at fixed FPS.

@@ -1,7 +1,7 @@
 import numpy as np
 import mujoco
 
-from mink.limits import Limit, Constraint
+from mink.limits import Limit, BoxConstraint
 
 _SUPPORTED_JOINT_TYPES = {mujoco.mjtJoint.mjJNT_HINGE, mujoco.mjtJoint.mjJNT_SLIDE}
 
@@ -59,7 +59,7 @@ class ConfigurationLimit(Limit):
         self,
         q: np.ndarray,
         dt: float,
-    ) -> Constraint:
+    ) -> BoxConstraint:
         del dt  # Unused.
 
         delta_q_max = np.zeros(self.model.nv)
@@ -82,13 +82,13 @@ class ConfigurationLimit(Limit):
         )
         delta_q_min[self.free_indices] = -np.inf
 
-        p_max = self.gain * delta_q_max
-        p_min = self.gain * delta_q_min
-        G = np.vstack([self.projection_matrix, -self.projection_matrix])
-        h = np.hstack([p_max, -p_min])
-        return Constraint(G=G, h=h)
+        # p_max = self.gain * delta_q_max
+        # p_min = self.gain * delta_q_min
+        # G = np.vstack([self.projection_matrix, -self.projection_matrix])
+        # h = np.hstack([p_max, -p_min])
+        # return Constraint(G=G, h=h)
 
-        # return BoxConstraint(
-        #     lower=self.gain * delta_q_min,
-        #     upper=self.gain * delta_q_max,
-        # )
+        return BoxConstraint(
+            lower=self.gain * delta_q_min,
+            upper=self.gain * delta_q_max,
+        )
