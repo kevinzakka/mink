@@ -1,6 +1,6 @@
 import numpy as np
 
-from mink.limits import Limit, BoxConstraint
+from mink.limits import Limit, Constraint
 
 
 class VelocityLimit(Limit):
@@ -18,6 +18,10 @@ class VelocityLimit(Limit):
         self,
         q: np.ndarray,
         dt: float,
-    ) -> BoxConstraint:
+    ) -> Constraint:
         del q  # Unused.
-        return BoxConstraint(lower=-dt * self.limit, upper=dt * self.limit)
+
+        # G = np.vstack([self.projection_matrix, -self.projection_matrix])
+        # h = np.hstack([dt * v_max, dt * v_max])
+
+        return Constraint(lower=-dt * self.limit, upper=dt * self.limit)

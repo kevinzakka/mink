@@ -5,14 +5,20 @@ import abc
 import numpy as np
 
 
-class BoxConstraint(NamedTuple):
-    """Box constraint of the form lower <= x <= upper."""
+# class BoxConstraint(NamedTuple):
+#     """Box constraint of the form lower <= x <= upper."""
 
-    lower: Optional[np.ndarray] = None
-    upper: Optional[np.ndarray] = None
+#     lower: Optional[np.ndarray] = None
+#     upper: Optional[np.ndarray] = None
 
-    def inactive(self) -> bool:
-        return self.lower is None and self.upper is None
+#     def inactive(self) -> bool:
+#         return self.lower is None and self.upper is None
+
+
+class Constraint(NamedTuple):
+
+    G: np.ndarray
+    h: np.ndarray
 
 
 class Limit(abc.ABC):
@@ -23,7 +29,7 @@ class Limit(abc.ABC):
         self,
         q: np.ndarray,
         dt: float,
-    ) -> BoxConstraint:
+    ) -> Constraint:
         """Compute limit as a box constraint.
 
         Args:
