@@ -18,6 +18,7 @@ class Contact:
         normal = self.fromto[3:] - self.fromto[:3]
         return normal / (np.linalg.norm(normal) + 1e-9)
 
+
 # Type alias.
 CollisionPairs = Sequence[tuple[Sequence[str], Sequence[str]]]
 
@@ -76,7 +77,14 @@ class CollisionAvoidanceLimit(Limit):
         coefficient_matrix = np.zeros((self.max_num_contacts, self.model.nv))
         for idx, (geom1_id, geom2_id) in enumerate(self.geom_id_pairs):
             fromto = np.empty(6)
-            dist = mujoco.mj_geomDistance(self.model, data, geom1_id, geom2_id, self.collision_detection_distance, fromto)
+            dist = mujoco.mj_geomDistance(
+                self.model,
+                data,
+                geom1_id,
+                geom2_id,
+                self.collision_detection_distance,
+                fromto,
+            )
             if dist == self.collision_detection_distance:
                 continue
             contact = Contact(dist=dist, fromto=fromto, geom1=geom1_id, geom2=geom2_id)
@@ -88,8 +96,7 @@ class CollisionAvoidanceLimit(Limit):
                 upper_bound[idx] = self.bound_relaxation
             jac = self._compute_contact_normal_jacobian(data, contact)
             coefficient_matrix[idx] = -jac
-        # return lower_bound, upper_bound, coefficient_matrix
-        return coefficient_matrix, upper_bound
+        return lower_bound, upper_bound, coefficient_matrix
 
     def _compute_contact_normal_jacobian(self, data: mujoco.MjData, contact: Contact):
         geom1_body = self.model.geom_bodyid[contact.geom1]

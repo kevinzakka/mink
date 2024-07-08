@@ -11,6 +11,7 @@ from mink.limits import Limit, BoxConstraint, CollisionAvoidanceLimit
 
 import mujoco
 from dataclasses import dataclass
+
 # import qpsolvers
 
 
@@ -126,42 +127,47 @@ def _compute_qp_inequalities(
     lower = np.maximum.reduce(lower_limits)
     upper = np.minimum.reduce(upper_limits)
     return BoxConstraint(lower, upper)
+    # return lower, upper
 
 
-# def build_ik_dual(
-#     configuration: Configuration,
-#     tasks: Sequence[Task],
-#     limits: Sequence[Limit],
-#     dt: float,
-#     damping: float = 1e-12,
-#     prev_sol: np.ndarray | None = None,
-# ) -> Problem:
-#     """Build a Quadratic Program (QP) for the current configuration and tasks."""
-#     H, c = _compute_qp_objective(configuration, tasks, damping)
-#     limits_subset = [
-#         limit for limit in limits if not isinstance(limit, CollisionAvoidanceLimit)
-#     ]
-#     lower, upper = _compute_qp_inequalities(configuration, limits_subset, dt)
-#     limit = None
-#     for l in limits:
-#         if isinstance(l, CollisionAvoidanceLimit):
-#             limit = l
-#             break
-#     assert limit is not None
-#     _, D, N = limit.compute_qp_inequalities(configuration.data, configuration.q, dt)
-#     N = np.vstack([N, np.eye(upper.shape[0], c.shape[0]), -np.eye(upper.shape[0], c.shape[0])])
-#     D = np.hstack([D, upper, -lower])
-#     H_inv = np.linalg.pinv(H)
-#     Q = N @ H_inv @ N.T
-#     b = N @ H_inv.T @ c + D
-#     low = np.zeros((b.shape[0],))
-#     problem = Problem.initialize(b.shape[0], Q, b, low, np.full_like(low, np.inf), prev_sol)
-#     lam = problem.solve()
-#     dq = -H_inv @ (c + N.T @ lam)
-#     return dq, lam
+def build_ik_dual(
+    configuration: Configuration,
+    tasks: Sequence[Task],
+    limits: Sequence[Limit],
+    dt: float,
+    damping: float = 1e-12,
+    prev_sol: np.ndarray | None = None,
+) -> Problem:
+    """Build a Quadratic Program (QP) for the current configuration and tasks."""
+    H, c = _compute_qp_objective(configuration, tasks, damping)
+    limits_subset = [
+        limit for limit in limits if not isinstance(limit, CollisionAvoidanceLimit)
+    ]
+    lower, upper = _compute_qp_inequalities(configuration, limits_subset, dt)
+    limit = None
+    for l in limits:
+        if isinstance(l, CollisionAvoidanceLimit):
+            limit = l
+            break
+    assert limit is not None
+    _, D, N = limit.compute_qp_inequalities(configuration.data, configuration.q, dt)
+    N = np.vstack(
+        [N, np.eye(upper.shape[0], c.shape[0]), -np.eye(upper.shape[0], c.shape[0])]
+    )
+    D = np.hstack([D, upper, -lower])
+    H_inv = np.linalg.pinv(H)
+    Q = N @ H_inv @ N.T
+    b = N @ H_inv.T @ c + D
+    low = np.zeros((b.shape[0],))
+    problem = Problem.initialize(
+        b.shape[0], Q, b, low, np.full_like(low, np.inf), prev_sol
+    )
+    lam = problem.solve()
+    dq = -H_inv @ (c + N.T @ lam)
+    return dq, lam
 
 
-def build_ik(
+def build_ik_penalty_method(
     configuration: Configuration,
     tasks: Sequence[Task],
     limits: Sequence[Limit],
@@ -205,7 +211,7 @@ def build_ik(
             c=c_prime,
             lower=lower,
             upper=upper,
-            prev_sol=prev_sol
+            prev_sol=prev_sol,
         )
         solution = problem.solve()
         constraint_violations = np.maximum(0, A @ solution - b)
@@ -231,11 +237,11 @@ def solve_ik(
     # **kwargs,
 ) -> np.ndarray:
     """Compute a velocity tangent to the current configuration."""
-    # dq, lam = build_ik(configuration, tasks, limits, dt, damping, prev_sol)
+    dq, lam = build_ik_dual(configuration, tasks, limits, dt, damping, prev_sol)
     # result = qpsolvers.solve_problem(problem, solver=solver, **kwargs)
     # dq = result.x
     # assert dq is not None
     # return dq / dt, lam
-    dq = build_ik(configuration, tasks, limits, dt, damping, prev_sol)
+    # dq = build_ik(configuration, tasks, limits, dt, damping, prev_sol)
     # dq = problem.solve()
-    return dq / dt
+    return dq / dt, lam

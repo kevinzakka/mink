@@ -35,7 +35,7 @@ if __name__ == "__main__":
 
     limits = [
         mink.ConfigurationLimit(model=model),
-        mink.VelocityLimit(np.deg2rad(180) * np.ones_like(configuration.q)),
+        # mink.VelocityLimit(np.deg2rad(180) * np.ones_like(configuration.q)),
         mink.CollisionAvoidanceLimit(model=model, geom_pairs=collision_pairs),
     ]
 
@@ -56,14 +56,14 @@ if __name__ == "__main__":
 
         rate = RateLimiter(frequency=500.0)
         vel = None
-        # lam = None
+        lam = None
         while viewer.is_running():
             # Update task target.
             end_effector_task.set_target_from_mocap(data, mid)
 
             # Compute velocity and integrate into the next configuration.
-            # vel, lam = mink.solve_ik(configuration, tasks, limits, rate.dt, 1e-12, lam)
-            vel = mink.solve_ik(configuration, tasks, limits, rate.dt, prev_sol=vel)
+            vel, lam = mink.solve_ik(configuration, tasks, limits, rate.dt, 1e-12, lam)
+            # vel = mink.solve_ik(configuration, tasks, limits, rate.dt, prev_sol=vel)
             configuration.integrate_inplace(vel, rate.dt)
 
             # Visualize at fixed FPS.

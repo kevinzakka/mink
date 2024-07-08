@@ -10,5 +10,5 @@ __all__ = (
     "BoxConstraint",
     "ConfigurationLimit",
     "VelocityLimit",
-    "CollisionAvoidanceLimit"
+    "CollisionAvoidanceLimit",
 )

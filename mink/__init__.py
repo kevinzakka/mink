@@ -1,14 +1,14 @@
 """mink: MuJoCo differential inverse kinematics."""
 
 from mink.configuration import Configuration
-from mink.solve_ik import build_ik, solve_ik
+from mink.solve_ik import solve_ik
 from mink.tasks import FrameTask, PostureTask, Task, Objective, ComTask
 from mink.limits import (
     ConfigurationLimit,
     BoxConstraint,
     Limit,
     VelocityLimit,
-    CollisionAvoidanceLimit
+    CollisionAvoidanceLimit,
 )
 from mink.lie import SO3, SE3
 
