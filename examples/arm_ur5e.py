@@ -25,45 +25,41 @@ if __name__ == "__main__":
         ),
     ]
 
-    limits = [
-        mink.ConfigurationLimit(model=model),
-        mink.VelocityLimit(np.deg2rad(180) * np.ones_like(configuration.q)),
+    # Enable collision avoidance between the following geoms:
+    collision_pairs = [
+        (["wrist_3_link"], ["floor", "wall"]),
     ]
 
+    limits = [
+        mink.ConfigurationLimit(model=model),
+        mink.VelocityLimit(model, np.full_like(configuration.q, np.pi)),
+        mink.CollisionAvoidanceLimit(model=model, geom_pairs=collision_pairs),
+    ]
+
+    mid = model.body("target").mocapid[0]
     model = configuration.model
     data = configuration.data
-    velocity = None
+    solver = "quadprog"
 
     with mujoco.viewer.launch_passive(
-        model=model,
-        data=data,
-        show_left_ui=False,
-        show_right_ui=False,
+        model=model, data=data, show_left_ui=False, show_right_ui=False
     ) as viewer:
-        # Initialize to the home keyframe.
-        mujoco.mj_resetDataKeyframe(model, data, model.key("home").id)
-        configuration.update()
-
-        # Initialize the mocap target at the end-effector site.
-        mocap_id = model.body("target").mocapid[0]
-        set_mocap_pose_from_site(model, data, "target", "attachment_site")
-
-        # Initialize the free camera.
         mujoco.mjv_defaultFreeCamera(model, viewer.cam)
 
-        rate = RateLimiter(frequency=60.0)
-        dt = rate.period
-        sim_steps_per_control_steps = int(np.ceil(dt / model.opt.timestep))
+        # Initialize to the home keyframe.
+        configuration.update_from_keyframe("home")
+
+        # Initialize the mocap target at the end-effector site.
+        set_mocap_pose_from_site(model, data, "target", "attachment_site")
+
+        rate = RateLimiter(frequency=500.0)
         while viewer.is_running():
             # Update task target.
-            end_effector_task.set_target_from_mocap(data, mocap_id)
+            end_effector_task.set_target_from_mocap(data, mid)
 
-            # Compute velocity, integrate into position targets and set control signal.
-            velocity = mink.solve_ik(
-                configuration, tasks, limits, dt, prev_sol=velocity
-            )
-            data.ctrl = configuration.integrate(velocity, dt)
-            mujoco.mj_step(model, data, sim_steps_per_control_steps)
+            # Compute velocity and integrate into the next configuration.
+            vel = mink.solve_ik(configuration, tasks, limits, rate.dt, solver, 1e-3)
+            configuration.integrate_inplace(vel, rate.dt)
 
             # Visualize at fixed FPS.
             viewer.sync()

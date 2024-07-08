@@ -40,10 +40,16 @@ class Configuration:
             self.data.qpos = q
         self.update()
 
-    def update(self, lights: bool = False) -> None:
+    def update_from_keyframe(self, key: str) -> None:
+        mujoco.mj_resetDataKeyframe(self.model, self.data, self.model.key(key).id)
+        self.update()
+
+    def update(self) -> None:
         mujoco.mj_kinematics(self.model, self.data)
         mujoco.mj_comPos(self.model, self.data)
         mujoco.mj_camlight(self.model, self.data)
+        # mujoco.mj_fwdPosition(self.model, self.data)
+        # mujoco.mj_sensorPos(self.model, self.data)
 
     def get_frame_jacobian(self, frame_name: str, frame_type: str) -> np.ndarray:
         assert frame_type in _SUPPORTED_OBJ_TYPES
@@ -70,6 +76,7 @@ class Configuration:
 
     def integrate(self, velocity: np.ndarray, dt: float) -> np.ndarray:
         q = self.data.qpos.copy()
+        # NOTE: mj_integratePos is basically doing `qpos += dt * qvel`.
         mujoco.mj_integratePos(self.model, q, velocity, dt)
         return q
 

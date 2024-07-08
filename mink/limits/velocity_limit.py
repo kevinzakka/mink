@@ -1,10 +1,11 @@
 import numpy as np
-
-from mink.limits import Limit, BoxConstraint
+import mujoco
+from mink.limits import Limit, Constraint
+from mink.configuration import Configuration
 
 
 class VelocityLimit(Limit):
-    def __init__(self, limit: np.ndarray):
+    def __init__(self, model: mujoco.MjModel, limit: np.ndarray):
         """Initialize velocity limits.
 
         Args:
@@ -13,11 +14,14 @@ class VelocityLimit(Limit):
             be ordered according to the joint indices in the robot model.
         """
         self.limit = limit
+        self.projection_matrix = np.eye(model.nv)
 
     def compute_qp_inequalities(
         self,
-        q: np.ndarray,
+        configuration: Configuration,
         dt: float,
-    ) -> BoxConstraint:
-        del q  # Unused.
-        return BoxConstraint(lower=-dt * self.limit, upper=dt * self.limit)
+    ) -> Constraint:
+        del configuration  # Unused.
+        G = np.vstack([self.projection_matrix, -self.projection_matrix])
+        h = np.hstack([dt * self.limit, dt * self.limit])
+        return Constraint(G=G, h=h)

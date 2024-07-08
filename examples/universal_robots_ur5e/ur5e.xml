@@ -101,14 +101,13 @@
                 <geom mesh="wrist2_0" material="black" class="visual"/>
                 <geom mesh="wrist2_1" material="urblue" class="visual"/>
                 <geom mesh="wrist2_2" material="jointgray" class="visual"/>
-                <geom class="collision" size="0.04 0.06" pos="0 0 0.04"/>
-                <geom class="collision" pos="0 0.02 0.1" quat="1 1 0 0" size="0.04 0.04"/>
+                <geom name="wrist_2_link" class="collision" size="0.04 0.06" pos="0 0 0.04"/>
                 <body name="wrist_3_link" pos="0 0 0.1">
                   <inertial mass="0.1879" pos="0 0.0771683 0" quat="1 0 0 1"
                     diaginertia="0.000132134 9.90863e-05 9.90863e-05"/>
                   <joint name="wrist_3"/>
                   <geom material="linkgray" mesh="wrist3" class="visual"/>
-                  <geom class="eef_collision" pos="0 0.08 0" quat="1 1 0 0" size="0.04 0.02"/>
+                  <geom name="wrist_3_link" class="collision" pos="0 0.025 0" quat="1 1 0 0" size="0.04 0.05"/>
                   <site name="attachment_site" size="0.01" pos="0 0.1 0" quat="-1 1 1 1" rgba="1 0 0 1" group="1"/>
                 </body>
               </body>

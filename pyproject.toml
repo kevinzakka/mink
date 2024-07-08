@@ -2,5 +2,9 @@
 name = "mink"
 version = "0.0.0"
 dependencies = [
-    "mujoco>=3.1.0",
+    # 3.1.6 for mj_geomDistance
+    "mujoco >= 3.1.6",
+    "qpsolvers >=4.3.1",
+    # examples/
+    "loop-rate-limiters >= 0.1.0",
 ]

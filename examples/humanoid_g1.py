@@ -12,20 +12,10 @@ _XML = _HERE / "unitree_g1" / "scene.xml"
 if __name__ == "__main__":
     model = mujoco.MjModel.from_xml_path(_XML.as_posix())
 
+    configuration = mink.Configuration(model)
+
     feet = ["right_foot", "left_foot"]
     hands = ["right_palm", "left_palm"]
-
-    #
-    # Limits.
-    #
-
-    limits = [
-        mink.ConfigurationLimit(model=model),
-    ]
-
-    #
-    # Tasks.
-    #
 
     tasks = [
         pelvis_orientation_task := mink.FrameTask(
@@ -62,46 +52,45 @@ if __name__ == "__main__":
         hand_tasks.append(task)
     tasks.extend(hand_tasks)
 
-    configuration = mink.Configuration(model)
+    limits = [
+        mink.ConfigurationLimit(model=model),
+    ]
+
+    com_mid = model.body("com_target").mocapid[0]
+    feet_mid = [model.body(f"{foot}_target").mocapid[0] for foot in feet]
+    hands_mid = [model.body(f"{hand}_target").mocapid[0] for hand in hands]
+
     model = configuration.model
     data = configuration.data
-    velocity = None
+    solver = "quadprog"
 
     with mujoco.viewer.launch_passive(
         model=model, data=data, show_left_ui=False, show_right_ui=False
     ) as viewer:
-        # Initialize to the home keyframe.
-        mujoco.mj_resetDataKeyframe(model, data, model.key("stand").id)
-        configuration.update()
-        for task in tasks:
-            task.set_target_from_configuration(configuration)
-
-        # Initialize mocap bodies at their respective targetees.
-        for foot in feet:
-            set_mocap_pose_from_site(model, data, f"{foot}_target", foot)
-        for hand in hands:
-            set_mocap_pose_from_site(model, data, f"{hand}_target", hand)
-
-        com_mocap_id = model.body("com_target").mocapid[0]
-        data.mocap_pos[com_mocap_id] = data.subtree_com[1]
-
-        # Initialize the free camera.
         mujoco.mjv_defaultFreeCamera(model, viewer.cam)
 
+        # Initialize to the home keyframe.
+        configuration.update_from_keyframe("stand")
+        posture_task.set_target_from_configuration(configuration)
+        pelvis_orientation_task.set_target_from_configuration(configuration)
+
+        # Initialize mocap bodies at their respective sites.
+        for hand, foot in zip(hands, feet):
+            set_mocap_pose_from_site(model, data, f"{foot}_target", foot)
+            set_mocap_pose_from_site(model, data, f"{hand}_target", hand)
+        data.mocap_pos[com_mid] = data.subtree_com[1]
+
         rate = RateLimiter(frequency=500.0)
-        dt = rate.period
+        vel = None
         while viewer.is_running():
             # Update task targets.
-            for i, task in enumerate(hand_tasks):
-                mocap_id = model.body(f"{hands[i]}_target").mocapid[0]
-                task.set_target_from_mocap(data, mocap_id)
-            for i, task in enumerate(feet_tasks):
-                mocap_id = model.body(f"{feet[i]}_target").mocapid[0]
-                task.set_target_from_mocap(data, mocap_id)
-            com_task.set_target_from_mocap(data, com_mocap_id)
+            com_task.set_target_from_mocap(data, com_mid)
+            for i, (hand_task, foot_task) in enumerate(zip(hand_tasks, feet_tasks)):
+                foot_task.set_target_from_mocap(data, feet_mid[i])
+                hand_task.set_target_from_mocap(data, hands_mid[i])
 
-            velocity = mink.solve_ik(configuration, tasks, limits, dt, 1e-1, velocity)
-            configuration.integrate_inplace(velocity, dt)
+            vel = mink.solve_ik(configuration, tasks, limits, rate.dt, solver, 1e-1)
+            configuration.integrate_inplace(vel, rate.dt)
 
             # Visualize at fixed FPS.
             viewer.sync()
