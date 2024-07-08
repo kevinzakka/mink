@@ -46,6 +46,7 @@ if __name__ == "__main__":
 
     model = configuration.model
     data = configuration.data
+    solver = "quadprog"
 
     with mujoco.viewer.launch_passive(
         model=model, data=data, show_left_ui=False, show_right_ui=False
@@ -62,7 +63,6 @@ if __name__ == "__main__":
         set_mocap_pose_from_body(model, data, "trunk_target", "trunk")
 
         rate = RateLimiter(frequency=500.0)
-        solver = "clarabel"
         while viewer.is_running():
             # Update task targets.
             base_task.set_target_from_mocap(data, base_mid)

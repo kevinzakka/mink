@@ -81,7 +81,6 @@ if __name__ == "__main__":
         data.mocap_pos[com_mid] = data.subtree_com[1]
 
         rate = RateLimiter(frequency=500.0)
-        vel = None
         while viewer.is_running():
             # Update task targets.
             com_task.set_target_from_mocap(data, com_mid)

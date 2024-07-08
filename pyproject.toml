@@ -24,8 +24,8 @@ classifiers = [
 dependencies = [
     # 3.1.6 for mj_geomDistance.
     "mujoco >= 3.1.6",
-    "qpsolvers >=4.3.1",
-    "quadprog >=0.1.11",
+    "qpsolvers >= 4.3.1",
+    "quadprog >= 0.1.11",
 ]
 keywords = ["inverse", "kinematics", "mujoco"]
 
