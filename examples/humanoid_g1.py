@@ -91,6 +91,7 @@ if __name__ == "__main__":
 
             vel = mink.solve_ik(configuration, tasks, limits, rate.dt, solver, 1e-1)
             configuration.integrate_inplace(vel, rate.dt)
+            mujoco.mj_camlight(model, data)
 
             # Visualize at fixed FPS.
             viewer.sync()

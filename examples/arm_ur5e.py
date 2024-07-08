@@ -60,6 +60,12 @@ if __name__ == "__main__":
             # Compute velocity and integrate into the next configuration.
             vel = mink.solve_ik(configuration, tasks, limits, rate.dt, solver, 1e-3)
             configuration.integrate_inplace(vel, rate.dt)
+            mujoco.mj_camlight(model, data)
+
+            # Note the below are optional: they are used to visualize the output of the
+            # fromto sensor which is used by the collision avoidance constraint.
+            # mujoco.mj_fwdPosition(model, data)
+            # mujoco.mj_sensorPos(model, data)
 
             # Visualize at fixed FPS.
             viewer.sync()

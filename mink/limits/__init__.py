@@ -6,9 +6,9 @@ from mink.limits.velocity_limit import VelocityLimit
 from mink.limits.collision_avoidance_limit import CollisionAvoidanceLimit
 
 __all__ = (
-    "Limit",
-    "Constraint",
     "ConfigurationLimit",
-    "VelocityLimit",
     "CollisionAvoidanceLimit",
+    "Constraint",
+    "Limit",
+    "VelocityLimit",
 )

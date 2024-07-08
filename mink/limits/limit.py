@@ -7,6 +7,8 @@ from mink.configuration import Configuration
 
 
 class Constraint(NamedTuple):
+    """Linear inequalities of the form Gx <= h."""
+
     G: np.ndarray
     h: np.ndarray
 
@@ -30,3 +32,4 @@ class Limit(abc.ABC):
             An instance of Constraint representing an inequality constraint of the form
             Gx <= h.
         """
+        raise NotImplementedError

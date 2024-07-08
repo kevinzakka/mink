@@ -28,5 +28,6 @@
 
   <sensor>
     <fromto geom1="wrist_3_link" geom2="wall" cutoff="1"/>
+    <fromto geom1="wrist_3_link" geom2="floor" cutoff="1"/>
   </sensor>
 </mujoco>

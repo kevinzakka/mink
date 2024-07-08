@@ -35,10 +35,12 @@ class Task(abc.ABC):
     @abc.abstractmethod
     def compute_error(self, configuration: Configuration) -> np.ndarray:
         """Compute the task error function at the current configuration."""
+        raise NotImplementedError
 
     @abc.abstractmethod
     def compute_jacobian(self, configuration: Configuration) -> np.ndarray:
         """Compute the task Jacobian at the current configuration."""
+        raise NotImplementedError
 
     def _construct_weight(self, n: int) -> np.ndarray:
         if self.cost is None:

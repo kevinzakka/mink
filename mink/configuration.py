@@ -1,4 +1,3 @@
-from __future__ import annotations
 import numpy as np
 import mujoco
 from mink.lie import SE3, SO3
@@ -47,10 +46,6 @@ class Configuration:
     def update(self) -> None:
         mujoco.mj_kinematics(self.model, self.data)
         mujoco.mj_comPos(self.model, self.data)
-        mujoco.mj_camlight(self.model, self.data)
-        # Note: for visualizing a `fromto` sensor, uncomment the below lines.
-        # mujoco.mj_fwdPosition(self.model, self.data)
-        # mujoco.mj_sensorPos(self.model, self.data)
 
     def get_frame_jacobian(self, frame_name: str, frame_type: str) -> np.ndarray:
         assert frame_type in _SUPPORTED_OBJ_TYPES

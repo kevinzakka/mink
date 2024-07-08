@@ -72,6 +72,7 @@ if __name__ == "__main__":
             # Compute velocity, integrate and set control signal.
             vel = mink.solve_ik(configuration, tasks, limits, rate.dt, solver, 1e-5)
             configuration.integrate_inplace(vel, rate.dt)
+            mujoco.mj_camlight(model, data)
 
             # Visualize at fixed FPS.
             viewer.sync()

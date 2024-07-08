@@ -7,9 +7,9 @@ from mink.tasks.com_task import ComTask
 
 
 __all__ = (
-    "Task",
-    "Objective",
-    "FrameTask",
-    "PostureTask",
     "ComTask",
+    "FrameTask",
+    "Objective",
+    "PostureTask",
+    "Task",
 )
