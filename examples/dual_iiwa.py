@@ -1,3 +1,5 @@
+"""Task adapted from https://github.com/stephane-caron/pink/pull/94."""
+
 from dm_control import mjcf
 import mujoco
 import mujoco.viewer
@@ -123,7 +125,6 @@ if __name__ == "__main__":
         rate = RateLimiter(frequency=60.0)
         t = 0.0
         while viewer.is_running():
-            # Make a sinusoidal trajectory between points A and B.
             mu = (1 + np.cos(t)) / 2
             l_y_des[:] = (
                 A + (B - A + 0.2 * np.array([0, 0, np.sin(mu * np.pi) ** 2])) * mu
