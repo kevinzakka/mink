@@ -12,6 +12,8 @@ from mink.limits import (
 )
 from mink.lie import SO3, SE3
 
+__version__ = "0.0.1"
+
 __all__ = (
     "ComTask",
     "Configuration",

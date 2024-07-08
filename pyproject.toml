@@ -1,19 +1,33 @@
 [build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
-
-[tool.hatch.metadata]
-allow-direct-references = true
+requires = ["flit_core >=2,<4"]
+build-backend = "flit_core.buildapi"
 
 [project]
 name = "mink"
-version = "0.0.0"
+readme = "README.md"
+authors = [
+    {name = "Kevin Zakka", email = "zakka@berkeley.edu"},
+]
+requires-python = ">=3.10"
+dynamic = ["version", "description"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Framework :: Robot Framework :: Library",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering",
+]
 dependencies = [
     # 3.1.6 for mj_geomDistance.
     "mujoco >= 3.1.6",
     "qpsolvers >=4.3.1",
     "quadprog >=0.1.11",
 ]
+keywords = ["inverse", "kinematics", "mujoco"]
 
 [project.optional-dependencies]
 examples = [
