@@ -44,13 +44,13 @@ class CollisionAvoidanceLimit(Limit):
         gain: float = 0.85,
         minimum_distance_from_collisions: float = 0.005,
         collision_detection_distance: float = 0.01,
+        bound_relaxation: float = 0.0,
     ):
-        """Initialize collision avoidance limit."""
         self.model = model
         self.gain = gain
         self.minimum_distance_from_collisions = minimum_distance_from_collisions
         self.collision_detection_distance = collision_detection_distance
-        self.bound_relaxation = 0.0
+        self.bound_relaxation = bound_relaxation
 
         # Convert pairs of geom strings into pairs of geom IDs.
         geom_id_pairs = []
@@ -59,7 +59,6 @@ class CollisionAvoidanceLimit(Limit):
                 for geom_b in id_pair[1]:
                     geom_id_pairs.append((geom_a, geom_b))
         self.geom_id_pairs = geom_id_pairs
-
         self.max_num_contacts = len(self.geom_id_pairs)
 
     def compute_qp_inequalities(

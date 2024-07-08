@@ -1,10 +1,21 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
 [project]
 name = "mink"
 version = "0.0.0"
 dependencies = [
-    # 3.1.6 for mj_geomDistance
+    # 3.1.6 for mj_geomDistance.
     "mujoco >= 3.1.6",
     "qpsolvers >=4.3.1",
-    # examples/
+]
+
+[project.optional-dependencies]
+examples = [
     "loop-rate-limiters >= 0.1.0",
+    "dm_control >= 1.0.20",
 ]
