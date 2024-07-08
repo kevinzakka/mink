@@ -1,9 +1,12 @@
 from dataclasses import dataclass
-from typing import List, Sequence
+from typing import Sequence
 import numpy as np
 import mujoco
 
 from mink.limits import Limit, Constraint
+from mink.configuration import Configuration
+
+CollisionPairs = Sequence[tuple[Sequence[str], Sequence[str]]]
 
 
 @dataclass(frozen=True)
@@ -17,9 +20,6 @@ class Contact:
     def normal(self) -> np.ndarray:
         normal = self.fromto[3:] - self.fromto[:3]
         return normal / (np.linalg.norm(normal) + 1e-9)
-
-# Type alias.
-CollisionPairs = Sequence[tuple[Sequence[str], Sequence[str]]]
 
 
 def _collision_pairs_to_geom_id_pairs(
@@ -59,22 +59,26 @@ class CollisionAvoidanceLimit(Limit):
                 for geom_b in id_pair[1]:
                     geom_id_pairs.append((geom_a, geom_b))
         self.geom_id_pairs = geom_id_pairs
-        print(self.geom_id_pairs)
 
         self.max_num_contacts = len(self.geom_id_pairs)
 
     def compute_qp_inequalities(
         self,
-        data: mujoco.MjData,
-        q: np.ndarray,
+        configuration: Configuration,
         dt: float,
     ) -> Constraint:
-        del q  # Unused.
         upper_bound = np.full((self.max_num_contacts,), np.inf)
         coefficient_matrix = np.zeros((self.max_num_contacts, self.model.nv))
         for idx, (geom1_id, geom2_id) in enumerate(self.geom_id_pairs):
             fromto = np.empty(6)
-            dist = mujoco.mj_geomDistance(self.model, data, geom1_id, geom2_id, self.collision_detection_distance, fromto)
+            dist = mujoco.mj_geomDistance(
+                self.model,
+                configuration.data,
+                geom1_id,
+                geom2_id,
+                self.collision_detection_distance,
+                fromto,
+            )
             if dist == self.collision_detection_distance:
                 continue
             contact = Contact(dist=dist, fromto=fromto, geom1=geom1_id, geom2=geom2_id)
@@ -84,11 +88,13 @@ class CollisionAvoidanceLimit(Limit):
                 upper_bound[idx] = (self.gain * dist / dt) + self.bound_relaxation
             else:
                 upper_bound[idx] = self.bound_relaxation
-            jac = self._compute_contact_normal_jacobian(data, contact)
+            jac = self._compute_contact_normal_jacobian(configuration.data, contact)
             coefficient_matrix[idx] = -jac
         return Constraint(G=coefficient_matrix, h=upper_bound)
 
-    def _compute_contact_normal_jacobian(self, data: mujoco.MjData, contact: Contact):
+    def _compute_contact_normal_jacobian(
+        self, data: mujoco.MjData, contact: Contact
+    ) -> np.ndarray:
         geom1_body = self.model.geom_bodyid[contact.geom1]
         geom2_body = self.model.geom_bodyid[contact.geom2]
         geom1_contact_pos = contact.fromto[:3]

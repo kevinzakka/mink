@@ -1,5 +1,6 @@
 import mujoco
 import mujoco.viewer
+import numpy as np
 import mink
 from pathlib import Path
 from loop_rate_limiters import RateLimiter
@@ -25,16 +26,14 @@ if __name__ == "__main__":
     ]
 
     # Enable collision avoidance between the following geoms:
-    # "wrist_3_link" and "floor"
-    # NOTE(kevin): Had to add "wrist_3_link" name to the geom.
     collision_pairs = [
-        # (["wrist_3_link"], ["floor", "wall"]),
-        (["wrist_2_link_1", "wrist_2_link_2"], ["floor", "wall"]),
+        (["wrist_3_link"], ["floor", "wall"]),
     ]
 
     limits = [
         mink.ConfigurationLimit(model=model),
-        # mink.CollisionAvoidanceLimit(model=model, geom_pairs=collision_pairs),
+        mink.VelocityLimit(model, np.full_like(configuration.q, np.pi)),
+        mink.CollisionAvoidanceLimit(model=model, geom_pairs=collision_pairs),
     ]
 
     mid = model.body("target").mocapid[0]
@@ -54,7 +53,6 @@ if __name__ == "__main__":
         set_mocap_pose_from_site(model, data, "target", "attachment_site")
 
         rate = RateLimiter(frequency=500.0)
-        vel = None
         while viewer.is_running():
             # Update task target.
             end_effector_task.set_target_from_mocap(data, mid)

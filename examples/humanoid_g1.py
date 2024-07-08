@@ -52,14 +52,8 @@ if __name__ == "__main__":
         hand_tasks.append(task)
     tasks.extend(hand_tasks)
 
-    collision_pairs = [
-        # (["wrist_3_link"], ["floor", "wall"]),
-        (["wrist_2_link_1", "wrist_2_link_2"], ["floor", "wall"]),
-    ]
-
     limits = [
         mink.ConfigurationLimit(model=model),
-        mink.CollisionAvoidanceLimit(model=model, geom_pairs=collision_pairs),
     ]
 
     com_mid = model.body("com_target").mocapid[0]
@@ -68,6 +62,7 @@ if __name__ == "__main__":
 
     model = configuration.model
     data = configuration.data
+    solver = "quadprog"
 
     with mujoco.viewer.launch_passive(
         model=model, data=data, show_left_ui=False, show_right_ui=False
@@ -94,7 +89,7 @@ if __name__ == "__main__":
                 foot_task.set_target_from_mocap(data, feet_mid[i])
                 hand_task.set_target_from_mocap(data, hands_mid[i])
 
-            vel = mink.solve_ik(configuration, tasks, limits, rate.dt, 1e-1, vel)
+            vel = mink.solve_ik(configuration, tasks, limits, rate.dt, solver, 1e-1)
             configuration.integrate_inplace(vel, rate.dt)
 
             # Visualize at fixed FPS.

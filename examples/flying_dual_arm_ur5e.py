@@ -118,6 +118,7 @@ if __name__ == "__main__":
     right_mid = model.body("r_target").mocapid[0]
     model = configuration.model
     data = configuration.data
+    solver = "quadprog"
 
     with mujoco.viewer.launch_passive(
         model=model, data=data, show_left_ui=False, show_right_ui=False
@@ -131,7 +132,6 @@ if __name__ == "__main__":
 
         rate = RateLimiter(frequency=200.0)
         t = 0.0
-        vel = None
         while viewer.is_running():
             data.mocap_pos[base_mid][2] = 0.3 * np.sin(2.0 * t)
             base_task.set_target_from_mocap(data, base_mid)
@@ -144,7 +144,7 @@ if __name__ == "__main__":
             data.mocap_pos[right_mid][2] = 0.2
             right_ee_task.set_target_from_mocap(data, right_mid)
 
-            vel = mink.solve_ik(configuration, tasks, limits, rate.dt, 1e-2, vel)
+            vel = mink.solve_ik(configuration, tasks, limits, rate.dt, solver, 1e-2)
             configuration.integrate_inplace(vel, rate.dt)
 
             viewer.sync()

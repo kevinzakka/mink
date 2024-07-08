@@ -62,7 +62,6 @@ if __name__ == "__main__":
         set_mocap_pose_from_body(model, data, "trunk_target", "trunk")
 
         rate = RateLimiter(frequency=500.0)
-        vel = None
         solver = "clarabel"
         while viewer.is_running():
             # Update task targets.

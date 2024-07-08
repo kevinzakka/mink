@@ -2,6 +2,7 @@ import numpy as np
 import mujoco
 
 from mink.limits import Limit, Constraint
+from mink.configuration import Configuration
 
 _SUPPORTED_JOINT_TYPES = {mujoco.mjtJoint.mjJNT_HINGE, mujoco.mjtJoint.mjJNT_SLIDE}
 
@@ -57,7 +58,7 @@ class ConfigurationLimit(Limit):
 
     def compute_qp_inequalities(
         self,
-        q: np.ndarray,
+        configuration: Configuration,
         dt: float,
     ) -> Constraint:
         del dt  # Unused.
@@ -67,7 +68,7 @@ class ConfigurationLimit(Limit):
             m=self.model,
             qvel=delta_q_max,
             dt=1.0,
-            qpos1=q,
+            qpos1=configuration.q,
             qpos2=self.upper,
         )
         delta_q_max[self.free_indices] = np.inf
@@ -77,7 +78,7 @@ class ConfigurationLimit(Limit):
             m=self.model,
             qvel=delta_q_min,
             dt=1.0,
-            qpos1=q,
+            qpos1=configuration.q,
             qpos2=self.lower,
         )
         delta_q_min[self.free_indices] = -np.inf
@@ -87,8 +88,3 @@ class ConfigurationLimit(Limit):
         G = np.vstack([self.projection_matrix, -self.projection_matrix])
         h = np.hstack([p_max, -p_min])
         return Constraint(G=G, h=h)
-
-        # return BoxConstraint(
-        #     lower=self.gain * delta_q_min,
-        #     upper=self.gain * delta_q_max,
-        # )
