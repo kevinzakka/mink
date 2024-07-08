@@ -48,6 +48,7 @@ class Configuration:
         mujoco.mj_kinematics(self.model, self.data)
         mujoco.mj_comPos(self.model, self.data)
         mujoco.mj_camlight(self.model, self.data)
+        # Note: for visualizing a `fromto` sensor, uncomment the below lines.
         # mujoco.mj_fwdPosition(self.model, self.data)
         # mujoco.mj_sensorPos(self.model, self.data)
 

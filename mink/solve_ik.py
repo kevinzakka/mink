@@ -43,10 +43,9 @@ def build_ik(
     dt: float,
     damping: float = 1e-12,
 ) -> qpsolvers.Problem:
-    H, c = _compute_qp_objective(configuration, tasks, damping)
+    P, q = _compute_qp_objective(configuration, tasks, damping)
     G, h = _compute_qp_inequalities(configuration, limits, dt)
-    problem = qpsolvers.Problem(H, c, G, h)
-    return problem
+    return qpsolvers.Problem(P, q, G, h)
 
 
 def solve_ik(

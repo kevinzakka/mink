@@ -25,7 +25,8 @@
       <geom name="wall" type="box" size=".1 .1 .1"/>
     </body>
   </worldbody>
-  <!-- <sensor>
-    <fromto geom1="wrist_2_link_2" geom2="wall" cutoff="1"/>
-  </sensor> -->
+
+  <sensor>
+    <fromto geom1="wrist_3_link" geom2="wall" cutoff="1"/>
+  </sensor>
 </mujoco>
