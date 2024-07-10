@@ -41,6 +41,21 @@ class SE3:
         return SE3(wxyz_xyz=np.concatenate([rotation.wxyz, translation]))
 
     @staticmethod
+    def from_rotation(rotation: SO3) -> SE3:
+        return SE3.from_rotation_and_translation(
+            rotation=rotation,
+            translation=np.zeros(
+                SE3.space_dim,
+            ),
+        )
+
+    @staticmethod
+    def from_translation(translation: np.ndarray) -> SE3:
+        return SE3.from_rotation_and_translation(
+            rotation=SO3.identity(), translation=translation
+        )
+
+    @staticmethod
     def from_matrix(matrix: np.ndarray) -> SE3:
         assert matrix.shape == (SE3.matrix_dim, SE3.matrix_dim)
         return SE3.from_rotation_and_translation(
@@ -106,7 +121,8 @@ class SE3:
                 + (skew_omega @ skew_omega) / 12.0
             )
         else:
-            V_inv = (
+            V_inv = np.eye(3) - 0.5 * skew_omega + (1 - theta_safe * np.cos(half_theta_safe) / (2 * np.sin(half_theta_safe))) / (theta_safe * theta_safe) * (skew_omega @ skew_omega)
+            V_inv_2 = (
                 np.eye(3, dtype=np.float64)
                 - 0.5 * skew_omega
                 + (
@@ -118,6 +134,8 @@ class SE3:
                 / theta_squared_safe
                 * (skew_omega @ skew_omega)
             )
+            np.testing.assert_array_almost_equal(V_inv, V_inv_2)
+            # from ipdb import set_trace; set_trace()
         return np.concatenate([V_inv @ self.translation(), omega])
 
     def adjoint(self) -> np.ndarray:
@@ -159,3 +177,6 @@ class SE3:
             return self.multiply(other=other)
         else:
             raise ValueError(f"Unsupported argument type for @ operator: {type(other)}")
+
+    def copy(self) -> SE3:
+        return SE3(wxyz_xyz=self.wxyz_xyz.copy())

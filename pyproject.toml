@@ -34,3 +34,14 @@ examples = [
     "loop-rate-limiters >= 0.1.0",
     "dm_control >= 1.0.20",
 ]
+test = [
+    "absl-py",
+    "pytest",
+    "robot_descriptions >= 1.9.0"
+]
+dev = [
+    "mypy",
+    "ruff",
+    "black",
+    "mink[test]"
+]

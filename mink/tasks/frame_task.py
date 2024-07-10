@@ -18,7 +18,7 @@ class FrameTask(Task):
         gain: float = 1.0,
         lm_damping: float = 0.0,
     ):
-        cost = np.zeros(6)
+        cost = np.zeros((6,), dtype=np.float64)
         cost[:3] = position_cost
         cost[3:] = orientation_cost
 
@@ -51,12 +51,25 @@ class FrameTask(Task):
         if self.world_T_target is None:
             raise ValueError("Target transform in world frame not set.")
 
+        ## OLD WAY OF DOING IT
+        # world_T_frame = configuration.get_transform_frame_to_world(
+        #     frame_name=self.frame_name,
+        #     frame_type=self.frame_type,
+        # )
+        # frame_T_target = world_T_frame.inverse() @ self.world_T_target
+        # return frame_T_target.log()
+
         world_T_frame = configuration.get_transform_frame_to_world(
             frame_name=self.frame_name,
             frame_type=self.frame_type,
         )
-        frame_T_target = world_T_frame.inverse() @ self.world_T_target
-        return frame_T_target.log()
+        error = np.zeros(6)
+        error[:3] = world_T_frame.translation() - self.world_T_target.translation()
+        site_quat = np.zeros(4)
+        mujoco.mju_mat2Quat(site_quat, world_T_frame.rotation().as_matrix().ravel())
+        mujoco.mju_subQuat(error[3:], self.world_T_target.rotation().wxyz, site_quat)
+
+        return error
 
     def compute_jacobian(self, configuration: Configuration) -> np.ndarray:
         if self.world_T_target is None:
@@ -70,4 +83,17 @@ class FrameTask(Task):
             frame_name=self.frame_name,
             frame_type=self.frame_type,
         )
-        return -world_T_frame.inverse().adjoint() @ jac
+
+        ## OLD WAY OF DOING IT
+        # return -world_T_frame.inverse().adjoint() @ jac
+
+        effector_quat = np.empty(4)
+        mujoco.mju_mat2Quat(effector_quat, world_T_frame.rotation().as_matrix().ravel())
+        target_quat = self.world_T_target.rotation().wxyz
+        Deffector = np.empty((3, 3))
+        mujoco.mjd_subQuat(target_quat, effector_quat, None, Deffector)
+        target_mat = self.world_T_target.rotation().as_matrix()
+        mat = Deffector.T @ target_mat.T
+        jac[3:] = mat @ jac[3:]
+
+        return jac

@@ -72,7 +72,6 @@ class Configuration:
 
     def integrate(self, velocity: np.ndarray, dt: float) -> np.ndarray:
         q = self.data.qpos.copy()
-        # NOTE: mj_integratePos is basically doing `qpos += dt * qvel`.
         mujoco.mj_integratePos(self.model, q, velocity, dt)
         return q
 
