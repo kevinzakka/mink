@@ -56,9 +56,7 @@ class Configuration:
         """
         self.model = model
         self.data = mujoco.MjData(model)
-        if q is not None:
-            self.data.qpos = q
-        self.update()
+        self.update(q=q)
 
     def update_from_keyframe(self, key: str) -> None:
         """Update the configuration from a keyframe and run forward kinematics.

@@ -1,8 +1,8 @@
 import mujoco
 import numpy as np
 
-from mink.configuration import Configuration
-from mink.tasks import Task
+from ..configuration import Configuration
+from .task import Task
 
 
 class PostureTask(Task):

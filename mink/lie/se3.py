@@ -4,8 +4,8 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from mink.lie.so3 import SO3
-from mink.lie.utils import get_epsilon, skew
+from .so3 import SO3
+from .utils import get_epsilon, skew
 
 _IDENTITY_WXYZ_XYZ = np.array([1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], dtype=np.float64)
 

@@ -4,8 +4,8 @@ from typing import Sequence
 import mujoco
 import numpy as np
 
-from mink.configuration import Configuration
-from mink.limits import Constraint, Limit
+from ..configuration import Configuration
+from .limit import Constraint, Limit
 
 CollisionPairs = Sequence[tuple[Sequence[str], Sequence[str]]]
 

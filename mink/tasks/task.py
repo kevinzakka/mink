@@ -3,7 +3,7 @@ from typing import NamedTuple, Sequence
 
 import numpy as np
 
-from mink.configuration import Configuration
+from ..configuration import Configuration
 
 
 class Objective(NamedTuple):

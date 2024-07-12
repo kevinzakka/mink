@@ -1,8 +1,8 @@
 import mujoco
 import numpy as np
 
-from mink.configuration import Configuration
-from mink.limits import Constraint, Limit
+from ..configuration import Configuration
+from .limit import Constraint, Limit
 
 _SUPPORTED_JOINT_TYPES = {mujoco.mjtJoint.mjJNT_HINGE, mujoco.mjtJoint.mjJNT_SLIDE}
 

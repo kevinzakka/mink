@@ -19,7 +19,7 @@ class UnsupportedFrameType(MinkError):
 
 
 class FrameNotFound(MinkError):
-    """Exception raised when a frame is not found in the robot model."""
+    """Exception raised when a frame name is not found in the robot model."""
 
     def __init__(
         self,
@@ -50,7 +50,7 @@ class FrameNotFound(MinkError):
 
 
 class KeyframeNotFound(MinkError):
-    """Exception raised when a keyframe is not found in the robot model."""
+    """Exception raised when a keyframe name is not found in the robot model."""
 
     def __init__(self, keyframe_name: str, model: mujoco.MjModel):
         available_keyframes = [model.key(i).name for i in range(model.nkey)]

@@ -9,15 +9,17 @@ from mink import lie
 class TestJacobians(absltest.TestCase):
     """Test task jacobian matrices against finite differences."""
 
+    @classmethod
+    def setUpClass(cls):
+        cls.model = load_robot_description("fr3_mj_description")
+
     def setUp(self, nb_configs: int = 1):
         np.random.seed(42)
-        model = load_robot_description("fr3_mj_description")
         random_q = np.random.uniform(
-            low=model.jnt_range[:, 0],
-            high=model.jnt_range[:, 1],
-            size=(nb_configs, model.nq),
+            low=self.model.jnt_range[:, 0],
+            high=self.model.jnt_range[:, 1],
+            size=(nb_configs, self.model.nq),
         )
-        self.model = model
         self.random_q = random_q
 
     def check_jacobian_finite_diff(self, task: mink.Task, tol: float):
@@ -27,13 +29,14 @@ class TestJacobians(absltest.TestCase):
             task: Task to test the Jacobian of.
             tol: Test tolerance.
         """
+        configuration = mink.Configuration(self.model)
 
         def e(q) -> np.ndarray:
-            configuration = mink.Configuration(self.model, q)
+            configuration.update(q)
             return task.compute_error(configuration)
 
         def J(q) -> np.ndarray:
-            configuration = mink.Configuration(self.model, q)
+            configuration.update(q)
             return task.compute_jacobian(configuration)
 
         nq = self.model.nq

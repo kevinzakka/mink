@@ -2,9 +2,9 @@ import mujoco
 import numpy as np
 import pinocchio as pin
 
-from mink.configuration import Configuration
-from mink.lie import SE3, SO3
-from mink.tasks import Task
+from ..configuration import Configuration
+from ..lie import SE3, SO3
+from .task import Task
 
 
 class FrameTask(Task):

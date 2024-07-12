@@ -21,7 +21,7 @@
       <geom type="box" size=".05 .05 .05" contype="0" conaffinity="0" rgba=".6 .3 .3 .2"/>
     </body>
     <body name="wall" pos="0.5 0 0.1">
-      <geom name="wall" type="box" size=".1 .1 .1"/>
+      <geom name="wall" type="box" size=".1 .1 .1" contype="0" conaffinity="0"/>
     </body>
   </worldbody>
 

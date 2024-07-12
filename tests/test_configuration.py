@@ -8,8 +8,11 @@ import mink
 class TestConfiguration(absltest.TestCase):
     """Test task various configuration methods work as intended."""
 
+    @classmethod
+    def setUpClass(cls):
+        cls.model = load_robot_description("ur5e_mj_description")
+
     def setUp(self):
-        self.model = load_robot_description("ur5e_mj_description")
         self.q_ref = self.model.key("home").qpos
 
     def test_initialize_from_keyframe(self):
@@ -39,8 +42,18 @@ class TestConfiguration(absltest.TestCase):
 
     def test_site_transform_raises_error_if_site_name_is_invalid(self):
         configuration = mink.Configuration(self.model)
-        with self.assertRaises(ValueError):
+        with self.assertRaises(mink.FrameNotFound):
             configuration.get_transform_frame_to_world("invalid_name", "site")
+
+    def test_site_transform_raises_error_if_site_type_is_invalid(self):
+        configuration = mink.Configuration(self.model)
+        with self.assertRaises(mink.UnsupportedFrameType):
+            configuration.get_transform_frame_to_world("invalid_name", "joint")
+
+    def test_update_raises_error_if_keyframe_is_invalid(self):
+        configuration = mink.Configuration(self.model)
+        with self.assertRaises(mink.KeyframeNotFound):
+            configuration.update_from_keyframe("invalid_keyframe")
 
     def test_integrate(self):
         configuration = mink.Configuration(self.model, self.q_ref)

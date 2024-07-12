@@ -5,9 +5,9 @@ from typing import Sequence
 import numpy as np
 import qpsolvers
 
-from mink.configuration import Configuration
-from mink.limits import Constraint, Limit
-from mink.tasks import Objective, Task
+from .configuration import Configuration
+from .limits import Constraint, Limit
+from .tasks import Objective, Task
 
 
 def _compute_qp_objective(
