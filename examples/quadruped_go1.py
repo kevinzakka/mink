@@ -1,9 +1,11 @@
+from pathlib import Path
+
 import mujoco
 import mujoco.viewer
-import mink
-from pathlib import Path
 from loop_rate_limiters import RateLimiter
-from mink.utils import set_mocap_pose_from_site, set_mocap_pose_from_body
+
+import mink
+from mink.utils import set_mocap_pose_from_body, set_mocap_pose_from_site
 
 _HERE = Path(__file__).parent
 _XML = _HERE / "unitree_go1" / "scene.xml"

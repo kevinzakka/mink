@@ -1,13 +1,13 @@
 """Build and solve the inverse kinematics problem."""
 
 from typing import Sequence
+
 import numpy as np
+import qpsolvers
 
 from mink.configuration import Configuration
-from mink.tasks import Task, Objective
-from mink.limits import Limit, Constraint
-
-import qpsolvers
+from mink.limits import Constraint, Limit
+from mink.tasks import Objective, Task
 
 
 def _compute_qp_objective(

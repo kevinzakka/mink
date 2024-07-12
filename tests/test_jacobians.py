@@ -1,10 +1,9 @@
+import numpy as np
 from absl.testing import absltest
+from robot_descriptions.loaders.mujoco import load_robot_description
 
 import mink
 from mink import lie
-import numpy as np
-
-from robot_descriptions.loaders.mujoco import load_robot_description
 
 
 class TestJacobians(absltest.TestCase):

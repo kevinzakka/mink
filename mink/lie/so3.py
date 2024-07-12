@@ -1,10 +1,11 @@
 from __future__ import annotations
 
-import numpy as np
 from dataclasses import dataclass
-import mujoco
 
-from mink.lie.utils import get_epsilon
+import mujoco
+import numpy as np
+
+from mink.lie.utils import get_epsilon, skew
 
 _IDENTITIY_WXYZ = np.array([1.0, 0.0, 0.0, 0.0], dtype=np.float64)
 _INVERT_QUAT_SIGN = np.array([1.0, -1.0, -1.0, -1.0], dtype=np.float64)
@@ -192,3 +193,45 @@ class SO3:
             return self.multiply(other=other)
         else:
             raise ValueError(f"Unsupported argument type for @ operator: {type(other)}")
+
+    def jlog(self):
+        """Derivatve of log(this.inv() * x) by x at x=this."""
+        theta = self.log()
+
+        theta_squared = np.sum(np.square(theta), axis=-1)
+        use_taylor = theta_squared < get_epsilon(theta_squared.dtype)
+
+        # Shim to avoid NaNs in np.where branches, which cause failures for
+        # reverse-mode AD.
+        theta_squared_safe = np.where(
+            use_taylor,
+            np.ones_like(theta_squared),  # Any non-zero value should do here.
+            theta_squared,
+        )
+        del theta_squared
+        theta_safe = np.sqrt(theta_squared_safe)
+        half_theta_safe = theta_safe / 2.0
+
+        skew_omega = skew(theta)
+        V_inv = np.where(
+            use_taylor[None, None],
+            np.eye(3)
+            - 0.5 * skew_omega
+            + np.einsum("ij,jk->ik", skew_omega, skew_omega) / 12.0,
+            (
+                np.eye(3)
+                - 0.5 * skew_omega
+                + (
+                    (
+                        1.0
+                        - theta_safe
+                        * np.cos(half_theta_safe)
+                        / (2.0 * np.sin(half_theta_safe))
+                    )
+                    / theta_squared_safe
+                )[None, None]
+                * np.einsum("ij,jk->ik", skew_omega, skew_omega)
+            ),
+        )
+
+        return V_inv.T

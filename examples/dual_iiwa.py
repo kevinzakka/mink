@@ -1,14 +1,15 @@
 """Task adapted from https://github.com/stephane-caron/pink/pull/94."""
 
-from dm_control import mjcf
+from pathlib import Path
+
 import mujoco
 import mujoco.viewer
 import numpy as np
-import mink
-from pathlib import Path
+from dm_control import mjcf
 from loop_rate_limiters import RateLimiter
-from mink.utils import set_mocap_pose_from_site
 
+import mink
+from mink.utils import set_mocap_pose_from_site
 
 _HERE = Path(__file__).parent
 _XML = _HERE / "kuka_iiwa_14" / "iiwa14.xml"
@@ -95,7 +96,7 @@ if __name__ == "__main__":
         mink.CollisionAvoidanceLimit(
             model=model,
             geom_pairs=collision_pairs,
-            minimum_distance_from_collisions=0.1,
+            minimum_distance_from_collisions=0.01,
             collision_detection_distance=0.2,
         ),
     ]
@@ -104,7 +105,7 @@ if __name__ == "__main__":
     right_mid = model.body("r_target").mocapid[0]
     model = configuration.model
     data = configuration.data
-    solver = "quadprog"
+    solver = "osqp"
 
     l_y_des = np.array([0.392, -0.392, 0.6])
     r_y_des = np.array([0.392, 0.392, 0.6])

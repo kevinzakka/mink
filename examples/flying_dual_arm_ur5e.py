@@ -1,12 +1,13 @@
-from dm_control import mjcf
+from pathlib import Path
+
 import mujoco
 import mujoco.viewer
 import numpy as np
-import mink
-from pathlib import Path
+from dm_control import mjcf
 from loop_rate_limiters import RateLimiter
-from mink.utils import set_mocap_pose_from_site
 
+import mink
+from mink.utils import set_mocap_pose_from_site
 
 _HERE = Path(__file__).parent
 _XML = _HERE / "universal_robots_ur5e" / "ur5e.xml"

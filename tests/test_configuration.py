@@ -1,9 +1,8 @@
+import numpy as np
 from absl.testing import absltest
+from robot_descriptions.loaders.mujoco import load_robot_description
 
 import mink
-import numpy as np
-
-from robot_descriptions.loaders.mujoco import load_robot_description
 
 
 class TestConfiguration(absltest.TestCase):
@@ -23,19 +22,22 @@ class TestConfiguration(absltest.TestCase):
         site_name = "attachment_site"
         configuration = mink.Configuration(self.model)
 
-        # From a keyframe.
+        # Randomly sample a joint configuration.
         np.random.seed(12345)
         configuration.data.qpos = np.random.uniform(*configuration.model.jnt_range.T)
         configuration.update()
+
         world_T_site = configuration.get_transform_frame_to_world(site_name, "site")
+
         expected_translation = configuration.data.site(site_name).xpos
         np.testing.assert_array_equal(world_T_site.translation(), expected_translation)
+
         expected_xmat = configuration.data.site(site_name).xmat.reshape(3, 3)
         np.testing.assert_almost_equal(
             world_T_site.rotation().as_matrix(), expected_xmat
         )
 
-    def test_site_transform_raises_error_if_site_not_exists(self):
+    def test_site_transform_raises_error_if_site_name_is_invalid(self):
         configuration = mink.Configuration(self.model)
         with self.assertRaises(ValueError):
             configuration.get_transform_frame_to_world("invalid_name", "site")

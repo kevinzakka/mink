@@ -1,9 +1,10 @@
 import mujoco
 import numpy as np
+import pinocchio as pin
 
+from mink.configuration import Configuration
 from mink.lie import SE3, SO3
 from mink.tasks import Task
-from mink.configuration import Configuration
 
 
 class FrameTask(Task):
@@ -50,50 +51,25 @@ class FrameTask(Task):
     def compute_error(self, configuration: Configuration) -> np.ndarray:
         if self.world_T_target is None:
             raise ValueError("Target transform in world frame not set.")
-
-        ## OLD WAY OF DOING IT
-        # world_T_frame = configuration.get_transform_frame_to_world(
-        #     frame_name=self.frame_name,
-        #     frame_type=self.frame_type,
-        # )
-        # frame_T_target = world_T_frame.inverse() @ self.world_T_target
-        # return frame_T_target.log()
-
-        world_T_frame = configuration.get_transform_frame_to_world(
+        T_0b = configuration.get_transform_frame_to_world(
             frame_name=self.frame_name,
             frame_type=self.frame_type,
         )
-        error = np.zeros(6)
-        error[:3] = world_T_frame.translation() - self.world_T_target.translation()
-        site_quat = np.zeros(4)
-        mujoco.mju_mat2Quat(site_quat, world_T_frame.rotation().as_matrix().ravel())
-        mujoco.mju_subQuat(error[3:], self.world_T_target.rotation().wxyz, site_quat)
-
-        return error
+        T_0t = self.world_T_target
+        T_bt = T_0b.inverse() @ T_0t
+        return T_bt.log()
 
     def compute_jacobian(self, configuration: Configuration) -> np.ndarray:
         if self.world_T_target is None:
             raise ValueError("Target transform in world frame not set.")
-
+        T_0b = configuration.get_transform_frame_to_world(
+            frame_name=self.frame_name,
+            frame_type=self.frame_type,
+        )
+        T_0t = self.world_T_target
         jac = configuration.get_frame_jacobian(
             frame_name=self.frame_name,
             frame_type=self.frame_type,
         )
-        world_T_frame = configuration.get_transform_frame_to_world(
-            frame_name=self.frame_name,
-            frame_type=self.frame_type,
-        )
-
-        ## OLD WAY OF DOING IT
-        # return -world_T_frame.inverse().adjoint() @ jac
-
-        effector_quat = np.empty(4)
-        mujoco.mju_mat2Quat(effector_quat, world_T_frame.rotation().as_matrix().ravel())
-        target_quat = self.world_T_target.rotation().wxyz
-        Deffector = np.empty((3, 3))
-        mujoco.mjd_subQuat(target_quat, effector_quat, None, Deffector)
-        target_mat = self.world_T_target.rotation().as_matrix()
-        mat = Deffector.T @ target_mat.T
-        jac[3:] = mat @ jac[3:]
-
-        return jac
+        T_tb = T_0t.inverse() @ T_0b
+        return -pin.Jlog6(pin.SE3(T_tb.as_matrix())) @ jac

@@ -1,7 +1,8 @@
-import numpy as np
 import mujoco
-from mink.limits import Limit, Constraint
+import numpy as np
+
 from mink.configuration import Configuration
+from mink.limits import Constraint, Limit
 
 
 class VelocityLimit(Limit):

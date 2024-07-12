@@ -1,8 +1,8 @@
+import abc
 from typing import NamedTuple
 
-import abc
-
 import numpy as np
+
 from mink.configuration import Configuration
 
 

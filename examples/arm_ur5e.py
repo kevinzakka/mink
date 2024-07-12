@@ -1,9 +1,11 @@
+from pathlib import Path
+
 import mujoco
 import mujoco.viewer
 import numpy as np
-import mink
-from pathlib import Path
 from loop_rate_limiters import RateLimiter
+
+import mink
 from mink.utils import set_mocap_pose_from_site
 
 _HERE = Path(__file__).parent

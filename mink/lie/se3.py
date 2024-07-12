@@ -1,7 +1,8 @@
 from __future__ import annotations
 
-import numpy as np
 from dataclasses import dataclass
+
+import numpy as np
 
 from mink.lie.so3 import SO3
 from mink.lie.utils import get_epsilon, skew
@@ -121,7 +122,18 @@ class SE3:
                 + (skew_omega @ skew_omega) / 12.0
             )
         else:
-            V_inv = np.eye(3) - 0.5 * skew_omega + (1 - theta_safe * np.cos(half_theta_safe) / (2 * np.sin(half_theta_safe))) / (theta_safe * theta_safe) * (skew_omega @ skew_omega)
+            V_inv = (
+                np.eye(3)
+                - 0.5 * skew_omega
+                + (
+                    1
+                    - theta_safe
+                    * np.cos(half_theta_safe)
+                    / (2 * np.sin(half_theta_safe))
+                )
+                / (theta_safe * theta_safe)
+                * (skew_omega @ skew_omega)
+            )
             V_inv_2 = (
                 np.eye(3, dtype=np.float64)
                 - 0.5 * skew_omega
@@ -142,8 +154,8 @@ class SE3:
         R = self.rotation().as_matrix()
         return np.block(
             [
-                [R, np.zeros((3, 3), dtype=np.float64)],
-                [skew(self.translation()) @ R, R],
+                [R, skew(self.translation()) @ R],
+                [np.zeros((3, 3), dtype=np.float64), R],
             ]
         )
 
@@ -180,3 +192,40 @@ class SE3:
 
     def copy(self) -> SE3:
         return SE3(wxyz_xyz=self.wxyz_xyz.copy())
+
+    def jlog(self):
+        """Derivatve of log(this.inv() * x) by x at x=this."""
+        rotation = self.rotation()
+        translation = self.translation()
+        jlog_so3 = rotation.jlog()
+        w = rotation.log()
+        theta = np.linalg.norm(w)
+        use_taylor = theta < get_epsilon(theta.dtype)
+        t2 = theta * theta
+        tinv = 1 / theta
+        t2inv = tinv * tinv
+        st, ct = np.sin(theta), np.cos(theta)
+        inv_2_2ct = 1 / (2 * (1 - ct))
+        beta = np.where(use_taylor, 1 / 12 + t2 / 720, t2inv - st * tinv * inv_2_2ct)
+
+        beta_dot_over_theta = np.where(
+            use_taylor,
+            1 / 360,
+            -2 * t2inv * t2inv + (1 + st * tinv) * t2inv * inv_2_2ct,
+        )
+        wTp = w @ translation
+        v3_tmp = (beta_dot_over_theta * wTp) * w - (
+            theta**2 * beta_dot_over_theta + 2 * beta
+        ) * translation
+        C = (
+            np.outer(v3_tmp, w)
+            + beta * np.outer(w, translation)
+            + wTp * beta * np.eye(3)
+        )
+        C = C + 0.5 * skew(translation)
+        B = C @ jlog_so3
+        jlog = np.zeros((6, 6))
+        jlog[:3, :3] = jlog_so3
+        jlog[3:, 3:] = jlog_so3
+        jlog[:3, 3:] = B
+        return jlog

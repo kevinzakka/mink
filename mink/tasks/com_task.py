@@ -1,8 +1,8 @@
-import numpy as np
 import mujoco
+import numpy as np
 
-from mink.tasks import Task
 from mink.configuration import Configuration
+from mink.tasks import Task
 
 
 class ComTask(Task):

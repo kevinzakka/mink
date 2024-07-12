@@ -1,10 +1,11 @@
 from dataclasses import dataclass
 from typing import Sequence
-import numpy as np
-import mujoco
 
-from mink.limits import Limit, Constraint
+import mujoco
+import numpy as np
+
 from mink.configuration import Configuration
+from mink.limits import Constraint, Limit
 
 CollisionPairs = Sequence[tuple[Sequence[str], Sequence[str]]]
 
