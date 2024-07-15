@@ -7,7 +7,7 @@ class MinkError(Exception):
     """Base class for Mink exceptions."""
 
 
-class UnsupportedFrameType(MinkError):
+class UnsupportedFrame(MinkError):
     """Exception raised when a frame type is unsupported."""
 
     def __init__(self, frame_type: str, supported_types: list[str]):
@@ -18,7 +18,7 @@ class UnsupportedFrameType(MinkError):
         super().__init__(message)
 
 
-class FrameNotFound(MinkError):
+class InvalidFrame(MinkError):
     """Exception raised when a frame name is not found in the robot model."""
 
     def __init__(
@@ -49,7 +49,7 @@ class FrameNotFound(MinkError):
         super().__init__(message)
 
 
-class KeyframeNotFound(MinkError):
+class InvalidKeyframe(MinkError):
     """Exception raised when a keyframe name is not found in the robot model."""
 
     def __init__(self, keyframe_name: str, model: mujoco.MjModel):
@@ -57,5 +57,24 @@ class KeyframeNotFound(MinkError):
         message = (
             f"Keyframe {keyframe_name} does not exist in the model. "
             f"Available keyframe names: {available_keyframes}"
+        )
+        super().__init__(message)
+
+
+class NotWithinConfigurationLimits(MinkError):
+    """Exception raised when a configuration violates its limits."""
+
+    def __init__(
+        self,
+        joint_id: int,
+        value: float,
+        lower: float,
+        upper: float,
+        model: mujoco.MjModel,
+    ):
+        joint_name = model.joint(joint_id).name
+        message = (
+            f"Joint {joint_id} ({joint_name}) violates configuration limits "
+            f"{lower} <= {value} <= {upper}"
         )
         super().__init__(message)

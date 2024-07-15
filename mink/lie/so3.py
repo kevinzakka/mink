@@ -5,7 +5,7 @@ from dataclasses import dataclass
 import mujoco
 import numpy as np
 
-from .utils import get_epsilon, skew
+from .utils import get_epsilon
 
 _IDENTITIY_WXYZ = np.array([1.0, 0.0, 0.0, 0.0], dtype=np.float64)
 _INVERT_QUAT_SIGN = np.array([1.0, -1.0, -1.0, -1.0], dtype=np.float64)
@@ -82,6 +82,7 @@ class SO3:
 
     @staticmethod
     def sample_uniform() -> SO3:
+        """Reference: https://lavalle.pl/planning/node198.html"""
         u1, u2, u3 = np.random.uniform(
             low=np.zeros(shape=(3,)),
             high=np.array([1.0, 2.0 * np.pi, 2.0 * np.pi]),
@@ -100,6 +101,7 @@ class SO3:
         return SO3(wxyz=wxyz)
 
     def as_matrix(self) -> np.ndarray:
+        """MuJoCo is implementing eqn 138."""
         mat = np.zeros(9, dtype=np.float64)
         mujoco.mju_quat2Mat(mat, self.wxyz)
         return mat.reshape(3, 3)
@@ -125,6 +127,7 @@ class SO3:
 
     @staticmethod
     def exp(tangent: np.ndarray) -> SO3:
+        """Eqn 132."""
         assert tangent.shape == (SO3.tangent_dim,)
         theta_squared = tangent @ tangent
         theta_pow_4 = theta_squared * theta_squared
@@ -141,6 +144,10 @@ class SO3:
         return SO3(wxyz=wxyz)
 
     def log(self) -> np.ndarray:
+        """See Eq. (133)
+
+        theta u = log(q) := 2 v arctan(||v||, w) / ||v||
+        """
         w = self.wxyz[0]
         norm_sq = self.wxyz[1:] @ self.wxyz[1:]
         use_taylor = norm_sq < get_epsilon(norm_sq.dtype)
@@ -157,7 +164,11 @@ class SO3:
                 atan_factor = 2.0 * atan_n_over_w / norm_safe
         return atan_factor * self.wxyz[1:]
 
+    def jlog(self):
+        raise NotImplementedError
+
     def adjoint(self) -> np.ndarray:
+        """Eqn 139."""
         return self.as_matrix()
 
     def inverse(self) -> SO3:
@@ -167,24 +178,16 @@ class SO3:
         return SO3(wxyz=self.wxyz / np.linalg.norm(self.wxyz))
 
     def apply(self, target: np.ndarray) -> np.ndarray:
+        """Eqn 136."""
         assert target.shape == (SO3.space_dim,)
         padded_target = np.concatenate([np.zeros(1, dtype=np.float64), target])
         return (self @ SO3(wxyz=padded_target) @ self.inverse()).wxyz[1:]
 
     def multiply(self, other: SO3) -> SO3:
-        w0, x0, y0, z0 = self.wxyz
-        w1, x1, y1, z1 = other.wxyz
-        return SO3(
-            wxyz=np.array(
-                [
-                    -x0 * x1 - y0 * y1 - z0 * z1 + w0 * w1,
-                    x0 * w1 + y0 * z1 - z0 * y1 + w0 * x1,
-                    -x0 * z1 + y0 * w1 + z0 * x1 + w0 * y1,
-                    x0 * y1 - y0 * x1 + z0 * w1 + w0 * z1,
-                ],
-                dtype=np.float64,
-            )
-        )
+        """Composition."""
+        res = np.empty(self.parameters_dim, dtype=np.float64)
+        mujoco.mju_mulQuat(res, self.wxyz, other.wxyz)
+        return SO3(wxyz=res)
 
     def __matmul__(self, other: SO3 | np.ndarray) -> SO3 | np.ndarray:
         if isinstance(other, np.ndarray):
@@ -193,45 +196,3 @@ class SO3:
             return self.multiply(other=other)
         else:
             raise ValueError(f"Unsupported argument type for @ operator: {type(other)}")
-
-    def jlog(self):
-        """Derivatve of log(this.inv() * x) by x at x=this."""
-        theta = self.log()
-
-        theta_squared = np.sum(np.square(theta), axis=-1)
-        use_taylor = theta_squared < get_epsilon(theta_squared.dtype)
-
-        # Shim to avoid NaNs in np.where branches, which cause failures for
-        # reverse-mode AD.
-        theta_squared_safe = np.where(
-            use_taylor,
-            np.ones_like(theta_squared),  # Any non-zero value should do here.
-            theta_squared,
-        )
-        del theta_squared
-        theta_safe = np.sqrt(theta_squared_safe)
-        half_theta_safe = theta_safe / 2.0
-
-        skew_omega = skew(theta)
-        V_inv = np.where(
-            use_taylor[None, None],
-            np.eye(3)
-            - 0.5 * skew_omega
-            + np.einsum("ij,jk->ik", skew_omega, skew_omega) / 12.0,
-            (
-                np.eye(3)
-                - 0.5 * skew_omega
-                + (
-                    (
-                        1.0
-                        - theta_safe
-                        * np.cos(half_theta_safe)
-                        / (2.0 * np.sin(half_theta_safe))
-                    )
-                    / theta_squared_safe
-                )[None, None]
-                * np.einsum("ij,jk->ik", skew_omega, skew_omega)
-            ),
-        )
-
-        return V_inv.T

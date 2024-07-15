@@ -6,7 +6,7 @@ import numpy as np
 from loop_rate_limiters import RateLimiter
 
 import mink
-from mink.utils import set_mocap_pose_from_site
+from mink.utils import pose_from_mocap, set_mocap_pose_from_site
 
 _HERE = Path(__file__).parent
 _XML = _HERE / "universal_robots_ur5e" / "scene.xml"
@@ -57,7 +57,7 @@ if __name__ == "__main__":
         rate = RateLimiter(frequency=500.0)
         while viewer.is_running():
             # Update task target.
-            end_effector_task.set_target_from_mocap(data, mid)
+            end_effector_task.set_target(pose_from_mocap(data, mid))
 
             # Compute velocity and integrate into the next configuration.
             vel = mink.solve_ik(configuration, tasks, limits, rate.dt, solver, 1e-3)

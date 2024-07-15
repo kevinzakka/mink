@@ -85,7 +85,7 @@ if __name__ == "__main__":
         rate = RateLimiter(frequency=500.0)
         while viewer.is_running():
             # Update task targets.
-            com_task.set_target_from_mocap(data, com_mid)
+            com_task.set_target(data.mocap_pos[com_mid])
             for i, (hand_task, foot_task) in enumerate(zip(hand_tasks, feet_tasks)):
                 foot_task.set_target_from_mocap(data, feet_mid[i])
                 hand_task.set_target_from_mocap(data, hands_mid[i])

@@ -94,3 +94,48 @@ R_bs, t_bs = inverse(R_sb, t_sb)
 A_bs = adjoint(R_bs, np.zeros(3))
 jac_muj_local = A_bs @ jac_muj
 np.testing.assert_allclose(jac_muj_local, jac_pin_local, atol=1e-7)
+
+##### Yuval #####
+cur_pos = data_mj.body("link7").xpos
+cur_xmat = data_mj.body("link7").xmat
+cur_quat = np.empty(4)
+
+target_pos = cur_pos.copy()
+target_pos += np.random.randn(3) * 1e-3
+target_xmat = cur_xmat.copy()
+target_quat = np.empty(4)
+mujoco.mju_mat2Quat(target_quat, target_xmat)
+
+# Error.
+error = np.empty(6)
+error[:3] = cur_pos - target_pos
+mujoco.mju_mat2Quat(cur_quat, cur_xmat)
+mujoco.mju_subQuat(error[3:], target_quat, cur_quat)
+
+# Jac.
+jac = np.empty((6, model_mj.nv))
+mujoco.mj_jacBody(model_mj, data_mj, jac[:3], jac[3:], data_mj.body("link7").id)
+Deffector = np.empty((3, 3))
+mujoco.mjd_subQuat(target_quat, cur_quat, None, Deffector)
+target_mat = np.empty(9)
+mujoco.mju_quat2Mat(target_mat, target_quat)
+target_mat = target_mat.reshape(3, 3)
+mat = Deffector.T @ target_mat.T
+jac[3:] = mat @ jac[3:]
+
+dq_mj = jac.T @ np.linalg.solve(jac @ jac.T, -error)
+
+##### Pinnochio #####
+oMdes = pin.SE3(
+    target_mat.reshape(3, 3),
+    target_pos,
+)
+pin.computeJointJacobians(model_pin, data_pin, q)
+pin.updateFramePlacements(model_pin, data_pin)
+iMd = data_pin.oMf[frame_id].actInv(oMdes)
+err = pin.log(iMd).vector
+J = pin.computeFrameJacobian(model_pin, data_pin, q, frame_id)
+J = -np.dot(pin.Jlog6(iMd.inverse()), J)
+dq_pin = -J.T.dot(np.linalg.solve(J.dot(J.T), err))
+
+np.testing.assert_allclose(dq_mj, dq_pin)

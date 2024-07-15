@@ -55,9 +55,11 @@ def solve_ik(
     dt: float,
     solver: str,
     damping: float = 1e-12,
+    safety_break: bool = True,
     **kwargs,
 ) -> np.ndarray:
     """Compute a velocity tangent to the current configuration."""
+    configuration.check_limits(safety_break=safety_break)
     problem = build_ik(configuration, tasks, limits, dt, damping)
     result = qpsolvers.solve_problem(problem, solver=solver, **kwargs)
     dq = result.x

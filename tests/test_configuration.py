@@ -16,6 +16,7 @@ class TestConfiguration(absltest.TestCase):
         self.q_ref = self.model.key("home").qpos
 
     def test_initialize_from_keyframe(self):
+        """Test that keyframe initialization correctly updates the configuration."""
         configuration = mink.Configuration(self.model)
         np.testing.assert_array_equal(configuration.q, np.zeros(self.model.nq))
         configuration.update_from_keyframe("home")
@@ -40,35 +41,49 @@ class TestConfiguration(absltest.TestCase):
             world_T_site.rotation().as_matrix(), expected_xmat
         )
 
-    def test_site_transform_raises_error_if_site_name_is_invalid(self):
+    def test_site_transform_raises_error_if_frame_name_is_invalid(self):
+        """Raise an error when the requested frame does not exist."""
         configuration = mink.Configuration(self.model)
-        with self.assertRaises(mink.FrameNotFound):
+        with self.assertRaises(mink.InvalidFrame):
             configuration.get_transform_frame_to_world("invalid_name", "site")
 
-    def test_site_transform_raises_error_if_site_type_is_invalid(self):
+    def test_site_transform_raises_error_if_frame_type_is_invalid(self):
+        """Raise an error when the requested frame type is invalid."""
         configuration = mink.Configuration(self.model)
-        with self.assertRaises(mink.UnsupportedFrameType):
-            configuration.get_transform_frame_to_world("invalid_name", "joint")
+        with self.assertRaises(mink.UnsupportedFrame):
+            configuration.get_transform_frame_to_world("name_does_not_matter", "joint")
 
     def test_update_raises_error_if_keyframe_is_invalid(self):
+        """Raise an error when the request keyframe does not exist."""
         configuration = mink.Configuration(self.model)
-        with self.assertRaises(mink.KeyframeNotFound):
+        with self.assertRaises(mink.InvalidKeyframe):
             configuration.update_from_keyframe("invalid_keyframe")
 
-    def test_integrate(self):
+    def test_inplace_integration(self):
         configuration = mink.Configuration(self.model, self.q_ref)
 
-        dt = 1e-2
-        qvel = np.ones((self.model.nv)) * 0.01
+        dt = 1e-3
+        qvel = np.ones((self.model.nv))
+        # We can use this formula because the ur5e only has hinge joints.
         expected_qpos = self.q_ref + dt * qvel
-        actual_qpos = configuration.integrate(qvel, dt)
-        np.testing.assert_almost_equal(actual_qpos, expected_qpos)
-        # qpos shouldn't be modified.
-        np.testing.assert_array_equal(configuration.q, self.q_ref)
+
+        # Regular integration should not modify the underlying q.
+        qpos = configuration.integrate(qvel, dt)
+        np.testing.assert_almost_equal(qpos, expected_qpos)
+        np.testing.assert_equal(configuration.q, self.q_ref)
 
         # Inplace integration should change qpos.
         configuration.integrate_inplace(qvel, dt)
         np.testing.assert_almost_equal(configuration.q, expected_qpos)
+
+    def test_check_limits(self):
+        """Check that an error is raised iff a joint limit is exceeded."""
+        configuration = mink.Configuration(self.model, q=self.q_ref)
+        configuration.check_limits()
+        self.q_ref[0] += 1e4  # Move configuration out of bounds.
+        configuration.update(q=self.q_ref)
+        with self.assertRaises(mink.NotWithinConfigurationLimits):
+            configuration.check_limits()
 
 
 if __name__ == "__main__":

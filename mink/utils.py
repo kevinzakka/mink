@@ -1,5 +1,7 @@
 import mujoco
 
+from mink import SE3, SO3
+
 
 def set_mocap_pose_from_site(
     model: mujoco.MjModel,
@@ -23,3 +25,10 @@ def set_mocap_pose_from_body(
     body_id = data.body(body_name).id
     data.mocap_pos[mocap_id] = data.xpos[body_id]
     mujoco.mju_mat2Quat(data.mocap_quat[mocap_id], data.xmat[body_id])
+
+
+def pose_from_mocap(data: mujoco.MjData, mocap_id: int) -> SE3:
+    return SE3.from_rotation_and_translation(
+        rotation=SO3(data.mocap_quat[mocap_id]),
+        translation=data.mocap_pos[mocap_id],
+    )

@@ -1,7 +1,13 @@
 """mink: MuJoCo differential inverse kinematics."""
 
 from .configuration import Configuration
-from .exceptions import FrameNotFound, KeyframeNotFound, MinkError, UnsupportedFrameType
+from .exceptions import (
+    InvalidFrame,
+    InvalidKeyframe,
+    MinkError,
+    NotWithinConfigurationLimits,
+    UnsupportedFrame,
+)
 from .lie import SE3, SO3
 from .limits import (
     CollisionAvoidanceLimit,
@@ -11,7 +17,7 @@ from .limits import (
     VelocityLimit,
 )
 from .solve_ik import build_ik, solve_ik
-from .tasks import ComTask, FrameTask, Objective, PostureTask, Task
+from .tasks import ComTask, FrameTask, Objective, PostureTask, TargetNotSet, Task
 
 __version__ = "0.0.1"
 
@@ -32,7 +38,9 @@ __all__ = (
     "SO3",
     "SE3",
     "MinkError",
-    "FrameNotFound",
-    "UnsupportedFrameType",
-    "KeyframeNotFound",
+    "UnsupportedFrame",
+    "InvalidFrame",
+    "InvalidKeyframe",
+    "NotWithinConfigurationLimits",
+    "TargetNotSet",
 )
