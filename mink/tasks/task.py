@@ -11,8 +11,8 @@ from .exceptions import InvalidDamping, InvalidGain
 class Objective(NamedTuple):
     """Quadratic objective function in the form 0.5 x^T H x + c^T x."""
 
-    H: np.ndarray
-    c: np.ndarray
+    H: np.ndarray  # (nv, nv)
+    c: np.ndarray  # (nv,)
 
     def value(self, x: np.ndarray) -> float:
         """Returns the value of the objective at the input vector."""
@@ -21,8 +21,6 @@ class Objective(NamedTuple):
 
 class Task(abc.ABC):
     """Abstract base class for kinematic tasks."""
-
-    k: int
 
     def __init__(
         self,
@@ -98,11 +96,8 @@ class Task(abc.ABC):
         The weight matrix W, of shape (k, k), weighs and normalizes task coordinates
         to the same unit. The unit of the overall contribution is [cost]^2.
         """
-        jacobian = self.compute_jacobian(configuration)
-        minus_gain_error = -self.gain * self.compute_error(configuration)
-
-        assert jacobian.shape == (self.k, configuration.nv)
-        assert minus_gain_error.shape == (self.k,)
+        jacobian = self.compute_jacobian(configuration)  # (k, nv)
+        minus_gain_error = -self.gain * self.compute_error(configuration)  # (k,)
 
         weight = self._construct_weight(jacobian.shape[0])
         weighted_jacobian = weight @ jacobian
@@ -111,7 +106,7 @@ class Task(abc.ABC):
         mu = self.lm_damping * weighted_error @ weighted_error
         eye_tg = np.eye(configuration.model.nv)
 
-        H = weighted_jacobian.T @ weighted_jacobian + mu * eye_tg
-        c = -weighted_error.T @ weighted_jacobian
+        H = weighted_jacobian.T @ weighted_jacobian + mu * eye_tg  # (nv, nv)
+        c = -weighted_error.T @ weighted_jacobian  # (nv,)
 
         return Objective(H, c)

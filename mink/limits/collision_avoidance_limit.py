@@ -26,13 +26,18 @@ class Contact:
 def _collision_pairs_to_geom_id_pairs(
     model: mujoco.MjModel,
     collision_pairs: CollisionPairs,
+    as_id: bool,
 ):
     geom_id_pairs = []
     for collision_pair in collision_pairs:
         name_pair_A = collision_pair[0]
         name_pair_B = collision_pair[1]
-        id_pair_A = set([model.geom(name).id for name in name_pair_A])
-        id_pair_B = set([model.geom(name).id for name in name_pair_B])
+        if as_id:
+            id_pair_A = set(name_pair_A)
+            id_pair_B = set(name_pair_B)
+        else:
+            id_pair_A = set([model.geom(name).id for name in name_pair_A])
+            id_pair_B = set([model.geom(name).id for name in name_pair_B])
         geom_id_pairs.append((id_pair_A, id_pair_B))
     return geom_id_pairs
 
@@ -46,6 +51,7 @@ class CollisionAvoidanceLimit(Limit):
         minimum_distance_from_collisions: float = 0.005,
         collision_detection_distance: float = 0.01,
         bound_relaxation: float = 0.0,
+        as_id: bool = False,
     ):
         self.model = model
         self.gain = gain
@@ -55,7 +61,7 @@ class CollisionAvoidanceLimit(Limit):
 
         # Convert pairs of geom strings into pairs of geom IDs.
         geom_id_pairs = []
-        for id_pair in _collision_pairs_to_geom_id_pairs(model, geom_pairs):
+        for id_pair in _collision_pairs_to_geom_id_pairs(model, geom_pairs, as_id):
             for geom_a in id_pair[0]:
                 for geom_b in id_pair[1]:
                     geom_id_pairs.append((geom_a, geom_b))

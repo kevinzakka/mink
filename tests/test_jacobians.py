@@ -1,3 +1,4 @@
+import mujoco
 import numpy as np
 from absl.testing import absltest
 from robot_descriptions.loaders.mujoco import load_robot_description
@@ -5,22 +6,42 @@ from robot_descriptions.loaders.mujoco import load_robot_description
 import mink
 from mink import lie
 
+_SUPPORTED_JOINT_TYPES = {mujoco.mjtJoint.mjJNT_HINGE, mujoco.mjtJoint.mjJNT_SLIDE}
+
+# np.set_printoptions(precision=2, suppress=True, threshold=1e-5)
+
 
 class TestJacobians(absltest.TestCase):
     """Test task jacobian matrices against finite differences."""
 
     @classmethod
     def setUpClass(cls):
-        cls.model = load_robot_description("fr3_mj_description")
+        cls.model = load_robot_description("g1_mj_description")
 
     def setUp(self, nb_configs: int = 1):
         np.random.seed(42)
+
+        lower = np.full(self.model.nq, -2 * np.pi)
+        upper = np.full(self.model.nq, 2 * np.pi)
+        for jnt in range(self.model.njnt):
+            jnt_type = self.model.jnt_type[jnt]
+            if (
+                jnt_type not in _SUPPORTED_JOINT_TYPES
+                or not self.model.jnt_limited[jnt]
+            ):
+                continue
+            padr = self.model.jnt_qposadr[jnt]
+            lower[padr : padr + 1] = self.model.jnt_range[jnt, 0]
+            upper[padr : padr + 1] = self.model.jnt_range[jnt, 1]
+
         random_q = np.random.uniform(
-            low=self.model.jnt_range[:, 0],
-            high=self.model.jnt_range[:, 1],
+            low=lower,
+            high=upper,
             size=(nb_configs, self.model.nq),
         )
         self.random_q = random_q
+
+        self.target_q = np.random.uniform(low=lower, high=upper)
 
     def check_jacobian_finite_diff(self, task: mink.Task, tol: float):
         """Check that a task Jacobian is de/dq by finite differences.
@@ -39,16 +60,16 @@ class TestJacobians(absltest.TestCase):
             configuration.update(q)
             return task.compute_jacobian(configuration)
 
-        nq = self.model.nq
-        nv = self.model.nv
         for q_0 in self.random_q:
             J_0 = J(q_0)
             e_0 = e(q_0)
-            J_finite = np.empty((e_0.shape[0], nv))
-            for i in range(nq):
+            J_finite = np.empty_like(J_0)
+            for i in range(self.model.nv):
                 h = 0.000001
-                e_i = np.eye(nq)[i]
-                J_finite[:, i] = (e(q_0 + h * e_i) - e_0) / h
+                e_i = np.eye(self.model.nv)[i]
+                q_perturbed = q_0.copy()
+                mujoco.mj_integratePos(self.model, q_perturbed, e_i, h)
+                J_finite[:, i] = (e(q_perturbed) - e_0) / h
             self.assertLess(np.linalg.norm(J_0 - J_finite, ord=np.inf), tol)
 
     def test_frame_task(self):
@@ -62,8 +83,12 @@ class TestJacobians(absltest.TestCase):
         self.check_jacobian_finite_diff(frame_task, tol=1e-5)
 
     def test_posture_task(self):
-        posture_task = mink.PostureTask(cost=1.0)
-        posture_task.set_target(self.model.key("home").qpos)
+        posture_task = mink.PostureTask(model=self.model, cost=1.0)
+        data = mujoco.MjData(self.model)
+        mujoco.mj_resetData(self.model, data)
+        q0 = data.qpos.copy()
+        target_q = q0 + np.random.randn(self.model.nq) * 1e-3
+        posture_task.set_target(target_q)
         self.check_jacobian_finite_diff(posture_task, tol=1e-6)
 
     def test_com_task(self):

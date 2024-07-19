@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+import mujoco
 import numpy as np
 
 from .so3 import SO3
@@ -62,6 +63,13 @@ class SE3:
         return SE3.from_rotation_and_translation(
             rotation=SO3.from_matrix(matrix[:3, :3]),
             translation=matrix[:3, 3],
+        )
+
+    @staticmethod
+    def from_mocap(data: mujoco.MjData, mocap_id: int) -> SE3:
+        return SE3.from_rotation_and_translation(
+            rotation=SO3(data.mocap_quat[mocap_id]),
+            translation=data.mocap_pos[mocap_id],
         )
 
     @staticmethod

@@ -29,8 +29,9 @@ def _compute_qp_inequalities(
     h_list = []
     for limit in limits:
         inequality = limit.compute_qp_inequalities(configuration, dt)
-        G_list.append(inequality.G)
-        h_list.append(inequality.h)
+        if not inequality.inactive:
+            G_list.append(inequality.G)
+            h_list.append(inequality.h)
     if not G_list:
         return None, None
     return np.vstack(G_list), np.hstack(h_list)

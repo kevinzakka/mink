@@ -87,8 +87,8 @@ if __name__ == "__main__":
             # Update task targets.
             com_task.set_target(data.mocap_pos[com_mid])
             for i, (hand_task, foot_task) in enumerate(zip(hand_tasks, feet_tasks)):
-                foot_task.set_target_from_mocap(data, feet_mid[i])
-                hand_task.set_target_from_mocap(data, hands_mid[i])
+                foot_task.set_target(mink.SE3.from_mocap(data, feet_mid[i]))
+                hand_task.set_target(mink.SE3.from_mocap(data, hands_mid[i]))
 
             vel = mink.solve_ik(configuration, tasks, limits, rate.dt, solver, 1e-1)
             configuration.integrate_inplace(vel, rate.dt)

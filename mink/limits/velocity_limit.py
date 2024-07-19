@@ -1,28 +1,68 @@
 import mujoco
 import numpy as np
+import numpy.typing as npt
 
 from ..configuration import Configuration
+from ..utils import dof_width
+from .exceptions import LimitDefinitionError
 from .limit import Constraint, Limit
 
 
 class VelocityLimit(Limit):
-    def __init__(self, model: mujoco.MjModel, limit: np.ndarray):
+    """Limit for joint velocities in a model.
+
+    Floating base joints (joint type="free") are ignored.
+
+    Attributes:
+        indices: Tangent indices corresponding to velocity-limited joints.
+        limit: Maximum allowed velocity magnitude for velocity-limited joints.
+        projection_matrix: Projection from tangent space to subspace with
+            velocity-limited joints.
+    """
+
+    def __init__(
+        self,
+        model: mujoco.MjModel,
+        velocities: dict[str, npt.ArrayLike] = {},
+    ):
         """Initialize velocity limits.
 
         Args:
-            limit: Array of maximum allowed magnitudes of joint velocities for each
-            joint, in m/s for slide joints and rad/s for hinge joints. The array should
-            be ordered according to the joint indices in the robot model.
+            velocities: Dictionary mapping joint name to maximum allowed magnitude in
+                [m]/[s] for slide joints and [rad]/[s] for hinge joints.
         """
-        self.limit = limit
-        self.projection_matrix = np.eye(model.nv)
+        limit_list: list[float] = []
+        index_list: list[int] = []
+        for joint_name, max_vel in velocities.items():
+            jid = model.joint(joint_name).id
+            jnt_type = model.jnt_type[jid]
+            jnt_dim = dof_width(jnt_type)
+            jnt_id = model.jnt_dofadr[jid]
+            if jnt_type == mujoco.mjtJoint.mjJNT_FREE:
+                raise LimitDefinitionError(f"Free joint {joint_name} is not supported")
+            max_vel = np.atleast_1d(max_vel)
+            if max_vel.shape != (jnt_dim,):
+                raise LimitDefinitionError(
+                    f"Joint {joint_name} must have a limit of shape ({jnt_dim},). "
+                    f"Got: {max_vel.shape}"
+                )
+            index_list.extend(range(jnt_id, jnt_id + jnt_dim))
+            limit_list.extend(max_vel.tolist())
+
+        self.indices = np.array(index_list)
+        self.indices.setflags(write=False)
+        self.limit = np.array(limit_list)
+        self.limit.setflags(write=False)
+
+        dim = len(self.indices)
+        self.projection_matrix = np.eye(model.nv)[self.indices] if dim > 0 else None
 
     def compute_qp_inequalities(
-        self,
-        configuration: Configuration,
-        dt: float,
+        self, configuration: Configuration, dt: float
     ) -> Constraint:
         del configuration  # Unused.
+        if self.projection_matrix is None:
+            return Constraint()
         G = np.vstack([self.projection_matrix, -self.projection_matrix])
         h = np.hstack([dt * self.limit, dt * self.limit])
         return Constraint(G=G, h=h)

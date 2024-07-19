@@ -34,9 +34,19 @@ if __name__ == "__main__":
 
     limits = [
         mink.ConfigurationLimit(model=model),
-        mink.VelocityLimit(model, np.full_like(configuration.q, np.pi)),
         mink.CollisionAvoidanceLimit(model=model, geom_pairs=collision_pairs),
     ]
+
+    max_velocities = {
+        "shoulder_pan": np.pi,
+        "shoulder_lift": np.pi,
+        "elbow": np.pi,
+        "wrist_1": np.pi,
+        "wrist_2": np.pi,
+        "wrist_3": np.pi,
+    }
+    velocity_limit = mink.VelocityLimit(model, max_velocities)
+    limits.append(velocity_limit)
 
     mid = model.body("target").mocapid[0]
     model = configuration.model
@@ -57,7 +67,7 @@ if __name__ == "__main__":
         rate = RateLimiter(frequency=500.0)
         while viewer.is_running():
             # Update task target.
-            end_effector_task.set_target(pose_from_mocap(data, mid))
+            end_effector_task.set_target(pose_from_mocap(model, data, mid))
 
             # Compute velocity and integrate into the next configuration.
             vel = mink.solve_ik(configuration, tasks, limits, rate.dt, solver, 1e-3)

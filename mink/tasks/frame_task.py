@@ -84,7 +84,7 @@ class FrameTask(Task):
 
         This error is a twist expressed in the local frame, i.e., it is a body twist.
         It is computed by taking the right minus difference between the target pose
-        and the current frame pose.
+        and the current frame pose: `e = T_wt ⊖ T_wf`.
         """
         if self.transform_target_to_world is None:
             raise TargetNotSet(self.__class__.__name__)

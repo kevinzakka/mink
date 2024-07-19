@@ -40,11 +40,21 @@ if __name__ == "__main__":
 
     limits = [
         mink.ConfigurationLimit(model=configuration.model),
-        mink.VelocityLimit(configuration.model, np.full_like(configuration.q, np.pi)),
-        mink.CollisionAvoidanceLimit(
-            model=configuration.model, geom_pairs=collision_pairs
-        ),
+        # mink.CollisionAvoidanceLimit(
+        #     model=configuration.model, geom_pairs=collision_pairs
+        # ),
     ]
+
+    # max_velocities = {
+    #     "shoulder_pan": np.pi,
+    #     "shoulder_lift": np.pi,
+    #     "elbow": np.pi,
+    #     "wrist_1": np.pi,
+    #     "wrist_2": np.pi,
+    #     "wrist_3": np.pi,
+    # }
+    # velocity_limit = mink.VelocityLimit(model, max_velocities)
+    # limits.append(velocity_limit)
 
     ## =================== ##
 

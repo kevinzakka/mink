@@ -2,12 +2,21 @@ import mujoco
 import numpy as np
 
 from ..configuration import Configuration
+from ..utils import qpos_width
+from .exceptions import LimitDefinitionError
 from .limit import Constraint, Limit
-
-_SUPPORTED_JOINT_TYPES = {mujoco.mjtJoint.mjJNT_HINGE, mujoco.mjtJoint.mjJNT_SLIDE}
 
 
 class ConfigurationLimit(Limit):
+    """Limit for joint positions in a model.
+
+    Floating base joints (joint type="free") are ignored.
+
+    Attributes:
+        indices:
+        projection_matrix:
+    """
+
     def __init__(
         self,
         model: mujoco.MjModel,
@@ -27,34 +36,35 @@ class ConfigurationLimit(Limit):
                 allow penetration).
         """
         if not 0.0 < gain <= 1.0:
-            raise ValueError("Limit gain must be in the range (0, 1].")
+            raise LimitDefinitionError(
+                f"{self.__class__.__name__} gain must be in the range (0, 1]"
+            )
 
-        indices = []
+        index_list: list[int] = []
         lower = np.full(model.nq, -np.inf)
         upper = np.full(model.nq, np.inf)
         for jnt in range(model.njnt):
             jnt_type = model.jnt_type[jnt]
-            if jnt_type not in _SUPPORTED_JOINT_TYPES or not model.jnt_limited[jnt]:
-                continue
+            qpos_dim = qpos_width(jnt_type)
+            jnt_range = model.jnt_range[jnt]
             padr = model.jnt_qposadr[jnt]
-            lower[padr : padr + 1] = model.jnt_range[jnt, 0] + min_distance_from_limits
-            upper[padr : padr + 1] = model.jnt_range[jnt, 1] - min_distance_from_limits
-            indices.append(jnt)
+            if jnt_type == mujoco.mjtJoint.mjJNT_FREE:
+                continue
+            lower[padr : padr + qpos_dim] = jnt_range[0] + min_distance_from_limits
+            upper[padr : padr + qpos_dim] = jnt_range[1] - min_distance_from_limits
+            index_list.append(jnt)
 
-        free_indices = []
-        for jnt in range(model.njnt):
-            if model.jnt_type[jnt] == mujoco.mjtJoint.mjJNT_FREE:
-                vadr = model.jnt_dofadr[jnt]
-                free_indices.extend(np.arange(vadr, vadr + 7))
-        free_indices = np.asarray(free_indices, dtype=int)
+        self.indices = np.array(index_list)
+        self.indices.setflags(write=False)
 
-        self.projection_matrix = np.eye(model.nv)
-        self.free_indices = free_indices
+        dim = len(self.indices)
+        self.projection_matrix = np.eye(model.nv)[self.indices] if dim > 0 else None
+
         self.lower = lower
         self.upper = upper
         self.model = model
         self.gain = gain
-        self.indices = indices
+        self.G = np.vstack([self.projection_matrix, -self.projection_matrix])
 
     def compute_qp_inequalities(
         self,
@@ -63,6 +73,7 @@ class ConfigurationLimit(Limit):
     ) -> Constraint:
         del dt  # Unused.
 
+        # Upper.
         delta_q_max = np.zeros(self.model.nv)
         mujoco.mj_differentiatePos(
             m=self.model,
@@ -71,8 +82,8 @@ class ConfigurationLimit(Limit):
             qpos1=configuration.q,
             qpos2=self.upper,
         )
-        delta_q_max[self.free_indices] = np.inf
 
+        # Lower.
         delta_q_min = np.zeros(self.model.nv)
         mujoco.mj_differentiatePos(
             m=self.model,
@@ -81,10 +92,8 @@ class ConfigurationLimit(Limit):
             qpos1=configuration.q,
             qpos2=self.lower,
         )
-        delta_q_min[self.free_indices] = -np.inf
 
-        p_max = self.gain * delta_q_max
-        p_min = self.gain * delta_q_min
-        G = np.vstack([self.projection_matrix, -self.projection_matrix])
+        p_min = self.gain * delta_q_min[self.indices]
+        p_max = self.gain * delta_q_max[self.indices]
         h = np.hstack([p_max, -p_min])
-        return Constraint(G=G, h=h)
+        return Constraint(G=self.G, h=h)
