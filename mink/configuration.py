@@ -6,7 +6,6 @@ import numpy as np
 from . import exceptions
 from .lie import SE3, SO3
 
-_SUPPORTED_JOINT_TYPES = {mujoco.mjtJoint.mjJNT_HINGE, mujoco.mjtJoint.mjJNT_SLIDE}
 _SUPPORTED_OBJ_TYPES = {"body", "geom", "site"}
 
 _TYPE_TO_ENUM = {
@@ -34,7 +33,7 @@ _TYPE_TO_XMAT_ATTRIBUTE = {
 
 class Configuration:
     """A struct that provides convenient access to kinematic quantities such as frame
-    transforms and frame jacobians.
+    transforms and frame jacobians. Frames can be defined at bodies, geoms or sites.
 
     The `update` function ensures the proper forward kinematics functions have been
     called, namely:
@@ -100,7 +99,7 @@ class Configuration:
         for jnt in range(self.model.njnt):
             jnt_type = self.model.jnt_type[jnt]
             if (
-                jnt_type not in _SUPPORTED_JOINT_TYPES
+                jnt_type == mujoco.mjtJoint.mjJNT_FREE
                 or not self.model.jnt_limited[jnt]
             ):
                 continue

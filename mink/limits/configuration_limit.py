@@ -48,7 +48,7 @@ class ConfigurationLimit(Limit):
             qpos_dim = qpos_width(jnt_type)
             jnt_range = model.jnt_range[jnt]
             padr = model.jnt_qposadr[jnt]
-            if jnt_type == mujoco.mjtJoint.mjJNT_FREE:
+            if jnt_type == mujoco.mjtJoint.mjJNT_FREE or not model.jnt_limited[jnt]:
                 continue
             lower[padr : padr + qpos_dim] = jnt_range[0] + min_distance_from_limits
             upper[padr : padr + qpos_dim] = jnt_range[1] - min_distance_from_limits
@@ -64,7 +64,6 @@ class ConfigurationLimit(Limit):
         self.upper = upper
         self.model = model
         self.gain = gain
-        self.G = np.vstack([self.projection_matrix, -self.projection_matrix])
 
     def compute_qp_inequalities(
         self,
@@ -95,5 +94,6 @@ class ConfigurationLimit(Limit):
 
         p_min = self.gain * delta_q_min[self.indices]
         p_max = self.gain * delta_q_max[self.indices]
+        self.G = np.vstack([self.projection_matrix, -self.projection_matrix])
         h = np.hstack([p_max, -p_min])
         return Constraint(G=self.G, h=h)

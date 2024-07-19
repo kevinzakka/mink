@@ -7,7 +7,7 @@ from loop_rate_limiters import RateLimiter
 
 import mink
 from mink.lie import SE3, SO3
-from mink.utils import set_mocap_pose_from_site
+from mink.utils import custom_configuration_vector, set_mocap_pose_from_site
 
 _HERE = Path(__file__).parent
 _XML = _HERE / "universal_robots_ur5e" / "scene.xml"
@@ -45,16 +45,16 @@ if __name__ == "__main__":
         # ),
     ]
 
-    # max_velocities = {
-    #     "shoulder_pan": np.pi,
-    #     "shoulder_lift": np.pi,
-    #     "elbow": np.pi,
-    #     "wrist_1": np.pi,
-    #     "wrist_2": np.pi,
-    #     "wrist_3": np.pi,
-    # }
-    # velocity_limit = mink.VelocityLimit(model, max_velocities)
-    # limits.append(velocity_limit)
+    max_velocities = {
+        "shoulder_pan": np.pi,
+        "shoulder_lift": np.pi,
+        "elbow": np.pi,
+        "wrist_1": np.pi,
+        "wrist_2": np.pi,
+        "wrist_3": np.pi,
+    }
+    velocity_limit = mink.VelocityLimit(model, max_velocities)
+    limits.append(velocity_limit)
 
     ## =================== ##
 
@@ -71,7 +71,14 @@ if __name__ == "__main__":
     ) as viewer:
         mujoco.mjv_defaultFreeCamera(model, viewer.cam)
 
-        mujoco.mj_resetDataKeyframe(model, data, model.key("home").id)
+        # mujoco.mj_resetDataKeyframe(model, data, model.key("home").id)
+        q_ref = custom_configuration_vector(
+            model,
+            "home",
+            shoulder_pan=(0.0, 0.1),
+        )
+        data.qpos = q_ref
+
         configuration.update(data.qpos)
         mujoco.mj_forward(model, data)
 

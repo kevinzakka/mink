@@ -39,6 +39,9 @@ class TestVelocityLimit(absltest.TestCase):
         empty_bounded = VelocityLimit(empty_model)
         self.assertEqual(len(empty_bounded.indices), 0)
         self.assertIsNone(empty_bounded.projection_matrix)
+        G, h = empty_bounded.compute_qp_inequalities(self.configuration, 1e-3)
+        self.assertIsNone(G)
+        self.assertIsNone(h)
 
     def test_model_with_subset_of_velocities_limited(self):
         velocities = {
@@ -109,7 +112,7 @@ class TestVelocityLimit(absltest.TestCase):
               <joint type="free" name="floating"/>
               <geom type="sphere" size=".1" mass=".1"/>
               <body>
-                <joint type="hinge" name="hinge" range="0 1.57"/>
+                <joint type="hinge" name="hinge" range="0 1.57" limited="true"/>
                 <geom type="sphere" size=".1" mass=".1"/>
               </body>
             </body>

@@ -1,3 +1,5 @@
+"""Tests for configuration.py."""
+
 import numpy as np
 from absl.testing import absltest
 from robot_descriptions.loaders.mujoco import load_robot_description
@@ -14,6 +16,11 @@ class TestConfiguration(absltest.TestCase):
 
     def setUp(self):
         self.q_ref = self.model.key("home").qpos
+
+    def test_nq_nv(self):
+        configuration = mink.Configuration(self.model)
+        self.assertEqual(configuration.nq, self.model.nq)
+        self.assertEqual(configuration.nv, self.model.nv)
 
     def test_initialize_from_keyframe(self):
         """Test that keyframe initialization correctly updates the configuration."""

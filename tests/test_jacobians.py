@@ -1,3 +1,5 @@
+"""Test task jacobian matrices against finite differences."""
+
 import mujoco
 import numpy as np
 from absl.testing import absltest
@@ -74,7 +76,7 @@ class TestJacobians(absltest.TestCase):
 
     def test_frame_task(self):
         frame_task = mink.FrameTask(
-            frame_name="attachment_site",
+            frame_name="left_foot",
             frame_type="site",
             position_cost=1.0,
             orientation_cost=1.0,
