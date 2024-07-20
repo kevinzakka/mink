@@ -44,7 +44,7 @@ class InvalidFrame(MinkError):
             ]
 
         message = (
-            f"Frame '{frame_name}' does not exist in the model. "
+            f"{frame_type} '{frame_name}' does not exist in the model. "
             f"Available {frame_type} names: {available_names_of_type_frame_type}"
         )
 
@@ -59,6 +59,22 @@ class InvalidKeyframe(MinkError):
         message = (
             f"Keyframe {keyframe_name} does not exist in the model. "
             f"Available keyframe names: {available_keyframes}"
+        )
+        super().__init__(message)
+
+
+class InvalidMocapBody(MinkError):
+    """Exception raised when a body is not a mocap body."""
+
+    def __init__(self, mocap_name: str, model: mujoco.MjModel):
+        available_mocap_names = [
+            model.body(i).name
+            for i in range(model.nbody)
+            if model.body(i).mocapid[0] != -1
+        ]
+        message = (
+            f"Body '{mocap_name}' is not a mocap body. "
+            f"Available mocap bodies: {available_mocap_names}"
         )
         super().__init__(message)
 

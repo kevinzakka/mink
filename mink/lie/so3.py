@@ -83,7 +83,7 @@ class SO3:
 
     @staticmethod
     def sample_uniform() -> SO3:
-        """Reference: https://lavalle.pl/planning/node198.html"""
+        # Ref: https://lavalle.pl/planning/node198.html
         u1, u2, u3 = np.random.uniform(
             low=np.zeros(shape=(3,)),
             high=np.array([1.0, 2.0 * np.pi, 2.0 * np.pi]),
@@ -101,8 +101,8 @@ class SO3:
         )
         return SO3(wxyz=wxyz)
 
+    # Eq. 138.
     def as_matrix(self) -> np.ndarray:
-        """MuJoCo is implementing eqn 138."""
         mat = np.zeros(9, dtype=np.float64)
         mujoco.mju_quat2Mat(mat, self.wxyz)
         return mat.reshape(3, 3)
@@ -126,61 +126,15 @@ class SO3:
             yaw=self.compute_yaw_radians(),
         )
 
-    @staticmethod
-    def exp(tangent: np.ndarray) -> SO3:
-        """Eqn 132."""
-        assert tangent.shape == (SO3.tangent_dim,)
-        theta_squared = tangent @ tangent
-        theta_pow_4 = theta_squared * theta_squared
-        use_taylor = theta_squared < get_epsilon(tangent.dtype)
-        safe_theta = 1.0 if use_taylor else np.sqrt(theta_squared)
-        safe_half_theta = 0.5 * safe_theta
-        if use_taylor:
-            real = 1.0 - theta_squared / 8.0 + theta_pow_4 / 384.0
-            imaginary = 0.5 - theta_squared / 48.0 + theta_pow_4 / 3840.0
-        else:
-            real = np.cos(safe_half_theta)
-            imaginary = np.sin(safe_half_theta) / safe_theta
-        wxyz = np.concatenate([np.array([real]), imaginary * tangent])
-        return SO3(wxyz=wxyz)
-
-    def log(self) -> np.ndarray:
-        """See Eq. (133)
-
-        theta u = log(q) := 2 v arctan(||v||, w) / ||v||
-        """
-        w = self.wxyz[0]
-        norm_sq = self.wxyz[1:] @ self.wxyz[1:]
-        use_taylor = norm_sq < get_epsilon(norm_sq.dtype)
-        norm_safe = 1.0 if use_taylor else np.sqrt(norm_sq)
-        w_safe = w if use_taylor else 1.0
-        atan_n_over_w = np.arctan2(-norm_safe if w < 0 else norm_safe, abs(w))
-        if use_taylor:
-            atan_factor = 2.0 / w_safe - 2.0 / 3.0 * norm_sq / w_safe**3
-        else:
-            if abs(w) < get_epsilon(w.dtype):
-                scl = 1.0 if w > 0.0 else -1.0
-                atan_factor = scl * np.pi / norm_safe
-            else:
-                atan_factor = 2.0 * atan_n_over_w / norm_safe
-        return atan_factor * self.wxyz[1:]
-
-    def jlog(self):
-        log = self.log()
-        return _V_inv(log).T
-
-    def adjoint(self) -> np.ndarray:
-        """Eqn 139."""
-        return self.as_matrix()
-
+    # Paragraph above Appendix B.A.
     def inverse(self) -> SO3:
         return SO3(wxyz=self.wxyz * _INVERT_QUAT_SIGN)
 
     def normalize(self) -> SO3:
         return SO3(wxyz=self.wxyz / np.linalg.norm(self.wxyz))
 
+    # Eq. 136.
     def apply(self, target: np.ndarray) -> np.ndarray:
-        """Eqn 136."""
         assert target.shape == (SO3.space_dim,)
         padded_target = np.concatenate([np.zeros(1, dtype=np.float64), target])
         return (self @ SO3(wxyz=padded_target) @ self.inverse()).wxyz[1:]
@@ -206,6 +160,55 @@ class SO3:
             return self.apply(target=other)
         assert isinstance(other, SO3)
         return self.multiply(other=other)
+
+    ##
+    #
+    ##
+
+    # Eq. 132.
+    @staticmethod
+    def exp(tangent: np.ndarray) -> SO3:
+        assert tangent.shape == (SO3.tangent_dim,)
+        theta_squared = tangent @ tangent
+        theta_pow_4 = theta_squared * theta_squared
+        use_taylor = theta_squared < get_epsilon(tangent.dtype)
+        safe_theta = 1.0 if use_taylor else np.sqrt(theta_squared)
+        safe_half_theta = 0.5 * safe_theta
+        if use_taylor:
+            real = 1.0 - theta_squared / 8.0 + theta_pow_4 / 384.0
+            imaginary = 0.5 - theta_squared / 48.0 + theta_pow_4 / 3840.0
+        else:
+            real = np.cos(safe_half_theta)
+            imaginary = np.sin(safe_half_theta) / safe_theta
+        wxyz = np.concatenate([np.array([real]), imaginary * tangent])
+        return SO3(wxyz=wxyz)
+
+    # Eq. 133.
+    def log(self) -> np.ndarray:
+        w = self.wxyz[0]
+        norm_sq = self.wxyz[1:] @ self.wxyz[1:]
+        use_taylor = norm_sq < get_epsilon(norm_sq.dtype)
+        norm_safe = 1.0 if use_taylor else np.sqrt(norm_sq)
+        w_safe = w if use_taylor else 1.0
+        atan_n_over_w = np.arctan2(-norm_safe if w < 0 else norm_safe, abs(w))
+        if use_taylor:
+            atan_factor = 2.0 / w_safe - 2.0 / 3.0 * norm_sq / w_safe**3
+        else:
+            if abs(w) < get_epsilon(w.dtype):
+                scl = 1.0 if w > 0.0 else -1.0
+                atan_factor = scl * np.pi / norm_safe
+            else:
+                atan_factor = 2.0 * atan_n_over_w / norm_safe
+        return atan_factor * self.wxyz[1:]
+
+    # Eq. 139.
+    def adjoint(self) -> np.ndarray:
+        return self.as_matrix()
+
+    # log(this^{-1} * x)
+    def jlog(self):
+        log = self.log()
+        return _V_inv(log).T
 
 
 def _V_inv(theta: np.ndarray) -> np.ndarray:

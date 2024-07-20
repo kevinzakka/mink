@@ -6,6 +6,7 @@ from typing import overload
 import mujoco
 import numpy as np
 
+from ..exceptions import InvalidMocapBody
 from .so3 import SO3
 from .utils import get_epsilon, skew
 
@@ -30,6 +31,9 @@ class SE3:
         quat = np.round(self.wxyz_xyz[:4], 5)
         xyz = np.round(self.wxyz_xyz[4:], 5)
         return f"{self.__class__.__name__}(wxyz={quat}, xyz={xyz})"
+
+    def copy(self) -> SE3:
+        return SE3(wxyz_xyz=np.array(self.wxyz_xyz))
 
     @staticmethod
     def identity() -> SE3:
@@ -67,11 +71,20 @@ class SE3:
         )
 
     @staticmethod
-    def from_mocap(data: mujoco.MjData, mocap_id: int) -> SE3:
+    def from_mocap_id(data: mujoco.MjData, mocap_id: int) -> SE3:
         return SE3.from_rotation_and_translation(
             rotation=SO3(data.mocap_quat[mocap_id]),
             translation=data.mocap_pos[mocap_id],
         )
+
+    @staticmethod
+    def from_mocap_name(
+        model: mujoco.MjModel, data: mujoco.MjData, mocap_name: str
+    ) -> SE3:
+        mocap_id = model.body(mocap_name).mocapid[0]
+        if mocap_id == -1:
+            raise InvalidMocapBody(mocap_name, model)
+        return SE3.from_mocap_id(data, mocap_id)
 
     @staticmethod
     def sample_uniform() -> SE3:
@@ -116,47 +129,6 @@ class SE3:
             translation=V @ tangent[:3],
         )
 
-    def log(self) -> np.ndarray:
-        """Eqn 173."""
-        omega = self.rotation().log()
-        theta_squared = omega @ omega
-        use_taylor = theta_squared < get_epsilon(theta_squared.dtype)
-        skew_omega = skew(omega)
-        theta_squared_safe = 1.0 if use_taylor else theta_squared
-        theta_safe = np.sqrt(theta_squared_safe)
-        half_theta_safe = 0.5 * theta_safe
-        skew_omega_norm = skew_omega @ skew_omega
-        if use_taylor:
-            V_inv = (
-                np.eye(3, dtype=np.float64) - 0.5 * skew_omega + skew_omega_norm / 12.0
-            )
-        else:
-            V_inv = (
-                np.eye(3, dtype=np.float64)
-                - 0.5 * skew_omega
-                + (
-                    1.0
-                    - theta_safe
-                    * np.cos(half_theta_safe)
-                    / (2.0 * np.sin(half_theta_safe))
-                )
-                / theta_squared_safe
-                * skew_omega_norm
-            )
-        return np.concatenate([V_inv @ self.translation(), omega])
-
-    def jlog(self) -> np.ndarray:
-        raise NotImplementedError
-
-    def adjoint(self) -> np.ndarray:
-        R = self.rotation().as_matrix()
-        return np.block(
-            [
-                [R, skew(self.translation()) @ R],
-                [np.zeros((3, 3), dtype=np.float64), R],
-            ]
-        )
-
     def inverse(self) -> SE3:
         R_inv = self.rotation().inverse()
         return SE3.from_rotation_and_translation(
@@ -189,17 +161,59 @@ class SE3:
     def __matmul__(self, other: SE3 | np.ndarray) -> SE3 | np.ndarray:
         """Overload for the `@` operator.
 
-        Switches between the group action (`.apply()`) and multiplication
-        (`.multiply()`) based on the type of `other`.
+        Switches between the group action and multiplication based on the type of
+        other.
         """
         if isinstance(other, np.ndarray):
             return self.apply(target=other)
         assert isinstance(other, SE3)
         return self.multiply(other=other)
 
-    def copy(self) -> SE3:
-        return SE3(wxyz_xyz=self.wxyz_xyz.copy())
+    ##
+    #
+    ##
+
+    def log(self) -> np.ndarray:
+        """Eqn 173."""
+        omega = self.rotation().log()
+        theta_squared = omega @ omega
+        use_taylor = theta_squared < get_epsilon(theta_squared.dtype)
+        skew_omega = skew(omega)
+        theta_squared_safe = 1.0 if use_taylor else theta_squared
+        theta_safe = np.sqrt(theta_squared_safe)
+        half_theta_safe = 0.5 * theta_safe
+        skew_omega_norm = skew_omega @ skew_omega
+        if use_taylor:
+            V_inv = (
+                np.eye(3, dtype=np.float64) - 0.5 * skew_omega + skew_omega_norm / 12.0
+            )
+        else:
+            V_inv = (
+                np.eye(3, dtype=np.float64)
+                - 0.5 * skew_omega
+                + (
+                    1.0
+                    - theta_safe
+                    * np.cos(half_theta_safe)
+                    / (2.0 * np.sin(half_theta_safe))
+                )
+                / theta_squared_safe
+                * skew_omega_norm
+            )
+        return np.concatenate([V_inv @ self.translation(), omega])
+
+    def jlog(self) -> np.ndarray:
+        raise NotImplementedError
 
     def minus(self, other: SE3) -> np.ndarray:
         """X minus Y = log(Y^-1 @ X)"""
         return (other.inverse() @ self).log()
+
+    def adjoint(self) -> np.ndarray:
+        R = self.rotation().as_matrix()
+        return np.block(
+            [
+                [R, skew(self.translation()) @ R],
+                [np.zeros((3, 3), dtype=np.float64), R],
+            ]
+        )

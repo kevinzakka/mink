@@ -11,6 +11,7 @@ from .constants import (
 from .exceptions import (
     InvalidFrame,
     InvalidKeyframe,
+    InvalidMocapBody,
     MinkError,
     NotWithinConfigurationLimits,
     UnsupportedFrame,
@@ -25,6 +26,11 @@ from .limits import (
 )
 from .solve_ik import build_ik, solve_ik
 from .tasks import ComTask, FrameTask, Objective, PostureTask, TargetNotSet, Task
+from .utils import (
+    custom_configuration_vector,
+    get_freejoint_dims,
+    move_mocap_to_frame,
+)
 
 __version__ = "0.0.1"
 
@@ -50,9 +56,15 @@ __all__ = (
     "InvalidKeyframe",
     "NotWithinConfigurationLimits",
     "TargetNotSet",
+    "InvalidMocapBody",
     "SUPPORTED_FRAMES",
     "FRAME_TO_ENUM",
     "FRAME_TO_JAC_FUNC",
     "FRAME_TO_POS_ATTR",
     "FRAME_TO_XMAT_ATTR",
+    "set_mocap_pose_from_frame",
+    "pose_from_mocap",
+    "custom_configuration_vector",
+    "get_freejoint_dims",
+    "move_mocap_to_frame",
 )

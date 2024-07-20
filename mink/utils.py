@@ -2,72 +2,35 @@ import mujoco
 import numpy as np
 
 from . import constants as consts
-from .exceptions import InvalidKeyframe
-from .lie import SE3, SO3
+from .exceptions import InvalidKeyframe, InvalidMocapBody
 
 
-def set_mocap_pose_from_site(
+def move_mocap_to_frame(
     model: mujoco.MjModel,
     data: mujoco.MjData,
     mocap_name: str,
-    site_name: str,
-):
+    frame_name: str,
+    frame_type: str,
+) -> None:
+    """Initialize mocap body pose at a desired frame.
+
+    Args:
+        model: An instance of mujoco.MjModel.
+        data: An instance of mujoco.MjData.
+        mocap_name: The name of the mocap body.
+        frame_name: The desired frame name.
+        frame_type: The desired frame type. Can be "body", "geom" or "site".
+    """
     mocap_id = model.body(mocap_name).mocapid[0]
-    site_id = data.site(site_name).id
-    data.mocap_pos[mocap_id] = data.site_xpos[site_id]
-    mujoco.mju_mat2Quat(data.mocap_quat[mocap_id], data.site_xmat[site_id])
+    if mocap_id == -1:
+        raise InvalidMocapBody(mocap_name, model)
 
+    obj_id = mujoco.mj_name2id(model, consts.FRAME_TO_ENUM[frame_type], frame_name)
+    xpos = getattr(data, consts.FRAME_TO_POS_ATTR[frame_type])[obj_id]
+    xmat = getattr(data, consts.FRAME_TO_XMAT_ATTR[frame_type])[obj_id]
 
-def set_mocap_pose_from_geom(
-    model: mujoco.MjModel,
-    data: mujoco.MjData,
-    mocap_name: str,
-    geom_name: str,
-):
-    mocap_id = model.body(mocap_name).mocapid[0]
-    geom_id = data.geom(geom_name).id
-    data.mocap_pos[mocap_id] = data.geom_xpos[geom_id]
-    mujoco.mju_mat2Quat(data.mocap_quat[mocap_id], data.geom_xmat[geom_id])
-
-
-def set_mocap_pose_from_body(
-    model: mujoco.MjModel,
-    data: mujoco.MjData,
-    mocap_name: str,
-    body_name: str,
-):
-    mocap_id = model.body(mocap_name).mocapid[0]
-    body_id = data.body(body_name).id
-    data.mocap_pos[mocap_id] = data.xpos[body_id]
-    mujoco.mju_mat2Quat(data.mocap_quat[mocap_id], data.xmat[body_id])
-
-
-def set_mocap_pose_from_obj(
-    model: mujoco.MjModel,
-    data: mujoco.MjData,
-    mocap_name: str,
-    obj_name: str,
-    obj_type: str,
-):
-    mocap_id = model.body(mocap_name).mocapid[0]
-    obj_id = mujoco.mj_name2id(model, consts.FRAME_TO_ENUM[obj_name], obj_name)
-    data.mocap_pos[mocap_id] = getattr(data, consts.FRAME_TO_POS_ATTR[obj_type])[obj_id]
-    mujoco.mju_mat2Quat(
-        data.mocap_quat[mocap_id],
-        getattr(data, consts.FRAME_TO_XMAT_ATTR[obj_type])[obj_id],
-    )
-
-
-def pose_from_mocap(
-    model: mujoco.MjModel,
-    data: mujoco.MjData,
-    mocap_name: str,
-) -> SE3:
-    mocap_id = model.body(mocap_name).mocapid[0]
-    return SE3.from_rotation_and_translation(
-        rotation=SO3(data.mocap_quat[mocap_id]),
-        translation=data.mocap_pos[mocap_id],
-    )
+    data.mocap_pos[mocap_id] = xpos.copy()
+    mujoco.mju_mat2Quat(data.mocap_quat[mocap_id], xmat)
 
 
 def get_freejoint_dims(model: mujoco.MjModel) -> tuple[list[int], list[int]]:
