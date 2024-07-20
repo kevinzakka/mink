@@ -8,10 +8,6 @@ from robot_descriptions.loaders.mujoco import load_robot_description
 import mink
 from mink import lie
 
-_SUPPORTED_JOINT_TYPES = {mujoco.mjtJoint.mjJNT_HINGE, mujoco.mjtJoint.mjJNT_SLIDE}
-
-# np.set_printoptions(precision=2, suppress=True, threshold=1e-5)
-
 
 class TestJacobians(absltest.TestCase):
     """Test task jacobian matrices against finite differences."""
@@ -27,10 +23,7 @@ class TestJacobians(absltest.TestCase):
         upper = np.full(self.model.nq, 2 * np.pi)
         for jnt in range(self.model.njnt):
             jnt_type = self.model.jnt_type[jnt]
-            if (
-                jnt_type not in _SUPPORTED_JOINT_TYPES
-                or not self.model.jnt_limited[jnt]
-            ):
+            if jnt_type not in mink.SUPPORTED_FRAMES or not self.model.jnt_limited[jnt]:
                 continue
             padr = self.model.jnt_qposadr[jnt]
             lower[padr : padr + 1] = self.model.jnt_range[jnt, 0]

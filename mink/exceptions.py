@@ -1,5 +1,7 @@
 """Exceptions specific to mink."""
 
+from typing import Sequence
+
 import mujoco
 
 
@@ -10,7 +12,7 @@ class MinkError(Exception):
 class UnsupportedFrame(MinkError):
     """Exception raised when a frame type is unsupported."""
 
-    def __init__(self, frame_type: str, supported_types: list[str]):
+    def __init__(self, frame_type: str, supported_types: Sequence[str]):
         message = (
             f"{frame_type} is not supported."
             f"Supported frame types are: {supported_types}"

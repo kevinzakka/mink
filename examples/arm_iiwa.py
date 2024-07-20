@@ -1,20 +1,36 @@
-from pathlib import Path
-
 import mujoco
 import mujoco.viewer
 import numpy as np
 from loop_rate_limiters import RateLimiter
+from robot_descriptions import iiwa14_mj_description
 
 import mink
 from mink.lie import SE3, SO3
 from mink.utils import set_mocap_pose_from_site
 
-_HERE = Path(__file__).parent
-_XML = _HERE / "kuka_iiwa_14" / "scene.xml"
+from . import utils
+
+
+def get_model() -> mujoco.MjModel:
+    mjcf = utils.Mjcf.from_xml_path(iiwa14_mj_description.MJCF_PATH)
+    mjcf.add_checkered_plane()
+
+    # Add mocap target.
+    body = mjcf.add_body(name="target", mocap=True)
+    mjcf.add_geom(
+        parent=body,
+        type=mujoco.mjtGeom.mjGEOM_BOX,
+        size=(0.05,) * 3,
+        contype=0,
+        conaffinity=0,
+        rgba=(0.6, 0.3, 0.3, 0.2),
+    )
+
+    return mjcf.compile()
 
 
 if __name__ == "__main__":
-    model = mujoco.MjModel.from_xml_path(_XML.as_posix())
+    model = get_model()
     data = mujoco.MjData(model)
 
     ## =================== ##
@@ -31,7 +47,7 @@ if __name__ == "__main__":
             orientation_cost=1.0,
             lm_damping=1e-2,
         ),
-        posture_task := mink.PostureTask(model=model, cost=1e-1),
+        posture_task := mink.PostureTask(model=model, cost=1e-3),
     ]
 
     limits = [
@@ -53,8 +69,9 @@ if __name__ == "__main__":
     ) as viewer:
         mujoco.mjv_defaultFreeCamera(model, viewer.cam)
 
-        mujoco.mj_resetDataKeyframe(model, data, model.key("home").id)
-        configuration.update(data.qpos)
+        q_ref = np.asarray([0, 0, 0, -1.5708, 0, 1.5708, 0])
+        configuration.update(q_ref)
+        data.qpos = q_ref
         mujoco.mj_forward(model, data)
 
         # Initialize the mocap target at the end-effector site.

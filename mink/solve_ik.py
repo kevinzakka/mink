@@ -6,7 +6,7 @@ import numpy as np
 import qpsolvers
 
 from .configuration import Configuration
-from .limits import Constraint, Limit
+from .limits import Limit
 from .tasks import Objective, Task
 
 
@@ -24,12 +24,13 @@ def _compute_qp_objective(
 
 def _compute_qp_inequalities(
     configuration: Configuration, limits: Sequence[Limit], dt: float
-) -> Constraint:
+) -> tuple[np.ndarray | None, np.ndarray | None]:
     G_list = []
     h_list = []
     for limit in limits:
         inequality = limit.compute_qp_inequalities(configuration, dt)
         if not inequality.inactive:
+            assert inequality.G is not None and inequality.h is not None  # mypy.
             G_list.append(inequality.G)
             h_list.append(inequality.h)
     if not G_list:

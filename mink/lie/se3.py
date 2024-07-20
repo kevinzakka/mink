@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import overload
 
 import mujoco
 import numpy as np
@@ -179,13 +180,22 @@ class SE3:
             translation=(self.rotation() @ other.translation()) + self.translation(),
         )
 
+    @overload
+    def __matmul__(self, other: SE3) -> SE3: ...
+
+    @overload
+    def __matmul__(self, other: np.ndarray) -> np.ndarray: ...
+
     def __matmul__(self, other: SE3 | np.ndarray) -> SE3 | np.ndarray:
+        """Overload for the `@` operator.
+
+        Switches between the group action (`.apply()`) and multiplication
+        (`.multiply()`) based on the type of `other`.
+        """
         if isinstance(other, np.ndarray):
             return self.apply(target=other)
-        elif isinstance(other, SE3):
-            return self.multiply(other=other)
-        else:
-            raise ValueError(f"Unsupported argument type for @ operator: {type(other)}")
+        assert isinstance(other, SE3)
+        return self.multiply(other=other)
 
     def copy(self) -> SE3:
         return SE3(wxyz_xyz=self.wxyz_xyz.copy())

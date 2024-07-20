@@ -1,6 +1,13 @@
 """mink: MuJoCo differential inverse kinematics."""
 
 from .configuration import Configuration
+from .constants import (
+    FRAME_TO_ENUM,
+    FRAME_TO_JAC_FUNC,
+    FRAME_TO_POS_ATTR,
+    FRAME_TO_XMAT_ATTR,
+    SUPPORTED_FRAMES,
+)
 from .exceptions import (
     InvalidFrame,
     InvalidKeyframe,
@@ -43,4 +50,9 @@ __all__ = (
     "InvalidKeyframe",
     "NotWithinConfigurationLimits",
     "TargetNotSet",
+    "SUPPORTED_FRAMES",
+    "FRAME_TO_ENUM",
+    "FRAME_TO_JAC_FUNC",
+    "FRAME_TO_POS_ATTR",
+    "FRAME_TO_XMAT_ATTR",
 )

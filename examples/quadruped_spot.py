@@ -3,6 +3,7 @@ from pathlib import Path
 import mujoco
 import mujoco.viewer
 from loop_rate_limiters import RateLimiter
+from robot_descriptions import spot_mj_description
 
 import mink
 from mink.utils import (
@@ -11,12 +12,52 @@ from mink.utils import (
     set_mocap_pose_from_site,
 )
 
-_HERE = Path(__file__).parent
-_XML = _HERE / "boston_dynamics_spot" / "scene.xml"
+from . import utils
+
+
+def get_model() -> mujoco.MjModel:
+    xml_path = Path(spot_mj_description.PACKAGE_PATH) / "spot_arm.xml"
+    mjcf = utils.Mjcf.from_xml_path(str(xml_path))
+    mjcf.add_checkered_plane()
+
+    body = mjcf.add("body", name="body_target", mocap=True)
+    mjcf.add(
+        "geom",
+        parent=body,
+        type=mujoco.mjtGeom.mjGEOM_BOX,
+        size=(0.05,) * 3,
+        contype=0,
+        conaffinity=0,
+        rgba=(0.6, 0.3, 0.3, 0.2),
+    )
+    body = mjcf.add("body", name="EE_target", mocap=True)
+    mjcf.add(
+        "geom",
+        parent=body,
+        type=mujoco.mjtGeom.mjGEOM_BOX,
+        size=(0.05,) * 3,
+        contype=0,
+        conaffinity=0,
+        rgba=(0.6, 0.3, 0.3, 0.2),
+    )
+
+    for feet in ["FR", "FL", "HR", "HL"]:
+        body = mjcf.add("body", name=f"{feet}_target", mocap=True)
+        mjcf.add(
+            "geom",
+            parent=body,
+            type=mujoco.mjtGeom.mjGEOM_SPHERE,
+            size=(0.04,) * 3,
+            contype=0,
+            conaffinity=0,
+            rgba=(0.6, 0.3, 0.3, 0.2),
+        )
+
+    return mjcf.compile()
 
 
 if __name__ == "__main__":
-    model = mujoco.MjModel.from_xml_path(_XML.as_posix())
+    model = get_model()
 
     configuration = mink.Configuration(model)
 
@@ -29,7 +70,7 @@ if __name__ == "__main__":
         orientation_cost=1.0,
     )
 
-    posture_task = mink.PostureTask(cost=1e-5)
+    posture_task = mink.PostureTask(model, cost=1e-5)
 
     feet_tasks = []
     for foot in feet:
@@ -50,34 +91,8 @@ if __name__ == "__main__":
 
     tasks = [base_task, posture_task, *feet_tasks, eef_task]
 
-    # # Get all geom IDs belonging to the arm.
-    # arm_body_ids: list[int] = []
-    # for bid in range(model.nbody):
-    #     if "arm" in model.body(bid).name:
-    #         arm_body_ids.append(bid)
-    # arm_geom_ids: list[int] = []
-    # for gid in range(model.ngeom):
-    #     if model.geom_bodyid[gid] in arm_body_ids:
-    #         arm_geom_ids.append(gid)
-    # body_ids: list[int] = []
-    # for bid in range(model.nbody):
-    #     if model.body_rootid[bid] == model.body("body").id and bid not in arm_body_ids:
-    #         body_ids.append(bid)
-    # quad_geom_ids: list[int] = []
-    # for gid in range(model.ngeom):
-    #     if model.geom_bodyid[gid] in body_ids:
-    #         quad_geom_ids.append(gid)
-    # collision_pairs = [(arm_geom_ids, quad_geom_ids)]
-
     limits = [
         mink.ConfigurationLimit(model=model),
-        # mink.CollisionAvoidanceLimit(
-        #     model=model,
-        #     geom_pairs=collision_pairs,
-        #     minimum_distance_from_collisions=0.01,
-        #     collision_detection_distance=0.5,
-        #     as_id=True,
-        # ),
     ]
 
     base_mid = model.body("body_target").mocapid[0]

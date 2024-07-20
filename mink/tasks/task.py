@@ -2,7 +2,6 @@ import abc
 from typing import NamedTuple
 
 import numpy as np
-import numpy.typing as npt
 
 from ..configuration import Configuration
 from .exceptions import InvalidDamping, InvalidGain
@@ -24,7 +23,7 @@ class Task(abc.ABC):
 
     def __init__(
         self,
-        cost: npt.ArrayLike | None = None,
+        cost: np.ndarray,
         gain: float = 1.0,
         lm_damping: float = 0.0,
     ):
@@ -82,9 +81,10 @@ class Task(abc.ABC):
         raise NotImplementedError
 
     def _construct_weight(self, n: int) -> np.ndarray:
-        if self.cost is None:
-            return np.eye(n)
-        diag = [self.cost] * n if isinstance(self.cost, float) else self.cost
+        # if self.cost is None:
+        # return np.eye(n)
+        # diag = [self.cost] * n if isinstance(self.cost, float) else self.cost
+        diag = self.cost
         return np.diag(diag)
 
     def compute_qp_objective(self, configuration: Configuration) -> Objective:

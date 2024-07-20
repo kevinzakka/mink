@@ -27,7 +27,7 @@ class TestUtils(absltest.TestCase):
         q = utils.custom_configuration_vector(self.model, **custom_joints)
         q_expected = self.q0.copy()
         for name, value in custom_joints.items():
-            qid = self.model.jnt_dofadr[self.model.joint(name).id]
+            qid = self.model.jnt_qposadr[self.model.joint(name).id]
             q_expected[qid] = value
         np.testing.assert_array_almost_equal(q, q_expected)
 

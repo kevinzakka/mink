@@ -1,18 +1,14 @@
 """Task adapted from https://github.com/stephane-caron/pink/pull/94."""
 
-from pathlib import Path
-
 import mujoco
 import mujoco.viewer
 import numpy as np
 from dm_control import mjcf
 from loop_rate_limiters import RateLimiter
+from robot_descriptions import iiwa14_mj_description
 
 import mink
-from mink.utils import set_mocap_pose_from_site
-
-_HERE = Path(__file__).parent
-_XML = _HERE / "kuka_iiwa_14" / "iiwa14.xml"
+from mink.utils import pose_from_mocap, set_mocap_pose_from_site
 
 
 def construct_model():
@@ -30,14 +26,14 @@ def construct_model():
         "site", name="r_attachment_site", pos=[0, -0.2, 0], group=5
     )
 
-    left_iiwa = mjcf.from_path(_XML.as_posix())
+    left_iiwa = mjcf.from_path(iiwa14_mj_description.MJCF_PATH)
     left_iiwa.model = "l_iiwa"
     left_iiwa.find("key", "home").remove()
     left_site.attach(left_iiwa)
     for i, g in enumerate(left_iiwa.worldbody.find_all("geom")):
         g.name = f"geom_{i}"
 
-    right_iiwa = mjcf.from_path(_XML.as_posix())
+    right_iiwa = mjcf.from_path(iiwa14_mj_description.MJCF_PATH)
     right_iiwa.model = "r_iiwa"
     right_iiwa.find("key", "home").remove()
     right_site.attach(right_iiwa)
@@ -76,13 +72,13 @@ if __name__ == "__main__":
         left_ee_task := mink.FrameTask(
             frame_name="l_iiwa/attachment_site",
             frame_type="site",
-            position_cost=2.0,
+            position_cost=1.0,
             orientation_cost=1.0,
         ),
         right_ee_task := mink.FrameTask(
             frame_name="r_iiwa/attachment_site",
             frame_type="site",
-            position_cost=2.0,
+            position_cost=1.0,
             orientation_cost=1.0,
         ),
     ]
@@ -105,7 +101,7 @@ if __name__ == "__main__":
     right_mid = model.body("r_target").mocapid[0]
     model = configuration.model
     data = configuration.data
-    solver = "osqp"
+    solver = "clarabel"
 
     l_y_des = np.array([0.392, -0.392, 0.6])
     r_y_des = np.array([0.392, 0.392, 0.6])
@@ -136,8 +132,8 @@ if __name__ == "__main__":
 
             data.mocap_pos[left_mid] = l_y_des
             data.mocap_pos[right_mid] = r_y_des
-            left_ee_task.set_target_from_mocap(data, left_mid)
-            right_ee_task.set_target_from_mocap(data, right_mid)
+            left_ee_task.set_target(pose_from_mocap(model, data, "l_target"))
+            right_ee_task.set_target(pose_from_mocap(model, data, "r_target"))
 
             vel = mink.solve_ik(configuration, tasks, limits, rate.dt, solver, 1e-2)
             configuration.integrate_inplace(vel, rate.dt)

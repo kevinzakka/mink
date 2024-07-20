@@ -46,6 +46,9 @@ dev = [
     "mink[test]"
 ]
 
+[tool.flit.module]
+name = "mink"
+
 [tool.ruff]
 lint.select = [
     "E",  # pycodestyle errors.
@@ -71,3 +74,9 @@ lint.ignore = [
     "PLW2901"  # For loop variable overwritten.
 ]
 extend-exclude = ["**/_argparse.py"]
+
+[tool.mypy]
+python_version = "3.12"
+ignore_missing_imports = true
+warn_unused_configs = true
+exclude = ["examples/"]

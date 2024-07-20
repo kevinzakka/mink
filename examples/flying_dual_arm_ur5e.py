@@ -1,16 +1,12 @@
-from pathlib import Path
-
 import mujoco
 import mujoco.viewer
 import numpy as np
 from dm_control import mjcf
 from loop_rate_limiters import RateLimiter
+from robot_descriptions import ur5e_mj_description
 
 import mink
-from mink.utils import set_mocap_pose_from_site
-
-_HERE = Path(__file__).parent
-_XML = _HERE / "universal_robots_ur5e" / "ur5e.xml"
+from mink.utils import pose_from_mocap, set_mocap_pose_from_site
 
 
 def construct_model():
@@ -41,14 +37,18 @@ def construct_model():
         group=5,
     )
 
-    left_ur5e = mjcf.from_path(_XML.as_posix())
+    left_ur5e = mjcf.from_path(ur5e_mj_description.MJCF_PATH)
     left_ur5e.model = "l_ur5e"
     left_ur5e.find("key", "home").remove()
+    for light in left_ur5e.find_all("light"):
+        light.remove()
     left_site.attach(left_ur5e)
 
-    right_ur5e = mjcf.from_path(_XML.as_posix())
+    right_ur5e = mjcf.from_path(ur5e_mj_description.MJCF_PATH)
     right_ur5e.model = "r_ur5e"
     right_ur5e.find("key", "home").remove()
+    for light in right_ur5e.find_all("light"):
+        light.remove()
     right_site.attach(right_ur5e)
 
     body = root.worldbody.add("body", name="base_target", mocap=True)
@@ -135,15 +135,15 @@ if __name__ == "__main__":
         t = 0.0
         while viewer.is_running():
             data.mocap_pos[base_mid][2] = 0.3 * np.sin(2.0 * t)
-            base_task.set_target_from_mocap(data, base_mid)
+            base_task.set_target(pose_from_mocap(model, data, "base_target"))
 
             data.mocap_pos[left_mid][1] = 0.5 + 0.2 * np.sin(2.0 * t)
             data.mocap_pos[left_mid][2] = 0.2
-            left_ee_task.set_target_from_mocap(data, left_mid)
+            left_ee_task.set_target(pose_from_mocap(model, data, "l_target"))
 
             data.mocap_pos[right_mid][1] = 0.5 + 0.2 * np.sin(2.0 * t)
             data.mocap_pos[right_mid][2] = 0.2
-            right_ee_task.set_target_from_mocap(data, right_mid)
+            right_ee_task.set_target(pose_from_mocap(model, data, "r_target"))
 
             vel = mink.solve_ik(configuration, tasks, limits, rate.dt, solver, 1e-2)
             configuration.integrate_inplace(vel, rate.dt)

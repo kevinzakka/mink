@@ -62,8 +62,7 @@ class TestSolveIK(absltest.TestCase):
 
     def test_trivial_solution(self):
         """No task returns no velocity."""
-        tasks = []
-        v = mink.solve_ik(self.configuration, tasks, [], dt=1e-3, solver="quadprog")
+        v = mink.solve_ik(self.configuration, [], [], dt=1e-3, solver="quadprog")
         np.testing.assert_allclose(v, np.zeros((self.model.nv,)))
 
     def test_single_task_fulfilled(self):

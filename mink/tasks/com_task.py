@@ -21,7 +21,7 @@ class ComTask(Task):
 
     def __init__(
         self,
-        cost: npt.ArrayLike | None,
+        cost: npt.ArrayLike,
         gain: float = 1.0,
         lm_damping: float = 0.0,
     ):

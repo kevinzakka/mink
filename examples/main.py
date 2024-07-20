@@ -1,20 +1,47 @@
-from pathlib import Path
-
 import mujoco
 import mujoco.viewer
 import numpy as np
 from loop_rate_limiters import RateLimiter
+from robot_descriptions import ur5e_mj_description
 
 import mink
 from mink.lie import SE3, SO3
-from mink.utils import custom_configuration_vector, set_mocap_pose_from_site
+from mink.utils import set_mocap_pose_from_site
 
-_HERE = Path(__file__).parent
-_XML = _HERE / "universal_robots_ur5e" / "scene.xml"
+from . import utils
+
+
+def get_model() -> mujoco.MjModel:
+    mjcf = utils.Mjcf.from_xml_path(ur5e_mj_description.MJCF_PATH)
+    mjcf.add_checkered_plane()
+
+    # Add obstacle.
+    body = mjcf.add_body(name="wall", pos=(0.5, 0, 0.1))
+    mjcf.add_geom(
+        parent=body,
+        name="wall",
+        type=mujoco.mjtGeom.mjGEOM_BOX,
+        size=(0.1, 0.1, 0.1),
+        contype=0,
+        conaffinity=0,
+    )
+
+    # Add mocap target.
+    body = mjcf.add_body(name="target", mocap=True)
+    mjcf.add_geom(
+        parent=body,
+        type=mujoco.mjtGeom.mjGEOM_BOX,
+        size=(0.05,) * 3,
+        contype=0,
+        conaffinity=0,
+        rgba=(0.6, 0.3, 0.3, 0.2),
+    )
+
+    return mjcf.compile()
 
 
 if __name__ == "__main__":
-    model = mujoco.MjModel.from_xml_path(_XML.as_posix())
+    model = get_model()
     data = mujoco.MjData(model)
 
     ## =================== ##
@@ -46,12 +73,12 @@ if __name__ == "__main__":
     ]
 
     max_velocities = {
-        "shoulder_pan": np.pi,
-        "shoulder_lift": np.pi,
-        "elbow": np.pi,
-        "wrist_1": np.pi,
-        "wrist_2": np.pi,
-        "wrist_3": np.pi,
+        "shoulder_pan_joint": np.pi,
+        "shoulder_lift_joint": np.pi,
+        "elbow_joint": np.pi,
+        "wrist_1_joint": np.pi,
+        "wrist_2_joint": np.pi,
+        "wrist_3_joint": np.pi,
     }
     velocity_limit = mink.VelocityLimit(model, max_velocities)
     limits.append(velocity_limit)
@@ -71,14 +98,7 @@ if __name__ == "__main__":
     ) as viewer:
         mujoco.mjv_defaultFreeCamera(model, viewer.cam)
 
-        # mujoco.mj_resetDataKeyframe(model, data, model.key("home").id)
-        q_ref = custom_configuration_vector(
-            model,
-            "home",
-            shoulder_pan=(0.0, 0.1),
-        )
-        data.qpos = q_ref
-
+        mujoco.mj_resetDataKeyframe(model, data, model.key("home").id)
         configuration.update(data.qpos)
         mujoco.mj_forward(model, data)
 

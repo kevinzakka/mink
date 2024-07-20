@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import overload
 
 import mujoco
 import numpy as np
@@ -185,18 +186,26 @@ class SO3:
         return (self @ SO3(wxyz=padded_target) @ self.inverse()).wxyz[1:]
 
     def multiply(self, other: SO3) -> SO3:
-        """Composition."""
         res = np.empty(self.parameters_dim, dtype=np.float64)
         mujoco.mju_mulQuat(res, self.wxyz, other.wxyz)
         return SO3(wxyz=res)
 
+    @overload
+    def __matmul__(self, other: SO3) -> SO3: ...
+
+    @overload
+    def __matmul__(self, other: np.ndarray) -> np.ndarray: ...
+
     def __matmul__(self, other: SO3 | np.ndarray) -> SO3 | np.ndarray:
+        """Overload for the `@` operator.
+
+        Switches between the group action (`.apply()`) and multiplication
+        (`.multiply()`) based on the type of `other`.
+        """
         if isinstance(other, np.ndarray):
             return self.apply(target=other)
-        elif isinstance(other, SO3):
-            return self.multiply(other=other)
-        else:
-            raise ValueError(f"Unsupported argument type for @ operator: {type(other)}")
+        assert isinstance(other, SO3)
+        return self.multiply(other=other)
 
 
 def _V_inv(theta: np.ndarray) -> np.ndarray:

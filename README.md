@@ -8,6 +8,13 @@ A port of [pink](https://github.com/stephane-caron/pink) for MuJoCo.
 pip install -e ".[examples]"
 ```
 
+## Todo list
+
+- [ ] Improve collision avoidance collision pair creation.
+- [ ] Add tests for collision avoidance limit.
+- [ ] Implement `Jlog6` for frame task.
+- [ ] Add tests for `mink.lie`.
+
 ## Usage
 
 ### Task costs

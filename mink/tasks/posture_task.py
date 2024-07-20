@@ -30,12 +30,17 @@ class PostureTask(Task):
         if cost < 0.0:
             raise TaskDefinitionError(f"{self.__class__.__name__} cost must be >= 0")
 
-        super().__init__(cost=cost, gain=gain, lm_damping=lm_damping)
+        super().__init__(
+            cost=np.asarray([cost] * model.nv),
+            gain=gain,
+            lm_damping=lm_damping,
+        )
         self.target_q = None
 
-        _, v_ids = get_freejoint_dims(model)
-        if v_ids:
-            self._v_ids = np.asarray(v_ids)
+        self._v_ids: np.ndarray | None
+        _, v_ids_or_none = get_freejoint_dims(model)
+        if v_ids_or_none:
+            self._v_ids = np.asarray(v_ids_or_none)
         else:
             self._v_ids = None
 

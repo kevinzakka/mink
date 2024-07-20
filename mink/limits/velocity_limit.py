@@ -3,7 +3,7 @@ import numpy as np
 import numpy.typing as npt
 
 from ..configuration import Configuration
-from ..utils import dof_width
+from ..constants import dof_width
 from .exceptions import LimitDefinitionError
 from .limit import Constraint, Limit
 

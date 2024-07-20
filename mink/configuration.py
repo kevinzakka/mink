@@ -3,32 +3,9 @@ from typing import Optional
 import mujoco
 import numpy as np
 
+from . import constants as consts
 from . import exceptions
 from .lie import SE3, SO3
-
-_SUPPORTED_OBJ_TYPES = {"body", "geom", "site"}
-
-_TYPE_TO_ENUM = {
-    "body": mujoco.mjtObj.mjOBJ_BODY,
-    "geom": mujoco.mjtObj.mjOBJ_GEOM,
-    "site": mujoco.mjtObj.mjOBJ_SITE,
-}
-
-_TYPE_TO_JAC_FUNCTION = {
-    "body": mujoco.mj_jacBody,
-    "geom": mujoco.mj_jacGeom,
-    "site": mujoco.mj_jacSite,
-}
-_TYPE_TO_POS_ATTRIBUTE = {
-    "body": "xpos",
-    "geom": "geom_xpos",
-    "site": "site_xpos",
-}
-_TYPE_TO_XMAT_ATTRIBUTE = {
-    "body": "xmat",
-    "geom": "geom_xmat",
-    "site": "site_xmat",
-}
 
 
 class Configuration:
@@ -136,10 +113,12 @@ class Configuration:
         Returns:
             Jacobian B_J_WB of the frame.
         """
-        if frame_type not in _SUPPORTED_OBJ_TYPES:
-            raise exceptions.UnsupportedFrame(frame_type, _SUPPORTED_OBJ_TYPES)
+        if frame_type not in consts.SUPPORTED_FRAMES:
+            raise exceptions.UnsupportedFrame(frame_type, consts.SUPPORTED_FRAMES)
 
-        frame_id = mujoco.mj_name2id(self.model, _TYPE_TO_ENUM[frame_type], frame_name)
+        frame_id = mujoco.mj_name2id(
+            self.model, consts.FRAME_TO_ENUM[frame_type], frame_name
+        )
         if frame_id == -1:
             raise exceptions.InvalidFrame(
                 frame_name=frame_name,
@@ -148,13 +127,13 @@ class Configuration:
             )
 
         jac = np.empty((6, self.model.nv))
-        jac_func = _TYPE_TO_JAC_FUNCTION[frame_type]
+        jac_func = consts.FRAME_TO_JAC_FUNC[frame_type]
         jac_func(self.model, self.data, jac[:3], jac[3:], frame_id)
 
         # MuJoCo jacobians have a frame of reference centered at the local frame but
         # aligned with the world frame. To obtain a jacobian expressed in the local
         # frame, aka body jacobian, we need to left-multiply by A[T_fw].
-        xmat = getattr(self.data, _TYPE_TO_XMAT_ATTRIBUTE[frame_type])[frame_id]
+        xmat = getattr(self.data, consts.FRAME_TO_XMAT_ATTR[frame_type])[frame_id]
         R_wf = SO3.from_matrix(xmat.reshape(3, 3))
         A_fw = SE3.from_rotation(R_wf.inverse()).adjoint()
         jac = A_fw @ jac
@@ -173,10 +152,12 @@ class Configuration:
         Returns:
             The pose of the frame in the world frame.
         """
-        if frame_type not in _SUPPORTED_OBJ_TYPES:
-            raise exceptions.UnsupportedFrame(frame_type, _SUPPORTED_OBJ_TYPES)
+        if frame_type not in consts.SUPPORTED_FRAMES:
+            raise exceptions.UnsupportedFrame(frame_type, consts.SUPPORTED_FRAMES)
 
-        frame_id = mujoco.mj_name2id(self.model, _TYPE_TO_ENUM[frame_type], frame_name)
+        frame_id = mujoco.mj_name2id(
+            self.model, consts.FRAME_TO_ENUM[frame_type], frame_name
+        )
         if frame_id == -1:
             raise exceptions.InvalidFrame(
                 frame_name=frame_name,
@@ -184,8 +165,8 @@ class Configuration:
                 model=self.model,
             )
 
-        xpos = getattr(self.data, _TYPE_TO_POS_ATTRIBUTE[frame_type])[frame_id]
-        xmat = getattr(self.data, _TYPE_TO_XMAT_ATTRIBUTE[frame_type])[frame_id]
+        xpos = getattr(self.data, consts.FRAME_TO_POS_ATTR[frame_type])[frame_id]
+        xmat = getattr(self.data, consts.FRAME_TO_XMAT_ATTR[frame_type])[frame_id]
         return SE3.from_rotation_and_translation(
             rotation=SO3.from_matrix(xmat.reshape(3, 3)),
             translation=xpos,

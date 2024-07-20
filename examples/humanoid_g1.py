@@ -1,18 +1,67 @@
-from pathlib import Path
-
 import mujoco
 import mujoco.viewer
 from loop_rate_limiters import RateLimiter
+from robot_descriptions import g1_mj_description
 
 import mink
 from mink.utils import set_mocap_pose_from_site
 
-_HERE = Path(__file__).parent
-_XML = _HERE / "unitree_g1" / "scene.xml"
+from . import utils
+
+
+def get_model() -> mujoco.MjModel:
+    mjcf = utils.Mjcf.from_xml_path(g1_mj_description.MJCF_PATH)
+    mjcf.add_checkered_plane()
+
+    # Add palm sites.
+    # TODO(kevin): Remove once added to menagerie.
+    body = mjcf.spec.find_body("left_zero_link")
+    site = body.add_site()
+    site.name = "left_palm"
+    body = mjcf.spec.find_body("right_zero_link")
+    site = body.add_site()
+    site.name = "right_palm"
+
+    body = mjcf.add("body", name="com_target", mocap=True)
+    mjcf.add(
+        "geom",
+        parent=body,
+        type=mujoco.mjtGeom.mjGEOM_SPHERE,
+        size=(0.08,) * 3,
+        contype=0,
+        conaffinity=0,
+        rgba=(0.6, 0.3, 0.3, 0.2),
+    )
+
+    for feet in ["left_foot", "right_foot"]:
+        body = mjcf.add("body", name=f"{feet}_target", mocap=True)
+        mjcf.add(
+            "geom",
+            parent=body,
+            type=mujoco.mjtGeom.mjGEOM_SPHERE,
+            size=(0.04,) * 3,
+            contype=0,
+            conaffinity=0,
+            rgba=(0.6, 0.3, 0.3, 0.2),
+        )
+
+    for feet in ["left_palm", "right_palm"]:
+        body = mjcf.add("body", name=f"{feet}_target", mocap=True)
+        mjcf.add(
+            "geom",
+            parent=body,
+            type=mujoco.mjtGeom.mjGEOM_SPHERE,
+            size=(0.04,) * 3,
+            contype=0,
+            conaffinity=0,
+            rgba=(0.6, 0.3, 0.3, 0.2),
+        )
+
+    return mjcf.compile()
 
 
 if __name__ == "__main__":
-    model = mujoco.MjModel.from_xml_path(_XML.as_posix())
+    model = get_model()
 
     configuration = mink.Configuration(model)
 
@@ -26,8 +75,8 @@ if __name__ == "__main__":
             position_cost=0.0,
             orientation_cost=10.0,
         ),
-        posture_task := mink.PostureTask(cost=1e-1),
-        com_task := mink.ComTask(cost=200.0),
+        posture_task := mink.PostureTask(model, cost=1e-1),
+        com_task := mink.ComTask(cost=10.0),
     ]
 
     feet_tasks = []
@@ -90,7 +139,9 @@ if __name__ == "__main__":
                 foot_task.set_target(mink.SE3.from_mocap(data, feet_mid[i]))
                 hand_task.set_target(mink.SE3.from_mocap(data, hands_mid[i]))
 
-            vel = mink.solve_ik(configuration, tasks, limits, rate.dt, solver, 1e-1)
+            vel = mink.solve_ik(
+                configuration, tasks, limits, rate.dt, solver, 1e-1, safety_break=False
+            )
             configuration.integrate_inplace(vel, rate.dt)
             mujoco.mj_camlight(model, data)
 
