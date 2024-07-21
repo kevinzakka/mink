@@ -63,16 +63,15 @@ def log3(R: np.ndarray) -> Tuple[np.ndarray, float]:
     return res, angle
 
 
-def Jlog3(theta: float, log: np.ndarray):
-    """
-    Compute the Jacobian of log3.
+def Jlog3(theta: float, log: np.ndarray) -> np.ndarray:
+    """Compute the Jacobian of log3.
 
     Args:
-    theta (float): Angle of rotation
-    log (np.ndarray): 3x1 vector representation of the rotation
+        theta (float): Angle of rotation
+        log (np.ndarray): 3x1 vector representation of the rotation
 
     Returns:
-    np.ndarray: 3x3 Jacobian matrix
+        np.ndarray: 3x3 Jacobian matrix
     """
     J = np.zeros((3, 3))
 
@@ -98,15 +97,14 @@ def Jlog3(theta: float, log: np.ndarray):
 
 
 def log6(R, p):
-    """
-    Compute the logarithm of a SE(3) transformation.
+    """Compute the logarithm of a SE(3) transformation.
 
     Args:
-    R (np.ndarray): 3x3 rotation matrix
-    p (np.ndarray): 3x1 translation vector
+        R (np.ndarray): 3x3 rotation matrix
+        p (np.ndarray): 3x1 translation vector
 
     Returns:
-    np.ndarray: 6x1 vector representation of the transformation
+        np.ndarray: 6x1 vector representation of the transformation
     """
     res = np.zeros(6)
 
@@ -131,20 +129,18 @@ def log6(R, p):
 
     res[:3] = alpha * p - 0.5 * np.cross(w, p) + (beta * np.dot(w, p)) * w
     res[3:] = w
-
     return res
 
 
 def Jlog6(R, p):
-    """
-    Compute the Jacobian of log6.
+    """Compute the Jacobian of log6.
 
     Args:
-    R (np.ndarray): 3x3 rotation matrix
-    p (np.ndarray): 3x1 translation vector
+        R (np.ndarray): 3x3 rotation matrix
+        p (np.ndarray): 3x1 translation vector
 
     Returns:
-    np.ndarray: 6x6 Jacobian matrix
+        np.ndarray: 6x6 Jacobian matrix
     """
     J = np.zeros((6, 6))
 
@@ -193,5 +189,4 @@ def Jlog6(R, p):
     J[:3, 3:] = TR
     J[3:, :3] = BL
     J[3:, 3:] = BR
-
     return J
