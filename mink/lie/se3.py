@@ -1,12 +1,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import overload
 
 import mujoco
 import numpy as np
 
 from ..exceptions import InvalidMocapBody
+from .base import MatrixLieGroup
 from .so3 import SO3
 from .utils import get_epsilon, skew
 
@@ -14,7 +14,7 @@ _IDENTITY_WXYZ_XYZ = np.array([1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], dtype=np.floa
 
 
 @dataclass(frozen=True)
-class SE3:
+class SE3(MatrixLieGroup):
     """Special Euclidean group for proper rigid transforms in 3D.
 
     Internal parameterization is (qw, qx, qy, qz, x, y, z). Tangent parameterization is
@@ -35,20 +35,24 @@ class SE3:
     def copy(self) -> SE3:
         return SE3(wxyz_xyz=np.array(self.wxyz_xyz))
 
-    @staticmethod
-    def identity() -> SE3:
+    def parameters(self) -> np.ndarray:
+        return self.wxyz_xyz
+
+    @classmethod
+    def identity(cls) -> SE3:
         return SE3(wxyz_xyz=_IDENTITY_WXYZ_XYZ)
 
-    @staticmethod
+    @classmethod
     def from_rotation_and_translation(
+        cls,
         rotation: SO3,
         translation: np.ndarray,
     ) -> SE3:
         assert translation.shape == (SE3.space_dim,)
         return SE3(wxyz_xyz=np.concatenate([rotation.wxyz, translation]))
 
-    @staticmethod
-    def from_rotation(rotation: SO3) -> SE3:
+    @classmethod
+    def from_rotation(cls, rotation: SO3) -> SE3:
         return SE3.from_rotation_and_translation(
             rotation=rotation,
             translation=np.zeros(
@@ -56,38 +60,38 @@ class SE3:
             ),
         )
 
-    @staticmethod
-    def from_translation(translation: np.ndarray) -> SE3:
+    @classmethod
+    def from_translation(cls, translation: np.ndarray) -> SE3:
         return SE3.from_rotation_and_translation(
             rotation=SO3.identity(), translation=translation
         )
 
-    @staticmethod
-    def from_matrix(matrix: np.ndarray) -> SE3:
+    @classmethod
+    def from_matrix(cls, matrix: np.ndarray) -> SE3:
         assert matrix.shape == (SE3.matrix_dim, SE3.matrix_dim)
         return SE3.from_rotation_and_translation(
             rotation=SO3.from_matrix(matrix[:3, :3]),
             translation=matrix[:3, 3],
         )
 
-    @staticmethod
-    def from_mocap_id(data: mujoco.MjData, mocap_id: int) -> SE3:
+    @classmethod
+    def from_mocap_id(cls, data: mujoco.MjData, mocap_id: int) -> SE3:
         return SE3.from_rotation_and_translation(
             rotation=SO3(data.mocap_quat[mocap_id]),
             translation=data.mocap_pos[mocap_id],
         )
 
-    @staticmethod
+    @classmethod
     def from_mocap_name(
-        model: mujoco.MjModel, data: mujoco.MjData, mocap_name: str
+        cls, model: mujoco.MjModel, data: mujoco.MjData, mocap_name: str
     ) -> SE3:
         mocap_id = model.body(mocap_name).mocapid[0]
         if mocap_id == -1:
             raise InvalidMocapBody(mocap_name, model)
         return SE3.from_mocap_id(data, mocap_id)
 
-    @staticmethod
-    def sample_uniform() -> SE3:
+    @classmethod
+    def sample_uniform(cls) -> SE3:
         return SE3.from_rotation_and_translation(
             rotation=SO3.sample_uniform(),
             translation=np.random.uniform(-1.0, 1.0, size=(SE3.space_dim,)),
@@ -105,8 +109,8 @@ class SE3:
         hmat[:3, 3] = self.translation()
         return hmat
 
-    @staticmethod
-    def exp(tangent: np.ndarray) -> SE3:
+    @classmethod
+    def exp(cls, tangent: np.ndarray) -> SE3:
         assert tangent.shape == (SE3.tangent_dim,)
         rotation = SO3.exp(tangent[3:])
         theta_squared = tangent[3:] @ tangent[3:]
@@ -151,23 +155,6 @@ class SE3:
             rotation=self.rotation() @ other.rotation(),
             translation=(self.rotation() @ other.translation()) + self.translation(),
         )
-
-    @overload
-    def __matmul__(self, other: SE3) -> SE3: ...
-
-    @overload
-    def __matmul__(self, other: np.ndarray) -> np.ndarray: ...
-
-    def __matmul__(self, other: SE3 | np.ndarray) -> SE3 | np.ndarray:
-        """Overload for the `@` operator.
-
-        Switches between the group action and multiplication based on the type of
-        other.
-        """
-        if isinstance(other, np.ndarray):
-            return self.apply(target=other)
-        assert isinstance(other, SE3)
-        return self.multiply(other=other)
 
     ##
     #

@@ -1,11 +1,11 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import overload
 
 import mujoco
 import numpy as np
 
+from .base import MatrixLieGroup
 from .utils import get_epsilon, skew
 
 _IDENTITIY_WXYZ = np.array([1.0, 0.0, 0.0, 0.0], dtype=np.float64)
@@ -20,7 +20,7 @@ class RollPitchYaw:
 
 
 @dataclass(frozen=True)
-class SO3:
+class SO3(MatrixLieGroup):
     """Special orthogonal group for 3D rotations.
 
     Internal parameterization is (qw, qx, qy, qz). Tangent parameterization is
@@ -43,23 +43,27 @@ class SO3:
         wxyz = np.round(self.wxyz, 5)
         return f"{self.__class__.__name__}(wxyz={wxyz})"
 
+    def parameters(self) -> np.ndarray:
+        return self.wxyz
+
     def copy(self) -> SO3:
         return SO3(wxyz=self.wxyz.copy())
 
-    @staticmethod
-    def from_x_radians(theta: float) -> SO3:
+    @classmethod
+    def from_x_radians(cls, theta: float) -> SO3:
         return SO3.exp(np.array([theta, 0.0, 0.0], dtype=np.float64))
 
-    @staticmethod
-    def from_y_radians(theta: float) -> SO3:
+    @classmethod
+    def from_y_radians(cls, theta: float) -> SO3:
         return SO3.exp(np.array([0.0, theta, 0.0], dtype=np.float64))
 
-    @staticmethod
-    def from_z_radians(theta: float) -> SO3:
+    @classmethod
+    def from_z_radians(cls, theta: float) -> SO3:
         return SO3.exp(np.array([0.0, 0.0, theta], dtype=np.float64))
 
-    @staticmethod
+    @classmethod
     def from_rpy_radians(
+        cls,
         roll: float,
         pitch: float,
         yaw: float,
@@ -70,19 +74,19 @@ class SO3:
             @ SO3.from_x_radians(roll)
         )
 
-    @staticmethod
-    def from_matrix(matrix: np.ndarray) -> SO3:
+    @classmethod
+    def from_matrix(cls, matrix: np.ndarray) -> SO3:
         assert matrix.shape == (SO3.matrix_dim, SO3.matrix_dim)
         wxyz = np.zeros(SO3.parameters_dim, dtype=np.float64)
         mujoco.mju_mat2Quat(wxyz, matrix.ravel())
         return SO3(wxyz=wxyz)
 
-    @staticmethod
-    def identity() -> SO3:
+    @classmethod
+    def identity(cls) -> SO3:
         return SO3(wxyz=_IDENTITIY_WXYZ)
 
-    @staticmethod
-    def sample_uniform() -> SO3:
+    @classmethod
+    def sample_uniform(cls) -> SO3:
         # Ref: https://lavalle.pl/planning/node198.html
         u1, u2, u3 = np.random.uniform(
             low=np.zeros(shape=(3,)),
@@ -144,30 +148,13 @@ class SO3:
         mujoco.mju_mulQuat(res, self.wxyz, other.wxyz)
         return SO3(wxyz=res)
 
-    @overload
-    def __matmul__(self, other: SO3) -> SO3: ...
-
-    @overload
-    def __matmul__(self, other: np.ndarray) -> np.ndarray: ...
-
-    def __matmul__(self, other: SO3 | np.ndarray) -> SO3 | np.ndarray:
-        """Overload for the `@` operator.
-
-        Switches between the group action (`.apply()`) and multiplication
-        (`.multiply()`) based on the type of `other`.
-        """
-        if isinstance(other, np.ndarray):
-            return self.apply(target=other)
-        assert isinstance(other, SO3)
-        return self.multiply(other=other)
-
     ##
     #
     ##
 
     # Eq. 132.
-    @staticmethod
-    def exp(tangent: np.ndarray) -> SO3:
+    @classmethod
+    def exp(cls, tangent: np.ndarray) -> SO3:
         assert tangent.shape == (SO3.tangent_dim,)
         theta_squared = tangent @ tangent
         theta_pow_4 = theta_squared * theta_squared
