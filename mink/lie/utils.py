@@ -1,5 +1,5 @@
-import numpy as np
 import mujoco
+import numpy as np
 
 
 def get_epsilon(dtype: np.dtype) -> float:

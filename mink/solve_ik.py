@@ -1,13 +1,13 @@
 """Build and solve the inverse kinematics problem."""
 
 from typing import Sequence
+
 import numpy as np
-
-from mink.configuration import Configuration
-from mink.tasks import Task, Objective
-from mink.limits import Limit, Constraint
-
 import qpsolvers
+
+from .configuration import Configuration
+from .limits import Limit
+from .tasks import Objective, Task
 
 
 def _compute_qp_objective(
@@ -24,13 +24,15 @@ def _compute_qp_objective(
 
 def _compute_qp_inequalities(
     configuration: Configuration, limits: Sequence[Limit], dt: float
-) -> Constraint:
+) -> tuple[np.ndarray | None, np.ndarray | None]:
     G_list = []
     h_list = []
     for limit in limits:
         inequality = limit.compute_qp_inequalities(configuration, dt)
-        G_list.append(inequality.G)
-        h_list.append(inequality.h)
+        if not inequality.inactive:
+            assert inequality.G is not None and inequality.h is not None  # mypy.
+            G_list.append(inequality.G)
+            h_list.append(inequality.h)
     if not G_list:
         return None, None
     return np.vstack(G_list), np.hstack(h_list)
@@ -55,9 +57,11 @@ def solve_ik(
     dt: float,
     solver: str,
     damping: float = 1e-12,
+    safety_break: bool = False,
     **kwargs,
 ) -> np.ndarray:
     """Compute a velocity tangent to the current configuration."""
+    configuration.check_limits(safety_break=safety_break)
     problem = build_ik(configuration, tasks, limits, dt, damping)
     result = qpsolvers.solve_problem(problem, solver=solver, **kwargs)
     dq = result.x

@@ -1,9 +1,10 @@
 """Kinematic limits."""
 
-from mink.limits.limit import Limit, Constraint
-from mink.limits.configuration_limit import ConfigurationLimit
-from mink.limits.velocity_limit import VelocityLimit
-from mink.limits.collision_avoidance_limit import CollisionAvoidanceLimit
+from .collision_avoidance_limit import CollisionAvoidanceLimit
+from .configuration_limit import ConfigurationLimit
+from .exceptions import LimitDefinitionError
+from .limit import Constraint, Limit
+from .velocity_limit import VelocityLimit
 
 __all__ = (
     "ConfigurationLimit",
@@ -11,4 +12,5 @@ __all__ = (
     "Constraint",
     "Limit",
     "VelocityLimit",
+    "LimitDefinitionError",
 )

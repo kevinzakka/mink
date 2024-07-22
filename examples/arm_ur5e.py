@@ -1,10 +1,11 @@
+from pathlib import Path
+
 import mujoco
 import mujoco.viewer
 import numpy as np
-import mink
-from pathlib import Path
 from loop_rate_limiters import RateLimiter
-from mink.utils import set_mocap_pose_from_site
+
+import mink
 
 _HERE = Path(__file__).parent
 _XML = _HERE / "universal_robots_ur5e" / "scene.xml"
@@ -32,9 +33,19 @@ if __name__ == "__main__":
 
     limits = [
         mink.ConfigurationLimit(model=model),
-        mink.VelocityLimit(model, np.full_like(configuration.q, np.pi)),
         mink.CollisionAvoidanceLimit(model=model, geom_pairs=collision_pairs),
     ]
+
+    max_velocities = {
+        "shoulder_pan": np.pi,
+        "shoulder_lift": np.pi,
+        "elbow": np.pi,
+        "wrist_1": np.pi,
+        "wrist_2": np.pi,
+        "wrist_3": np.pi,
+    }
+    velocity_limit = mink.VelocityLimit(model, max_velocities)
+    limits.append(velocity_limit)
 
     mid = model.body("target").mocapid[0]
     model = configuration.model
@@ -50,12 +61,13 @@ if __name__ == "__main__":
         configuration.update_from_keyframe("home")
 
         # Initialize the mocap target at the end-effector site.
-        set_mocap_pose_from_site(model, data, "target", "attachment_site")
+        mink.move_mocap_to_frame(model, data, "target", "attachment_site", "site")
 
         rate = RateLimiter(frequency=500.0)
         while viewer.is_running():
             # Update task target.
-            end_effector_task.set_target_from_mocap(data, mid)
+            T_wt = mink.SE3.from_mocap_name(model, data, "target")
+            end_effector_task.set_target(T_wt)
 
             # Compute velocity and integrate into the next configuration.
             vel = mink.solve_ik(configuration, tasks, limits, rate.dt, solver, 1e-3)
@@ -64,8 +76,8 @@ if __name__ == "__main__":
 
             # Note the below are optional: they are used to visualize the output of the
             # fromto sensor which is used by the collision avoidance constraint.
-            # mujoco.mj_fwdPosition(model, data)
-            # mujoco.mj_sensorPos(model, data)
+            mujoco.mj_fwdPosition(model, data)
+            mujoco.mj_sensorPos(model, data)
 
             # Visualize at fixed FPS.
             viewer.sync()

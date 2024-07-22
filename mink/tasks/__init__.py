@@ -1,10 +1,16 @@
 """Kinematic tasks."""
 
-from mink.tasks.task import Task, Objective
-from mink.tasks.frame_task import FrameTask
-from mink.tasks.posture_task import PostureTask
-from mink.tasks.com_task import ComTask
-
+from .com_task import ComTask
+from .exceptions import (
+    InvalidDamping,
+    InvalidGain,
+    InvalidTarget,
+    TargetNotSet,
+    TaskDefinitionError,
+)
+from .frame_task import FrameTask
+from .posture_task import PostureTask
+from .task import Objective, Task
 
 __all__ = (
     "ComTask",
@@ -12,4 +18,9 @@ __all__ = (
     "Objective",
     "PostureTask",
     "Task",
+    "TargetNotSet",
+    "InvalidTarget",
+    "TaskDefinitionError",
+    "InvalidGain",
+    "InvalidDamping",
 )

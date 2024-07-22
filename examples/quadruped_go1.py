@@ -1,9 +1,10 @@
+from pathlib import Path
+
 import mujoco
 import mujoco.viewer
-import mink
-from pathlib import Path
 from loop_rate_limiters import RateLimiter
-from mink.utils import set_mocap_pose_from_site, set_mocap_pose_from_body
+
+import mink
 
 _HERE = Path(__file__).parent
 _XML = _HERE / "unitree_go1" / "scene.xml"
@@ -23,7 +24,7 @@ if __name__ == "__main__":
         orientation_cost=1.0,
     )
 
-    posture_task = mink.PostureTask(cost=1e-5)
+    posture_task = mink.PostureTask(model, cost=1e-5)
 
     feet_tasks = []
     for foot in feet:
@@ -59,15 +60,15 @@ if __name__ == "__main__":
 
         # Initialize mocap bodies at their respective sites.
         for foot in feet:
-            set_mocap_pose_from_site(model, data, f"{foot}_target", foot)
-        set_mocap_pose_from_body(model, data, "trunk_target", "trunk")
+            mink.move_mocap_to_frame(model, data, f"{foot}_target", foot, "site")
+        mink.move_mocap_to_frame(model, data, "trunk_target", "trunk", "body")
 
         rate = RateLimiter(frequency=500.0)
         while viewer.is_running():
             # Update task targets.
-            base_task.set_target_from_mocap(data, base_mid)
+            base_task.set_target(mink.SE3.from_mocap_id(data, base_mid))
             for i, task in enumerate(feet_tasks):
-                task.set_target_from_mocap(data, feet_mid[i])
+                task.set_target(mink.SE3.from_mocap_id(data, feet_mid[i]))
 
             # Compute velocity, integrate and set control signal.
             vel = mink.solve_ik(configuration, tasks, limits, rate.dt, solver, 1e-5)

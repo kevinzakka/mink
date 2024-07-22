@@ -1,16 +1,20 @@
+import abc
 from typing import NamedTuple
 
-import abc
-
 import numpy as np
-from mink.configuration import Configuration
+
+from ..configuration import Configuration
 
 
 class Constraint(NamedTuple):
-    """Linear inequalities of the form Gx <= h."""
+    """Linear inequalities in the form Gx <= h."""
 
-    G: np.ndarray
-    h: np.ndarray
+    G: np.ndarray | None = None  # (nv, nv)
+    h: np.ndarray | None = None  # (nv,)
+
+    @property
+    def inactive(self) -> bool:
+        return self.G is None or self.h is None
 
 
 class Limit(abc.ABC):

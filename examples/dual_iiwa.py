@@ -1,14 +1,14 @@
 """Task adapted from https://github.com/stephane-caron/pink/pull/94."""
 
-from dm_control import mjcf
+from pathlib import Path
+
 import mujoco
 import mujoco.viewer
 import numpy as np
-import mink
-from pathlib import Path
+from dm_control import mjcf
 from loop_rate_limiters import RateLimiter
-from mink.utils import set_mocap_pose_from_site
 
+import mink
 
 _HERE = Path(__file__).parent
 _XML = _HERE / "kuka_iiwa_14" / "iiwa14.xml"
@@ -104,7 +104,7 @@ if __name__ == "__main__":
     right_mid = model.body("r_target").mocapid[0]
     model = configuration.model
     data = configuration.data
-    solver = "quadprog"
+    solver = "osqp"
 
     l_y_des = np.array([0.392, -0.392, 0.6])
     r_y_des = np.array([0.392, 0.392, 0.6])
@@ -119,8 +119,12 @@ if __name__ == "__main__":
         mujoco.mjv_defaultFreeCamera(model, viewer.cam)
         viewer.opt.frame = mujoco.mjtFrame.mjFRAME_SITE
 
-        set_mocap_pose_from_site(model, data, "l_target", "l_iiwa/attachment_site")
-        set_mocap_pose_from_site(model, data, "r_target", "r_iiwa/attachment_site")
+        mink.move_mocap_to_frame(
+            model, data, "l_target", "l_iiwa/attachment_site", "site"
+        )
+        mink.move_mocap_to_frame(
+            model, data, "r_target", "r_iiwa/attachment_site", "site"
+        )
 
         rate = RateLimiter(frequency=60.0)
         t = 0.0
@@ -132,13 +136,18 @@ if __name__ == "__main__":
             r_y_des[:] = (
                 B + (A - B + 0.2 * np.array([0, 0, -np.sin(mu * np.pi) ** 2])) * mu
             )
-
             data.mocap_pos[left_mid] = l_y_des
             data.mocap_pos[right_mid] = r_y_des
-            left_ee_task.set_target_from_mocap(data, left_mid)
-            right_ee_task.set_target_from_mocap(data, right_mid)
 
-            vel = mink.solve_ik(configuration, tasks, limits, rate.dt, solver, 1e-2)
+            # Update task targets.
+            T_wt_left = mink.SE3.from_mocap_name(model, data, "l_target")
+            left_ee_task.set_target(T_wt_left)
+            T_wt_right = mink.SE3.from_mocap_name(model, data, "r_target")
+            right_ee_task.set_target(T_wt_right)
+
+            vel = mink.solve_ik(
+                configuration, tasks, limits, rate.dt, solver, 1e-2, False
+            )
             configuration.integrate_inplace(vel, rate.dt)
             mujoco.mj_camlight(model, data)
 

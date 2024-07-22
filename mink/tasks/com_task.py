@@ -1,40 +1,80 @@
-import numpy as np
-import mujoco
+"""Center of mass task implementation."""
 
-from mink.tasks import Task
-from mink.configuration import Configuration
+import mujoco
+import numpy as np
+import numpy.typing as npt
+
+from ..configuration import Configuration
+from .exceptions import InvalidTarget, TargetNotSet, TaskDefinitionError
+from .task import Task
 
 
 class ComTask(Task):
+    """Regulate the center of mass (CoM) of a robot.
+
+    Attributes:
+        target_com: Target position of the CoM.
+    """
+
+    k: int = 3
+    target_com: np.ndarray | None
+
     def __init__(
         self,
-        cost: np.ndarray,
+        cost: npt.ArrayLike,
         gain: float = 1.0,
         lm_damping: float = 0.0,
-        target_com: np.ndarray | None = None,
     ):
-        super().__init__(cost=np.full((3,), cost), gain=gain, lm_damping=lm_damping)
+        super().__init__(cost=np.zeros((self.k,)), gain=gain, lm_damping=lm_damping)
+        self.target_com = None
 
-        self.target_com = target_com
+        self.set_cost(cost)
 
-    def set_target(self, target_com: np.ndarray) -> None:
+    def set_cost(self, cost: npt.ArrayLike) -> None:
+        """Set a new cost for all CoM coordinates."""
+        cost = np.atleast_1d(cost)
+        if cost.ndim != 1 or cost.shape[0] not in (1, self.k):
+            raise TaskDefinitionError(
+                f"{self.__class__.__name__} cost must be a vector of shape (1,) "
+                f"(aka identical cost for all coordinates) or ({self.k},). "
+                f"Got {cost.shape}"
+            )
+        if not np.all(cost >= 0.0):
+            raise TaskDefinitionError(f"{self.__class__.__name__} cost must be >= 0")
+        self.cost[:] = cost
+
+    def set_target(self, target_com: npt.ArrayLike) -> None:
+        """Set the target CoM position in the world frame."""
+        target_com = np.atleast_1d(target_com)
+        if target_com.ndim != 1 or target_com.shape[0] != (self.k):
+            raise InvalidTarget(
+                f"Expected target CoM to have shape ({self.k},) but got "
+                f"{target_com.shape}"
+            )
         self.target_com = target_com.copy()
 
     def set_target_from_configuration(self, configuration: Configuration) -> None:
-        desired_com = configuration.data.subtree_com[1]
-        self.set_target(desired_com)
-
-    def set_target_from_mocap(self, data: mujoco.MjData, mocap_id: int) -> None:
-        self.set_target(data.mocap_pos[mocap_id])
+        """Set the target CoM from a given robot configuration."""
+        self.set_target(configuration.data.subtree_com[1])
 
     def compute_error(self, configuration: Configuration) -> np.ndarray:
-        if self.target_com is None:
-            raise ValueError("Target COM is not set.")
+        """Compute the CoM task error.
 
-        error = configuration.data.subtree_com[1] - self.target_com
-        return error
+        The error is the difference between the target CoM and current CoM positions,
+        expressed in the world frame.
+        """
+        if self.target_com is None:
+            raise TargetNotSet(self.__class__.__name__)
+        return configuration.data.subtree_com[1] - self.target_com
 
     def compute_jacobian(self, configuration: Configuration) -> np.ndarray:
-        J = np.empty((3, configuration.model.nv))
-        mujoco.mj_jacSubtreeCom(configuration.model, configuration.data, J, 1)
-        return J
+        """Compute the CoM task Jacobian.
+
+        The task Jacobian is the derivative of the task error with respect to the
+        current configuration. It has dimension (3, nv).
+        """
+        if self.target_com is None:
+            raise TargetNotSet(self.__class__.__name__)
+        jac = np.empty((self.k, configuration.nv))
+        mujoco.mj_jacSubtreeCom(configuration.model, configuration.data, jac, 1)
+        return jac
