@@ -37,7 +37,12 @@ class TestSolveIK(absltest.TestCase):
         self.configuration.update(q)
         with self.assertRaises(mink.NotWithinConfigurationLimits):
             mink.solve_ik(
-                self.configuration, [], self.limits, dt=1.0, solver="quadprog"
+                self.configuration,
+                [],
+                self.limits,
+                dt=1.0,
+                safety_break=True,
+                solver="quadprog",
             )
 
     def test_ignores_configuration_limits(self):

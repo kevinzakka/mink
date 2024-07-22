@@ -1,3 +1,4 @@
+from typing import Mapping
 import mujoco
 import numpy as np
 import numpy.typing as npt
@@ -23,7 +24,7 @@ class VelocityLimit(Limit):
     def __init__(
         self,
         model: mujoco.MjModel,
-        velocities: dict[str, npt.ArrayLike] = {},
+        velocities: Mapping[str, npt.ArrayLike] = {},
     ):
         """Initialize velocity limits.
 

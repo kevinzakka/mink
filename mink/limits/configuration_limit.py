@@ -70,7 +70,7 @@ class ConfigurationLimit(Limit):
         configuration: Configuration,
         dt: float,
     ) -> Constraint:
-        del dt  # Unused.
+        # del dt  # Unused.
 
         # Upper.
         delta_q_max = np.zeros(self.model.nv)
@@ -94,6 +94,6 @@ class ConfigurationLimit(Limit):
 
         p_min = self.gain * delta_q_min[self.indices]
         p_max = self.gain * delta_q_max[self.indices]
-        self.G = np.vstack([self.projection_matrix, -self.projection_matrix])
+        G = np.vstack([self.projection_matrix, -self.projection_matrix])
         h = np.hstack([p_max, -p_min])
-        return Constraint(G=self.G, h=h)
+        return Constraint(G=G, h=h)

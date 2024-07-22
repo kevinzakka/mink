@@ -79,4 +79,4 @@ extend-exclude = ["**/_argparse.py"]
 python_version = "3.12"
 ignore_missing_imports = true
 warn_unused_configs = true
-exclude = ["examples/", "scripts/"]
+exclude = ["scripts/"]

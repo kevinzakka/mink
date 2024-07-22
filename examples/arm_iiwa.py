@@ -6,8 +6,6 @@ import numpy as np
 from loop_rate_limiters import RateLimiter
 
 import mink
-from mink.lie import SE3, SO3
-from mink.utils import set_mocap_pose_from_site
 
 _HERE = Path(__file__).parent
 _XML = _HERE / "kuka_iiwa_14" / "scene.xml"
@@ -29,9 +27,9 @@ if __name__ == "__main__":
             frame_type="site",
             position_cost=1.0,
             orientation_cost=1.0,
-            lm_damping=1e-2,
+            lm_damping=1.0,
         ),
-        posture_task := mink.PostureTask(model=model, cost=1e-1),
+        posture_task := mink.PostureTask(model=model, cost=1e-3),
     ]
 
     limits = [
@@ -39,8 +37,6 @@ if __name__ == "__main__":
     ]
 
     ## =================== ##
-
-    mid = model.body("target").mocapid[0]
 
     # IK settings.
     solver = "quadprog"
@@ -58,16 +54,15 @@ if __name__ == "__main__":
         mujoco.mj_forward(model, data)
 
         # Initialize the mocap target at the end-effector site.
-        set_mocap_pose_from_site(model, data, "target", "attachment_site")
+        mink.move_mocap_to_frame(model, data, "target", "attachment_site", "site")
 
         posture_task.set_target_from_configuration(configuration)
 
         rate = RateLimiter(frequency=500.0)
         while viewer.is_running():
-            target_pos = data.mocap_pos[mid]
-            target_ori = data.mocap_quat[mid]
-            target_pose = SE3.from_rotation_and_translation(SO3(target_ori), target_pos)
-            end_effector_task.set_target(target_pose)
+            # Update task target.
+            T_wt = mink.SE3.from_mocap_name(model, data, "target")
+            end_effector_task.set_target(T_wt)
 
             # Compute velocity and integrate into the next configuration.
             for i in range(max_iters):

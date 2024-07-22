@@ -138,6 +138,7 @@ class MatrixLieGroup(abc.ABC):
     @classmethod
     @abc.abstractmethod
     def ljacinv(cls, other: np.ndarray) -> np.ndarray:
+        # NOTE: Can just be np.linalg.inv(cls.ljac(other)).
         raise NotImplementedError
 
     # Eqn. 67.

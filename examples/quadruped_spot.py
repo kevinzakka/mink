@@ -2,14 +2,10 @@ from pathlib import Path
 
 import mujoco
 import mujoco.viewer
+import numpy as np
 from loop_rate_limiters import RateLimiter
 
 import mink
-from mink.utils import (
-    set_mocap_pose_from_body,
-    set_mocap_pose_from_geom,
-    set_mocap_pose_from_site,
-)
 
 _HERE = Path(__file__).parent
 _XML = _HERE / "boston_dynamics_spot" / "scene.xml"
@@ -17,6 +13,11 @@ _XML = _HERE / "boston_dynamics_spot" / "scene.xml"
 
 if __name__ == "__main__":
     model = mujoco.MjModel.from_xml_path(_XML.as_posix())
+    data = mujoco.MjData(model)
+
+    ## =================== ##
+    ## Setup IK.
+    ## =================== ##
 
     configuration = mink.Configuration(model)
 
@@ -29,7 +30,7 @@ if __name__ == "__main__":
         orientation_cost=1.0,
     )
 
-    posture_task = mink.PostureTask(cost=1e-5)
+    posture_task = mink.PostureTask(model, cost=1e-5)
 
     feet_tasks = []
     for foot in feet:
@@ -50,71 +51,65 @@ if __name__ == "__main__":
 
     tasks = [base_task, posture_task, *feet_tasks, eef_task]
 
-    # # Get all geom IDs belonging to the arm.
-    # arm_body_ids: list[int] = []
-    # for bid in range(model.nbody):
-    #     if "arm" in model.body(bid).name:
-    #         arm_body_ids.append(bid)
-    # arm_geom_ids: list[int] = []
-    # for gid in range(model.ngeom):
-    #     if model.geom_bodyid[gid] in arm_body_ids:
-    #         arm_geom_ids.append(gid)
-    # body_ids: list[int] = []
-    # for bid in range(model.nbody):
-    #     if model.body_rootid[bid] == model.body("body").id and bid not in arm_body_ids:
-    #         body_ids.append(bid)
-    # quad_geom_ids: list[int] = []
-    # for gid in range(model.ngeom):
-    #     if model.geom_bodyid[gid] in body_ids:
-    #         quad_geom_ids.append(gid)
-    # collision_pairs = [(arm_geom_ids, quad_geom_ids)]
-
     limits = [
         mink.ConfigurationLimit(model=model),
-        # mink.CollisionAvoidanceLimit(
-        #     model=model,
-        #     geom_pairs=collision_pairs,
-        #     minimum_distance_from_collisions=0.01,
-        #     collision_detection_distance=0.5,
-        #     as_id=True,
-        # ),
     ]
+
+    ## =================== ##
 
     base_mid = model.body("body_target").mocapid[0]
     feet_mid = [model.body(f"{foot}_target").mocapid[0] for foot in feet]
     eef_mid = model.body("EE_target").mocapid[0]
 
-    model = configuration.model
-    data = configuration.data
+    # IK settings.
     solver = "quadprog"
+    pos_threshold = 1e-4
+    ori_threshold = 1e-4
+    max_iters = 20
 
     with mujoco.viewer.launch_passive(
         model=model, data=data, show_left_ui=False, show_right_ui=False
     ) as viewer:
         mujoco.mjv_defaultFreeCamera(model, viewer.cam)
 
-        # Initialize to the home keyframe.
-        configuration.update_from_keyframe("home")
-        posture_task.set_target_from_configuration(configuration)
+        mujoco.mj_resetDataKeyframe(model, data, model.key("home").id)
+        configuration.update(data.qpos)
+        mujoco.mj_forward(model, data)
 
-        # Initialize mocap bodies at their respective sites.
+        posture_task.set_target_from_configuration(configuration)
         for foot in feet:
-            set_mocap_pose_from_geom(model, data, f"{foot}_target", foot)
-        set_mocap_pose_from_body(model, data, "body_target", "body")
-        set_mocap_pose_from_site(model, data, "EE_target", "EE")
+            mink.move_mocap_to_frame(model, data, f"{foot}_target", foot, "geom")
+        mink.move_mocap_to_frame(model, data, "body_target", "body", "body")
+        mink.move_mocap_to_frame(model, data, "EE_target", "EE", "site")
 
         rate = RateLimiter(frequency=500.0)
         while viewer.is_running():
-            # Update task targets.
-            base_task.set_target(mink.SE3.from_mocap(data, base_mid))
+            base_task.set_target(mink.SE3.from_mocap_id(data, base_mid))
             for i, task in enumerate(feet_tasks):
-                task.set_target(mink.SE3.from_mocap(data, feet_mid[i]))
-            eef_task.set_target(mink.SE3.from_mocap(data, eef_mid))
+                task.set_target(mink.SE3.from_mocap_id(data, feet_mid[i]))
+            eef_task.set_target(mink.SE3.from_mocap_id(data, eef_mid))
 
-            # Compute velocity, integrate and set control signal.
-            vel = mink.solve_ik(configuration, tasks, limits, rate.dt, solver, 1e-5)
-            configuration.integrate_inplace(vel, rate.dt)
-            mujoco.mj_camlight(model, data)
+            # Compute velocity and integrate into the next configuration.
+            for i in range(max_iters):
+                vel = mink.solve_ik(configuration, tasks, limits, rate.dt, solver, 1e-3)
+                configuration.integrate_inplace(vel, rate.dt)
+
+                pos_achieved = True
+                ori_achieved = True
+                for task in [
+                    eef_task,
+                    base_task,
+                    *feet_tasks,
+                ]:
+                    err = eef_task.compute_error(configuration)
+                    pos_achieved &= bool(np.linalg.norm(err[:3]) <= pos_threshold)
+                    ori_achieved &= bool(np.linalg.norm(err[3:]) <= ori_threshold)
+                if pos_achieved and ori_achieved:
+                    print(f"Exiting after {i} iterations.")
+                    break
+
+            data.ctrl = configuration.q[7:]
+            mujoco.mj_step(model, data)
 
             # Visualize at fixed FPS.
             viewer.sync()

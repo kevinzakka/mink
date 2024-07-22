@@ -7,7 +7,6 @@ from dm_control import mjcf
 from loop_rate_limiters import RateLimiter
 
 import mink
-from mink.utils import set_mocap_pose_from_site
 
 _HERE = Path(__file__).parent
 _XML = _HERE / "universal_robots_ur5e" / "ur5e.xml"
@@ -127,23 +126,25 @@ if __name__ == "__main__":
         mujoco.mjv_defaultFreeCamera(model, viewer.cam)
         viewer.opt.frame = mujoco.mjtFrame.mjFRAME_SITE
 
-        set_mocap_pose_from_site(model, data, "base_target", "base")
-        set_mocap_pose_from_site(model, data, "l_target", "l_ur5e/attachment_site")
-        set_mocap_pose_from_site(model, data, "r_target", "r_ur5e/attachment_site")
+        for mocap, frame in zip(
+            ["base_target", "l_target", "r_target"],
+            ["base", "l_ur5e/attachment_site", "r_ur5e/attachment_site"],
+        ):
+            mink.move_mocap_to_frame(model, data, mocap, frame, "site")
 
         rate = RateLimiter(frequency=200.0)
         t = 0.0
         while viewer.is_running():
             data.mocap_pos[base_mid][2] = 0.3 * np.sin(2.0 * t)
-            base_task.set_target_from_mocap(data, base_mid)
+            base_task.set_target(mink.SE3.from_mocap_name(model, data, "base_target"))
 
             data.mocap_pos[left_mid][1] = 0.5 + 0.2 * np.sin(2.0 * t)
             data.mocap_pos[left_mid][2] = 0.2
-            left_ee_task.set_target_from_mocap(data, left_mid)
+            left_ee_task.set_target(mink.SE3.from_mocap_name(model, data, "l_target"))
 
             data.mocap_pos[right_mid][1] = 0.5 + 0.2 * np.sin(2.0 * t)
             data.mocap_pos[right_mid][2] = 0.2
-            right_ee_task.set_target_from_mocap(data, right_mid)
+            right_ee_task.set_target(mink.SE3.from_mocap_name(model, data, "r_target"))
 
             vel = mink.solve_ik(configuration, tasks, limits, rate.dt, solver, 1e-2)
             configuration.integrate_inplace(vel, rate.dt)

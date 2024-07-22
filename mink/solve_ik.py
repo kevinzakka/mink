@@ -57,7 +57,7 @@ def solve_ik(
     dt: float,
     solver: str,
     damping: float = 1e-12,
-    safety_break: bool = True,
+    safety_break: bool = False,
     **kwargs,
 ) -> np.ndarray:
     """Compute a velocity tangent to the current configuration."""

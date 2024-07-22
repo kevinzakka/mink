@@ -200,7 +200,7 @@ class SE3(MatrixLieGroup):
     def ljac(cls, other: np.ndarray) -> np.ndarray:
         theta = other[3:]
         if theta @ theta < get_epsilon(theta.dtype):
-            return np.eye(6)
+            return np.eye(cls.tangent_dim)
         Q = _getQ(other)
         J = SO3.ljac(theta)
         O = np.zeros((3, 3))
@@ -211,7 +211,7 @@ class SE3(MatrixLieGroup):
     def ljacinv(cls, other: np.ndarray) -> np.ndarray:
         theta = other[3:]
         if theta @ theta < get_epsilon(theta.dtype):
-            return np.eye(6)
+            return np.eye(cls.tangent_dim)
         Q = _getQ(other)
         J_inv = SO3.ljacinv(theta)
         O = np.zeros((3, 3))

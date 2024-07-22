@@ -6,8 +6,6 @@ import numpy as np
 from loop_rate_limiters import RateLimiter
 
 import mink
-from mink.lie import SE3, SO3
-from mink.utils import custom_configuration_vector, set_mocap_pose_from_site
 
 _HERE = Path(__file__).parent
 _XML = _HERE / "universal_robots_ur5e" / "scene.xml"
@@ -40,9 +38,9 @@ if __name__ == "__main__":
 
     limits = [
         mink.ConfigurationLimit(model=configuration.model),
-        # mink.CollisionAvoidanceLimit(
-        #     model=configuration.model, geom_pairs=collision_pairs
-        # ),
+        mink.CollisionAvoidanceLimit(
+            model=configuration.model, geom_pairs=collision_pairs
+        ),
     ]
 
     max_velocities = {
@@ -71,26 +69,18 @@ if __name__ == "__main__":
     ) as viewer:
         mujoco.mjv_defaultFreeCamera(model, viewer.cam)
 
-        # mujoco.mj_resetDataKeyframe(model, data, model.key("home").id)
-        q_ref = custom_configuration_vector(
-            model,
-            "home",
-            shoulder_pan=(0.0, 0.1),
-        )
-        data.qpos = q_ref
-
+        mujoco.mj_resetDataKeyframe(model, data, model.key("home").id)
         configuration.update(data.qpos)
         mujoco.mj_forward(model, data)
 
         # Initialize the mocap target at the end-effector site.
-        set_mocap_pose_from_site(model, data, "target", "attachment_site")
+        mink.move_mocap_to_frame(model, data, "target", "attachment_site", "site")
 
         rate = RateLimiter(frequency=500.0)
         while viewer.is_running():
-            target_pos = data.mocap_pos[mid]
-            target_ori = data.mocap_quat[mid]
-            target_pose = SE3.from_rotation_and_translation(SO3(target_ori), target_pos)
-            end_effector_task.set_target(target_pose)
+            # Update task target.
+            T_wt = mink.SE3.from_mocap_name(model, data, "target")
+            end_effector_task.set_target(T_wt)
 
             # Compute velocity and integrate into the next configuration.
             for i in range(max_iters):
