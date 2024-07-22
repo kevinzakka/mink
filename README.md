@@ -1,5 +1,7 @@
 # mink
 
+[![Build](https://img.shields.io/github/actions/workflow/status/kevinzakka/mink/ci.yml?branch=main)](https://github.com/kevinzakka/mink/actions)
+
 A port of [pink](https://github.com/stephane-caron/pink) for MuJoCo.
 
 ## Installation
