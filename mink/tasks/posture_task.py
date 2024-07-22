@@ -90,8 +90,6 @@ class PostureTask(Task):
 
         The task Jacobian is the derivative of the task error with respect to the
         current configuration. It is equal to -I and has dimension (nv, nv).
-
-        del (q* ⊖ q) / del q = -J^{-1}_{l} (Eqn 82)
         """
         if self.target_q is None:
             raise TargetNotSet(self.__class__.__name__)
