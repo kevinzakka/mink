@@ -2,7 +2,6 @@
 
 import numpy as np
 import numpy.typing as npt
-import pinocchio as pin
 
 from ..configuration import Configuration
 from ..lie import SE3
@@ -105,8 +104,9 @@ class FrameTask(Task):
 
         jac = configuration.get_frame_jacobian(self.frame_name, self.frame_type)
 
-        X = self.transform_target_to_world
-        Y = configuration.get_transform_frame_to_world(self.frame_name, self.frame_type)
-        pin_jlog = -pin.Jlog6(pin.SE3((X.inverse() @ Y).as_matrix()))
+        transform_frame_to_world = configuration.get_transform_frame_to_world(
+            self.frame_name, self.frame_type
+        )
 
-        return pin_jlog @ jac
+        T_tb = self.transform_target_to_world.inverse() @ transform_frame_to_world
+        return -T_tb.jlog() @ jac

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import NamedTuple
 
 import mujoco
 import numpy as np
@@ -12,8 +13,7 @@ _IDENTITIY_WXYZ = np.array([1.0, 0.0, 0.0, 0.0], dtype=np.float64)
 _INVERT_QUAT_SIGN = np.array([1.0, -1.0, -1.0, -1.0], dtype=np.float64)
 
 
-@dataclass(frozen=True)
-class RollPitchYaw:
+class RollPitchYaw(NamedTuple):
     roll: float
     pitch: float
     yaw: float
@@ -192,46 +192,33 @@ class SO3(MatrixLieGroup):
     def adjoint(self) -> np.ndarray:
         return self.as_matrix()
 
-    # log(this^{-1} * x)
-    def jlog(self):
-        log = self.log()
-        return _V_inv(log).T
+    # Jacobians.
 
+    # Eqn. 145, 174.
+    @classmethod
+    def ljac(cls, other: np.ndarray) -> np.ndarray:
+        theta = np.sqrt(other @ other)
+        use_taylor = theta < get_epsilon(theta.dtype)
+        if use_taylor:
+            t2 = theta**2
+            A = (1.0 / 2.0) * (1.0 - t2 / 12.0 * (1.0 - t2 / 30.0 * (1.0 - t2 / 56.0)))
+            B = (1.0 / 6.0) * (1.0 - t2 / 20.0 * (1.0 - t2 / 42.0 * (1.0 - t2 / 72.0)))
+        else:
+            A = (1 - np.cos(theta)) / (theta**2)
+            B = (theta - np.sin(theta)) / (theta**3)
+        skew_other = skew(other)
+        return np.eye(3) + A * skew_other + B * (skew_other @ skew_other)
 
-def _V_inv(theta: np.ndarray) -> np.ndarray:
-    theta_squared = np.sum(np.square(theta), axis=-1)
-    use_taylor = theta_squared < get_epsilon(theta_squared.dtype)
-
-    # Shim to avoid NaNs in np.where branches, which cause failures for
-    # reverse-mode AD.
-    theta_squared_safe = np.where(
-        use_taylor,
-        np.ones_like(theta_squared),  # Any non-zero value should do here.
-        theta_squared,
-    )
-    del theta_squared
-    theta_safe = np.sqrt(theta_squared_safe)
-    half_theta_safe = theta_safe / 2.0
-
-    skew_omega = skew(theta)
-    V_inv = np.where(
-        use_taylor[None, None],
-        np.eye(3)
-        - 0.5 * skew_omega
-        + np.einsum("ij,jk->ik", skew_omega, skew_omega) / 12.0,
-        (
-            np.eye(3)
-            - 0.5 * skew_omega
-            + (
-                (
-                    1.0
-                    - theta_safe
-                    * np.cos(half_theta_safe)
-                    / (2.0 * np.sin(half_theta_safe))
-                )
-                / theta_squared_safe
-            )[None, None]
-            * np.einsum("ij,jk->ik", skew_omega, skew_omega)
-        ),
-    )
-    return V_inv
+    @classmethod
+    def ljacinv(cls, other: np.ndarray) -> np.ndarray:
+        theta = np.sqrt(other @ other)
+        use_taylor = theta < get_epsilon(theta.dtype)
+        if use_taylor:
+            t2 = theta**2
+            A = (1.0 / 12.0) * (1.0 + t2 / 60.0 * (1.0 + t2 / 42.0 * (1.0 + t2 / 40.0)))
+        else:
+            A = (1.0 / theta**2) * (
+                1.0 - (theta * np.sin(theta) / (2.0 * (1.0 - np.cos(theta))))
+            )
+        skew_other = skew(other)
+        return np.eye(3) - 0.5 * skew_other + A * (skew_other @ skew_other)

@@ -156,12 +156,7 @@ class SE3(MatrixLieGroup):
             translation=(self.rotation() @ other.translation()) + self.translation(),
         )
 
-    ##
-    #
-    ##
-
     def log(self) -> np.ndarray:
-        """Eqn 173."""
         omega = self.rotation().log()
         theta_squared = omega @ omega
         use_taylor = theta_squared < get_epsilon(theta_squared.dtype)
@@ -189,13 +184,6 @@ class SE3(MatrixLieGroup):
             )
         return np.concatenate([V_inv @ self.translation(), omega])
 
-    def jlog(self) -> np.ndarray:
-        raise NotImplementedError
-
-    def minus(self, other: SE3) -> np.ndarray:
-        """X minus Y = log(Y^-1 @ X)"""
-        return (other.inverse() @ self).log()
-
     def adjoint(self) -> np.ndarray:
         R = self.rotation().as_matrix()
         return np.block(
@@ -204,3 +192,58 @@ class SE3(MatrixLieGroup):
                 [np.zeros((3, 3), dtype=np.float64), R],
             ]
         )
+
+    # Jacobians.
+
+    # Eqn 179 a)
+    @classmethod
+    def ljac(cls, other: np.ndarray) -> np.ndarray:
+        theta = other[3:]
+        if theta @ theta < get_epsilon(theta.dtype):
+            return np.eye(6)
+        Q = _getQ(other)
+        J = SO3.ljac(theta)
+        O = np.zeros((3, 3))
+        return np.block([[J, Q], [O, J]])
+
+    # Eqn 179 b)
+    @classmethod
+    def ljacinv(cls, other: np.ndarray) -> np.ndarray:
+        theta = other[3:]
+        if theta @ theta < get_epsilon(theta.dtype):
+            return np.eye(6)
+        Q = _getQ(other)
+        J_inv = SO3.ljacinv(theta)
+        O = np.zeros((3, 3))
+        return np.block([[J_inv, -J_inv @ Q @ J_inv], [O, J_inv]])
+
+
+# Eqn 180.
+def _getQ(c) -> np.ndarray:
+    theta_sq = c[3:] @ c[3:]
+    A = 0.5
+    if theta_sq < get_epsilon(theta_sq.dtype):
+        B = (1.0 / 6.0) + (1.0 / 120.0) * theta_sq
+        C = -(1.0 / 24.0) + (1.0 / 720.0) * theta_sq
+        D = -(1.0 / 60.0)
+    else:
+        theta = np.sqrt(theta_sq)
+        sin_theta = np.sin(theta)
+        cos_theta = np.cos(theta)
+        B = (theta - sin_theta) / (theta_sq * theta)
+        C = (1.0 - theta_sq / 2.0 - cos_theta) / (theta_sq * theta_sq)
+        D = ((2) * theta - (3) * sin_theta + theta * cos_theta) / (
+            (2) * theta_sq * theta_sq * theta
+        )
+    V = skew(c[:3])
+    W = skew(c[3:])
+    VW = V @ W
+    WV = VW.T
+    WVW = WV @ W
+    VWW = VW @ W
+    return (
+        +A * V
+        + B * (WV + VW + WVW)
+        - C * (VWW - VWW.T - 3 * WVW)
+        + D * (WVW @ W + W @ WVW)
+    )

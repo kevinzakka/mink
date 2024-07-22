@@ -101,3 +101,54 @@ class MatrixLieGroup(abc.ABC):
     def normalize(self) -> Self:
         """Normalize/projects values and returns."""
         raise NotImplementedError
+
+    # Plus and minus operators.
+
+    # Eqn. 25.
+    def rplus(self, other: np.ndarray) -> Self:
+        return self @ self.exp(other)
+
+    # Eqn. 26.
+    def rminus(self, other: Self) -> np.ndarray:
+        return (other.inverse() @ self).log()
+
+    # Eqn. 27.
+    def lplus(self, other: np.ndarray) -> Self:
+        return self.exp(other) @ self
+
+    # Eqn. 28.
+    def lminus(self, other: Self) -> np.ndarray:
+        return (self @ other.inverse()).log()
+
+    def plus(self, other: np.ndarray) -> Self:
+        """Alias for rplus."""
+        return self.rplus(other)
+
+    def minus(self, other: Self) -> np.ndarray:
+        """Alias for rminus."""
+        return self.rminus(other)
+
+    # Jacobians.
+
+    @classmethod
+    @abc.abstractmethod
+    def ljac(cls, other: np.ndarray) -> np.ndarray:
+        raise NotImplementedError
+
+    @classmethod
+    @abc.abstractmethod
+    def ljacinv(cls, other: np.ndarray) -> np.ndarray:
+        raise NotImplementedError
+
+    # Eqn. 67.
+    @classmethod
+    def rjac(cls, other: np.ndarray) -> np.ndarray:
+        return cls.ljac(-other)
+
+    @classmethod
+    def rjacinv(cls, other: np.ndarray) -> np.ndarray:
+        return cls.ljacinv(-other)
+
+    # Eqn. 79.
+    def jlog(self) -> np.ndarray:
+        return self.rjacinv(self.log())
