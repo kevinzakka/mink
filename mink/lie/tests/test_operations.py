@@ -57,6 +57,13 @@ class TestOperations(parameterized.TestCase):
         T_ab = T_wa.inverse() @ T_wb
         assert_transforms_close(T_wa.rplus(T_ab.log()), T_wb)
 
+    def test_jlog(self, group: Type[MatrixLieGroup]):
+        state = group.sample_uniform()
+        w = np.random.rand(state.tangent_dim) * 1e-4
+        state_pert = state.plus(w).log()
+        state_lin = state.log() + state.jlog() @ w
+        np.testing.assert_allclose(state_pert, state_lin, atol=1e-7)
+
 
 class TestGroupSpecificOperations(absltest.TestCase):
     """Group specific tests."""
