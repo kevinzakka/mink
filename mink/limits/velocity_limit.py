@@ -1,4 +1,5 @@
 from typing import Mapping
+
 import mujoco
 import numpy as np
 import numpy.typing as npt

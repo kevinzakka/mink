@@ -29,7 +29,7 @@ if __name__ == "__main__":
             orientation_cost=1.0,
             lm_damping=1.0,
         ),
-        posture_task := mink.PostureTask(model=model, cost=1e-3),
+        posture_task := mink.PostureTask(model=model, cost=1e-2),
     ]
 
     limits = [
@@ -51,12 +51,11 @@ if __name__ == "__main__":
 
         mujoco.mj_resetDataKeyframe(model, data, model.key("home").id)
         configuration.update(data.qpos)
+        posture_task.set_target_from_configuration(configuration)
         mujoco.mj_forward(model, data)
 
         # Initialize the mocap target at the end-effector site.
         mink.move_mocap_to_frame(model, data, "target", "attachment_site", "site")
-
-        posture_task.set_target_from_configuration(configuration)
 
         rate = RateLimiter(frequency=500.0)
         while viewer.is_running():
