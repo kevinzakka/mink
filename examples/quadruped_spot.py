@@ -83,6 +83,7 @@ if __name__ == "__main__":
         mink.move_mocap_to_frame(model, data, "EE_target", "EE", "site")
 
         rate = RateLimiter(frequency=500.0)
+        vel = None
         while viewer.is_running():
             base_task.set_target(mink.SE3.from_mocap_id(data, base_mid))
             for i, task in enumerate(feet_tasks):
@@ -91,7 +92,7 @@ if __name__ == "__main__":
 
             # Compute velocity and integrate into the next configuration.
             for i in range(max_iters):
-                vel = mink.solve_ik(configuration, tasks, limits, rate.dt, solver, 1e-3)
+                vel = mink.solve_ik(configuration, tasks, limits, rate.dt, 1e-3, prev_sol=None)
                 configuration.integrate_inplace(vel, rate.dt)
 
                 pos_achieved = True

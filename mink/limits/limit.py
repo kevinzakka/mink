@@ -17,6 +17,16 @@ class Constraint(NamedTuple):
         return self.G is None or self.h is None
 
 
+class BoxConstraint(NamedTuple):
+    """Box constraint of the form lower <= x <= upper."""
+
+    lower: np.ndarray | None = None
+    upper: np.ndarray | None = None
+
+    def inactive(self) -> bool:
+        return self.lower is None and self.upper is None
+
+
 class Limit(abc.ABC):
     """Abstract base class for kinematic limits."""
 
@@ -25,7 +35,7 @@ class Limit(abc.ABC):
         self,
         configuration: Configuration,
         dt: float,
-    ) -> Constraint:
+    ) -> BoxConstraint:
         """Compute limit as linearized QP inequalities.
 
         Args:

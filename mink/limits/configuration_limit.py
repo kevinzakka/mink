@@ -4,7 +4,7 @@ import numpy as np
 from ..configuration import Configuration
 from ..constants import qpos_width
 from .exceptions import LimitDefinitionError
-from .limit import Constraint, Limit
+from .limit import Constraint, Limit, BoxConstraint
 
 
 class ConfigurationLimit(Limit):
@@ -69,8 +69,8 @@ class ConfigurationLimit(Limit):
         self,
         configuration: Configuration,
         dt: float,
-    ) -> Constraint:
-        # del dt  # Unused.
+    ) -> BoxConstraint:
+        del dt  # Unused.
 
         # Upper.
         delta_q_max = np.zeros(self.model.nv)
@@ -94,6 +94,4 @@ class ConfigurationLimit(Limit):
 
         p_min = self.gain * delta_q_min[self.indices]
         p_max = self.gain * delta_q_max[self.indices]
-        G = np.vstack([self.projection_matrix, -self.projection_matrix])
-        h = np.hstack([p_max, -p_min])
-        return Constraint(G=G, h=h)
+        return BoxConstraint(p_min, p_max)

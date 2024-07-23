@@ -38,9 +38,9 @@ if __name__ == "__main__":
 
     limits = [
         mink.ConfigurationLimit(model=configuration.model),
-        mink.CollisionAvoidanceLimit(
-            model=configuration.model, geom_pairs=collision_pairs
-        ),
+        # mink.CollisionAvoidanceLimit(
+        #     model=configuration.model, geom_pairs=collision_pairs
+        # ),
     ]
 
     max_velocities = {
@@ -59,7 +59,6 @@ if __name__ == "__main__":
     mid = model.body("target").mocapid[0]
 
     # IK settings.
-    solver = "quadprog"
     pos_threshold = 1e-4
     ori_threshold = 1e-4
     max_iters = 20
@@ -83,14 +82,15 @@ if __name__ == "__main__":
             end_effector_task.set_target(T_wt)
 
             # Compute velocity and integrate into the next configuration.
+            vel = None
             for i in range(max_iters):
-                vel = mink.solve_ik(configuration, tasks, limits, rate.dt, solver, 1e-3)
+                vel = mink.solve_ik(configuration, tasks, limits, rate.dt, 1e-3, prev_sol=vel)
                 configuration.integrate_inplace(vel, rate.dt)
                 err = end_effector_task.compute_error(configuration)
                 pos_achieved = np.linalg.norm(err[:3]) <= pos_threshold
                 ori_achieved = np.linalg.norm(err[3:]) <= ori_threshold
                 if pos_achieved and ori_achieved:
-                    print(f"Exiting after {i} iterations.")
+                    # print(f"Exiting after {i} iterations.")
                     break
 
             data.ctrl = configuration.q

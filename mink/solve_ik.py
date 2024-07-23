@@ -1,13 +1,55 @@
 """Build and solve the inverse kinematics problem."""
 
+from dataclasses import dataclass
 from typing import Sequence
 
 import numpy as np
-import qpsolvers
+import mujoco
 
 from .configuration import Configuration
 from .limits import Limit
 from .tasks import Objective, Task
+
+
+@dataclass(frozen=True)
+class Problem:
+    H: np.ndarray
+    c: np.ndarray
+    lower: np.ndarray
+    upper: np.ndarray
+    n: int
+    dq: np.ndarray
+    R: np.ndarray
+    index: np.ndarray
+
+    @staticmethod
+    def initialize(
+        configuration: Configuration,
+        H: np.ndarray,
+        c: np.ndarray,
+        lower: np.ndarray,
+        upper: np.ndarray,
+        prev_sol: np.ndarray | None,
+    ):
+        n = configuration.model.nv
+        dq = np.zeros(n) if prev_sol is None else prev_sol
+        R = np.zeros((n, n + 7))
+        index = np.zeros(n, np.int32)
+        return Problem(H, c, lower, upper, n, dq, R, index)
+
+    def solve(self) -> np.ndarray | None:
+        rank = mujoco.mju_boxQP(
+            res=self.dq,
+            R=self.R,
+            index=self.index,
+            H=self.H,
+            g=self.c,
+            lower=self.lower,
+            upper=self.upper,
+        )
+        if rank == -1:
+            return None
+        return self.dq
 
 
 def _compute_qp_objective(
@@ -25,17 +67,20 @@ def _compute_qp_objective(
 def _compute_qp_inequalities(
     configuration: Configuration, limits: Sequence[Limit], dt: float
 ) -> tuple[np.ndarray | None, np.ndarray | None]:
-    G_list = []
-    h_list = []
+    lower_list = []
+    upper_list = []
     for limit in limits:
         inequality = limit.compute_qp_inequalities(configuration, dt)
         if not inequality.inactive:
             assert inequality.G is not None and inequality.h is not None  # mypy.
-            G_list.append(inequality.G)
-            h_list.append(inequality.h)
-    if not G_list:
+            lower_list.append(inequality.lower)
+            upper_list.append(inequality.upper)
+    if not lower_list:
         return None, None
-    return np.vstack(G_list), np.hstack(h_list)
+    print(len(lower_list))
+    lower = np.maximum.reduce(lower_list)
+    upper = np.minimum.reduce(upper_list)
+    return lower, upper
 
 
 def build_ik(
@@ -44,10 +89,11 @@ def build_ik(
     limits: Sequence[Limit],
     dt: float,
     damping: float = 1e-12,
-) -> qpsolvers.Problem:
+    prev_sol: np.ndarray | None = None,
+):
     P, q = _compute_qp_objective(configuration, tasks, damping)
-    G, h = _compute_qp_inequalities(configuration, limits, dt)
-    return qpsolvers.Problem(P, q, G, h)
+    lower, upper = _compute_qp_inequalities(configuration, limits, dt)
+    return Problem.initialize(configuration, P, q, lower, upper, prev_sol)
 
 
 def solve_ik(
@@ -55,16 +101,13 @@ def solve_ik(
     tasks: Sequence[Task],
     limits: Sequence[Limit],
     dt: float,
-    solver: str,
     damping: float = 1e-12,
-    safety_break: bool = False,
-    **kwargs,
+    prev_sol: np.ndarray | None = None,
 ) -> np.ndarray:
     """Compute a velocity tangent to the current configuration."""
-    configuration.check_limits(safety_break=safety_break)
-    problem = build_ik(configuration, tasks, limits, dt, damping)
-    result = qpsolvers.solve_problem(problem, solver=solver, **kwargs)
-    dq = result.x
+    configuration.check_limits(safety_break=False)
+    problem = build_ik(configuration, tasks, limits, dt, damping, prev_sol)
+    dq = problem.solve()
     assert dq is not None
     v: np.ndarray = dq / dt
     return v
