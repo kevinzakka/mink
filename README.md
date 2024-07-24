@@ -17,15 +17,11 @@ pip install -e ".[examples]"
 * Arms:
 * Humanoids:
 * Quadrupeds:
-
-## Todo list
-
-- [ ] Improve collision avoidance collision pair creation.
-- [ ] Add tests for collision avoidance limit.
-- [x] Implement `Jlog6` for frame task.
-- [ ] Add tests for `mink.lie`.
+* Hands:
+* Mobile manipulators:
 
 ## Acknowledgements
 
 * pink
 * jaxlie
+* dm_robotics
