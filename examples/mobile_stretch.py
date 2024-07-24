@@ -31,10 +31,6 @@ if __name__ == "__main__":
         ),
     ]
 
-    limits = [
-        mink.ConfigurationLimit(model=model),
-    ]
-
     model = configuration.model
     data = configuration.data
     solver = "quadprog"
@@ -74,8 +70,7 @@ if __name__ == "__main__":
             base_task.set_target(mink.SE3.from_mocap_id(data, mid))
 
             # Compute velocity and integrate into the next configuration.
-            vel = mink.solve_ik(configuration, tasks, [], rate.dt, solver, 1e-3)
-            # vel = np.zeros(configuration.nv)
+            vel = mink.solve_ik(configuration, tasks, rate.dt, solver, 1e-3)
             configuration.integrate_inplace(vel, rate.dt)
             mujoco.mj_camlight(model, data)
 

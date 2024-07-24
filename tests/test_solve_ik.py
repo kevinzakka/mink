@@ -39,21 +39,21 @@ class TestSolveIK(absltest.TestCase):
             mink.solve_ik(
                 self.configuration,
                 [],
-                self.limits,
+                limits=self.limits,
                 dt=1.0,
                 safety_break=True,
                 solver="quadprog",
             )
 
     def test_ignores_configuration_limits(self):
-        """IK ignores for configuration limits if flag is set."""
+        """IK ignores configuration limits if flag is set."""
         q = self.model.key("home").qpos.copy()
         q[0] = np.inf
         self.configuration.update(q)
         mink.solve_ik(
             self.configuration,
             [],
-            self.limits,
+            limits=self.limits,
             dt=1.0,
             solver="quadprog",
             safety_break=False,
@@ -61,13 +61,19 @@ class TestSolveIK(absltest.TestCase):
 
     def test_model_with_no_limits(self):
         """Model with no limits has no inequality constraints."""
-        problem = mink.build_ik(self.configuration, [], [], dt=1.0)
+        problem = mink.build_ik(self.configuration, [], limits=[], dt=1.0)
         self.assertIsNone(problem.G)
         self.assertIsNone(problem.h)
 
+    def test_default_limits(self):
+        """If no limits are provided, configuration limits are set."""
+        problem = mink.build_ik(self.configuration, [], dt=1.0)
+        self.assertIsNotNone(problem.G)
+        self.assertIsNotNone(problem.h)
+
     def test_trivial_solution(self):
         """No task returns no velocity."""
-        v = mink.solve_ik(self.configuration, [], [], dt=1e-3, solver="quadprog")
+        v = mink.solve_ik(self.configuration, [], limits=[], dt=1e-3, solver="quadprog")
         np.testing.assert_allclose(v, np.zeros((self.model.nv,)))
 
     def test_single_task_fulfilled(self):
@@ -82,7 +88,7 @@ class TestSolveIK(absltest.TestCase):
             self.configuration.get_transform_frame_to_world("attachment_site", "site")
         )
         v = mink.solve_ik(
-            self.configuration, [task], self.limits, dt=1e-3, solver="quadprog"
+            self.configuration, [task], limits=self.limits, dt=1e-3, solver="quadprog"
         )
         np.testing.assert_allclose(v, np.zeros((self.model.nv,)), atol=1e-10)
 
@@ -104,7 +110,7 @@ class TestSolveIK(absltest.TestCase):
 
         dt = 5e-3  # [s]
         velocity = mink.solve_ik(
-            configuration, [task], self.limits, dt, solver="quadprog"
+            configuration, [task], limits=self.limits, dt=dt, solver="quadprog"
         )
 
         # Initially we are nowhere near the target and moving.
@@ -127,7 +133,7 @@ class TestSolveIK(absltest.TestCase):
             last_error = error
             configuration.integrate_inplace(velocity, dt)
             velocity = mink.solve_ik(
-                configuration, [task], self.limits, dt, solver="quadprog"
+                configuration, [task], limits=self.limits, dt=dt, solver="quadprog"
             )
 
         # After nb_steps we are at the target and not moving.

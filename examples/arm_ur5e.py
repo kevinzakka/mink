@@ -70,7 +70,9 @@ if __name__ == "__main__":
             end_effector_task.set_target(T_wt)
 
             # Compute velocity and integrate into the next configuration.
-            vel = mink.solve_ik(configuration, tasks, limits, rate.dt, solver, 1e-3)
+            vel = mink.solve_ik(
+                configuration, tasks, rate.dt, solver, 1e-3, limits=limits
+            )
             configuration.integrate_inplace(vel, rate.dt)
             mujoco.mj_camlight(model, data)
 

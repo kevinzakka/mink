@@ -34,10 +34,6 @@ if __name__ == "__main__":
         *finger_tasks,
     ]
 
-    limits = [
-        mink.ConfigurationLimit(model=configuration.model),
-    ]
-
     model = configuration.model
     data = configuration.data
     solver = "quadprog"
@@ -64,7 +60,7 @@ if __name__ == "__main__":
                     mink.SE3.from_mocap_name(model, data, f"{finger}_target")
                 )
 
-            vel = mink.solve_ik(configuration, tasks, limits, rate.dt, solver, 1e-5)
+            vel = mink.solve_ik(configuration, tasks, rate.dt, solver, 1e-5)
             configuration.integrate_inplace(vel, rate.dt)
             mujoco.mj_camlight(model, data)
 

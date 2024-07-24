@@ -51,10 +51,6 @@ if __name__ == "__main__":
 
     tasks = [base_task, posture_task, *feet_tasks, eef_task]
 
-    limits = [
-        mink.ConfigurationLimit(model=model),
-    ]
-
     ## =================== ##
 
     base_mid = model.body("body_target").mocapid[0]
@@ -91,7 +87,7 @@ if __name__ == "__main__":
 
             # Compute velocity and integrate into the next configuration.
             for i in range(max_iters):
-                vel = mink.solve_ik(configuration, tasks, limits, rate.dt, solver, 1e-3)
+                vel = mink.solve_ik(configuration, tasks, rate.dt, solver, 1e-3)
                 configuration.integrate_inplace(vel, rate.dt)
 
                 pos_achieved = True

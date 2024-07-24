@@ -80,13 +80,6 @@ class Task(abc.ABC):
         """
         raise NotImplementedError
 
-    def _construct_weight(self, n: int) -> np.ndarray:
-        # if self.cost is None:
-        # return np.eye(n)
-        # diag = [self.cost] * n if isinstance(self.cost, float) else self.cost
-        diag = self.cost
-        return np.diag(diag)
-
     def compute_qp_objective(self, configuration: Configuration) -> Objective:
         """Compute the matrix-vector pair :math:`(H, c)` of the QP objective.
 
@@ -99,7 +92,7 @@ class Task(abc.ABC):
         jacobian = self.compute_jacobian(configuration)  # (k, nv)
         minus_gain_error = -self.gain * self.compute_error(configuration)  # (k,)
 
-        weight = self._construct_weight(jacobian.shape[0])
+        weight = np.diag(self.cost)
         weighted_jacobian = weight @ jacobian
         weighted_error = weight @ minus_gain_error
 

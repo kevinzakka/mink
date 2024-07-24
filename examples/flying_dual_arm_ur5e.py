@@ -109,10 +109,6 @@ if __name__ == "__main__":
         ),
     ]
 
-    limits = [
-        mink.ConfigurationLimit(model=model),
-    ]
-
     base_mid = model.body("base_target").mocapid[0]
     left_mid = model.body("l_target").mocapid[0]
     right_mid = model.body("r_target").mocapid[0]
@@ -146,7 +142,7 @@ if __name__ == "__main__":
             data.mocap_pos[right_mid][2] = 0.2
             right_ee_task.set_target(mink.SE3.from_mocap_name(model, data, "r_target"))
 
-            vel = mink.solve_ik(configuration, tasks, limits, rate.dt, solver, 1e-2)
+            vel = mink.solve_ik(configuration, tasks, rate.dt, solver, 1e-2)
             configuration.integrate_inplace(vel, rate.dt)
             mujoco.mj_camlight(model, data)
 

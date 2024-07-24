@@ -6,7 +6,7 @@ import numpy as np
 import qpsolvers
 
 from .configuration import Configuration
-from .limits import Limit
+from .limits import ConfigurationLimit, Limit
 from .tasks import Objective, Task
 
 
@@ -23,8 +23,10 @@ def _compute_qp_objective(
 
 
 def _compute_qp_inequalities(
-    configuration: Configuration, limits: Sequence[Limit], dt: float
+    configuration: Configuration, limits: Sequence[Limit] | None, dt: float
 ) -> tuple[np.ndarray | None, np.ndarray | None]:
+    if limits is None:
+        limits = [ConfigurationLimit(configuration.model)]
     G_list = []
     h_list = []
     for limit in limits:
@@ -41,10 +43,23 @@ def _compute_qp_inequalities(
 def build_ik(
     configuration: Configuration,
     tasks: Sequence[Task],
-    limits: Sequence[Limit],
     dt: float,
     damping: float = 1e-12,
+    limits: Sequence[Limit] | None = None,
 ) -> qpsolvers.Problem:
+    """Build quadratic program from current configuration and tasks.
+
+    Args:
+        configuration: Robot configuration.
+        tasks: List of kinematic tasks.
+        dt: Integration timestep in [s].
+        damping: Levenberg-Marquardt damping.
+        limits: List of limits to enforce. Set to empty list to disable. If None,
+            defaults to a configuration limit.
+
+    Returns:
+        Quadratic program of the inverse kinematics problem.
+    """
     P, q = _compute_qp_objective(configuration, tasks, damping)
     G, h = _compute_qp_inequalities(configuration, limits, dt)
     return qpsolvers.Problem(P, q, G, h)
@@ -53,16 +68,36 @@ def build_ik(
 def solve_ik(
     configuration: Configuration,
     tasks: Sequence[Task],
-    limits: Sequence[Limit],
     dt: float,
     solver: str,
     damping: float = 1e-12,
     safety_break: bool = False,
+    limits: Sequence[Limit] | None = None,
     **kwargs,
 ) -> np.ndarray:
-    """Compute a velocity tangent to the current configuration."""
+    """Solve the differential inverse kinematics problem.
+
+    Computes a velocity tangent to the current robot configuration. The computed
+    velocity satisfies at (weighted) best the set of provided kinematic tasks.
+
+    Args:
+        configuration: Robot configuration.
+        tasks: List of kinematic tasks.
+        dt: Integration timestep in [s].
+        solver: Backend quadratic programming (QP) solver.
+        damping: Levenberg-Marquardt damping.
+        safety_break: If True, stop execution and raise an exception if
+            the current configuration is outside limits. If False, print a
+            warning and continue execution.
+        limits: List of limits to enforce. Set to empty list to disable. If None,
+            defaults to a configuration limit.
+        kwargs: Keyword arguments to forward to the backend QP solver.
+
+    Returns:
+        Velocity `v` in tangent space.
+    """
     configuration.check_limits(safety_break=safety_break)
-    problem = build_ik(configuration, tasks, limits, dt, damping)
+    problem = build_ik(configuration, tasks, dt, damping, limits)
     result = qpsolvers.solve_problem(problem, solver=solver, **kwargs)
     dq = result.x
     assert dq is not None

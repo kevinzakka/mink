@@ -32,10 +32,6 @@ if __name__ == "__main__":
         posture_task := mink.PostureTask(model=model, cost=1e-2),
     ]
 
-    limits = [
-        mink.ConfigurationLimit(model=configuration.model),
-    ]
-
     ## =================== ##
 
     # IK settings.
@@ -65,7 +61,7 @@ if __name__ == "__main__":
 
             # Compute velocity and integrate into the next configuration.
             for i in range(max_iters):
-                vel = mink.solve_ik(configuration, tasks, limits, rate.dt, solver, 1e-3)
+                vel = mink.solve_ik(configuration, tasks, rate.dt, solver, 1e-3)
                 configuration.integrate_inplace(vel, rate.dt)
                 err = end_effector_task.compute_error(configuration)
                 pos_achieved = np.linalg.norm(err[:3]) <= pos_threshold

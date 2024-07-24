@@ -53,10 +53,6 @@ if __name__ == "__main__":
         hand_tasks.append(task)
     tasks.extend(hand_tasks)
 
-    limits = [
-        mink.ConfigurationLimit(model=model),
-    ]
-
     com_mid = model.body("com_target").mocapid[0]
     feet_mid = [model.body(f"{foot}_target").mocapid[0] for foot in feet]
     hands_mid = [model.body(f"{hand}_target").mocapid[0] for hand in hands]
@@ -89,7 +85,7 @@ if __name__ == "__main__":
                 foot_task.set_target(mink.SE3.from_mocap_id(data, feet_mid[i]))
                 hand_task.set_target(mink.SE3.from_mocap_id(data, hands_mid[i]))
 
-            vel = mink.solve_ik(configuration, tasks, limits, rate.dt, solver, 1e-1)
+            vel = mink.solve_ik(configuration, tasks, rate.dt, solver, 1e-1)
             configuration.integrate_inplace(vel, rate.dt)
             mujoco.mj_camlight(model, data)
 

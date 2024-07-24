@@ -38,10 +38,6 @@ if __name__ == "__main__":
 
     tasks = [base_task, posture_task, *feet_tasks]
 
-    limits = [
-        mink.ConfigurationLimit(model=model),
-    ]
-
     base_mid = model.body("trunk_target").mocapid[0]
     feet_mid = [model.body(f"{foot}_target").mocapid[0] for foot in feet]
 
@@ -71,7 +67,7 @@ if __name__ == "__main__":
                 task.set_target(mink.SE3.from_mocap_id(data, feet_mid[i]))
 
             # Compute velocity, integrate and set control signal.
-            vel = mink.solve_ik(configuration, tasks, limits, rate.dt, solver, 1e-5)
+            vel = mink.solve_ik(configuration, tasks, rate.dt, solver, 1e-5)
             configuration.integrate_inplace(vel, rate.dt)
             mujoco.mj_camlight(model, data)
 
