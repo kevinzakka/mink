@@ -86,9 +86,12 @@ if __name__ == "__main__":
         ),
     ]
 
-    l_geom_names = [f"l_iiwa/geom_{i}" for i in range(30, 61)]
-    r_geom_names = [f"r_iiwa/geom_{i}" for i in range(30, 61)]
-    collision_pairs = [(l_geom_names, r_geom_names)]
+    collision_pairs = [
+        (
+            mink.get_subtree_geom_ids(model, model.body("l_iiwa/link5").id),
+            mink.get_subtree_geom_ids(model, model.body("r_iiwa/link5").id),
+        ),
+    ]
 
     limits = [
         mink.ConfigurationLimit(model=model),

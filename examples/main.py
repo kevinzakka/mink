@@ -31,15 +31,17 @@ if __name__ == "__main__":
         ),
     ]
 
-    # Enable collision avoidance between the following geoms:
+    # Enable collision avoidance between (wrist3, floor) and (wrist3, wall).
+    wrist_3_geoms = mink.get_body_geom_ids(model, model.body("wrist_3_link").id)
     collision_pairs = [
-        (["wrist_3_link"], ["floor", "wall"]),
+        (wrist_3_geoms, ["floor", "wall"]),
     ]
 
     limits = [
         mink.ConfigurationLimit(model=configuration.model),
         mink.CollisionAvoidanceLimit(
-            model=configuration.model, geom_pairs=collision_pairs
+            model=configuration.model,
+            geom_pairs=collision_pairs,
         ),
     ]
 

@@ -7,7 +7,10 @@ from ..configuration import Configuration
 
 
 class Constraint(NamedTuple):
-    """Linear inequalities in the form Gx <= h."""
+    """Linear inequalities in the form G(q) dq <= h(q).
+
+    The limit is considered inactive when G or h are None.
+    """
 
     G: np.ndarray | None = None  # (nv, nv)
     h: np.ndarray | None = None  # (nv,)
@@ -29,11 +32,10 @@ class Limit(abc.ABC):
         """Compute limit as linearized QP inequalities.
 
         Args:
-            configuration: Configuration instance.
-            dt: Integration time step in seconds.
+            configuration: Current configuration.
+            dt: Integration time step in [s].
 
         Returns:
-            An instance of Constraint representing an inequality constraint of the form
-            Gx <= h.
+            Pair (G, h) representing the inequality constraint.
         """
         raise NotImplementedError

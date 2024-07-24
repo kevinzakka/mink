@@ -1,3 +1,25 @@
+"""Limit on joint velocities.
+
+Derivation
+==========
+
+Given maximum joint velocity magnitudes v_max, we can express joint velocity limits as:
+
+    -v_max      <= v       <= v_max
+    -v_max      <= dq / dt <= v_max
+    -v_max * dt <= dq      <= v_max * dt
+
+Rewriting as G dq <= h:
+
+    +I * dq <= v_max * dt
+    -I * dq <= v_max * dt
+
+Stacking them together, we get:
+
+    G = [+I, -I]
+    h = [v_max * dt, v_max * dt]
+"""
+
 from typing import Mapping
 
 import mujoco
@@ -13,7 +35,7 @@ from .limit import Constraint, Limit
 class VelocityLimit(Limit):
     """Limit for joint velocities in a model.
 
-    Floating base joints (joint type="free") are ignored.
+    Floating base joints are ignored.
 
     Attributes:
         indices: Tangent indices corresponding to velocity-limited joints.

@@ -1,3 +1,25 @@
+"""Limit on joint positions.
+
+Derivation
+==========
+
+Using a first order Taylor expansion on the configuration, we can write the limit as:
+
+    q_min     <= q + v * dt <= q_max
+    q_min     <= q + dq     <= q_max
+    q_min - q <= dq         <= q_max - q
+
+Rewriting as G dq <= h:
+
+    +I * dq <= q_max - q
+    -I * dq <= q - q_min
+
+Stacking them together, we get:
+
+    G = [+I, -I]
+    h = [q_max - q, q - q_min]
+"""
+
 import mujoco
 import numpy as np
 
@@ -13,8 +35,11 @@ class ConfigurationLimit(Limit):
     Floating base joints (joint type="free") are ignored.
 
     Attributes:
-        indices:
-        projection_matrix:
+        indices: Tangent indices corresponding to configuration-limited joints.
+        projection_matrix: Projection from tangent space to subspace with
+            configuration-limited joints.
+        lower: Lower configuration limit.
+        upper: Upper configuration limit.
     """
 
     def __init__(
@@ -70,7 +95,7 @@ class ConfigurationLimit(Limit):
         configuration: Configuration,
         dt: float,
     ) -> Constraint:
-        # del dt  # Unused.
+        del dt  # Unused.
 
         # Upper.
         delta_q_max = np.zeros(self.model.nv)
@@ -88,12 +113,14 @@ class ConfigurationLimit(Limit):
             m=self.model,
             qvel=delta_q_min,
             dt=1.0,
-            qpos1=configuration.q,
-            qpos2=self.lower,
+            # NOTE: mujoco.mj_differentiatePos does `qpos2 - qpos1` so notice the order
+            # swap here compared to above.
+            qpos1=self.lower,
+            qpos2=configuration.q,
         )
 
         p_min = self.gain * delta_q_min[self.indices]
         p_max = self.gain * delta_q_max[self.indices]
         G = np.vstack([self.projection_matrix, -self.projection_matrix])
-        h = np.hstack([p_max, -p_min])
+        h = np.hstack([p_max, p_min])
         return Constraint(G=G, h=h)

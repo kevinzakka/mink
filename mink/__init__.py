@@ -28,7 +28,9 @@ from .solve_ik import build_ik, solve_ik
 from .tasks import ComTask, FrameTask, Objective, PostureTask, TargetNotSet, Task
 from .utils import (
     custom_configuration_vector,
+    get_body_geom_ids,
     get_freejoint_dims,
+    get_subtree_geom_ids,
     move_mocap_to_frame,
 )
 
@@ -67,4 +69,6 @@ __all__ = (
     "custom_configuration_vector",
     "get_freejoint_dims",
     "move_mocap_to_frame",
+    "get_subtree_geom_ids",
+    "get_body_geom_ids",
 )
