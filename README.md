@@ -7,10 +7,12 @@ mink is a library for differential inverse kinematics in Python, based on the [M
 ## Installation
 
 ```bash
-pip install -e ".[examples]"
+pip install mink
 ```
 
 ## Examples
+
+mink works with a variety of robots, including:
 
 * Arms: [UR5e](https://github.com/kevinzakka/mink/blob/main/examples/arm_ur5e_actuators.py), [iiwa14](https://github.com/kevinzakka/mink/blob/main/examples/arm_iiwa.py), [bimanual iiwa14](https://github.com/kevinzakka/mink/blob/main/examples/dual_iiwa.py)
 * Humanoids: [Unitree G1](https://github.com/kevinzakka/mink/blob/main/examples/humanoid_g1.py)
