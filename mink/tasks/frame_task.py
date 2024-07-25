@@ -1,5 +1,7 @@
 """Frame task implementation."""
 
+from typing import Optional
+
 import numpy as np
 import numpy.typing as npt
 
@@ -19,7 +21,7 @@ class FrameTask(Task):
     """
 
     k: int = 6
-    transform_target_to_world: SE3 | None
+    transform_target_to_world: Optional[SE3]
 
     def __init__(
         self,

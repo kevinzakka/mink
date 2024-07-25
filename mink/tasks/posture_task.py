@@ -1,3 +1,5 @@
+from typing import Optional
+
 import mujoco
 import numpy as np
 import numpy.typing as npt
@@ -18,7 +20,7 @@ class PostureTask(Task):
         target_q: Target configuration.
     """
 
-    target_q: np.ndarray | None
+    target_q: Optional[np.ndarray]
 
     def __init__(
         self,

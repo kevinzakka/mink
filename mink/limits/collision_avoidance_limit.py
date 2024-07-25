@@ -30,7 +30,7 @@ where:
 
 import itertools
 from dataclasses import dataclass
-from typing import List, Sequence
+from typing import List, Sequence, Union
 
 import mujoco
 import numpy as np
@@ -39,7 +39,7 @@ from ..configuration import Configuration
 from .limit import Constraint, Limit
 
 # Type aliases.
-Geom = int | str
+Geom = Union[int, str]
 GeomSequence = Sequence[Geom]
 CollisionPair = tuple[GeomSequence, GeomSequence]
 CollisionPairs = Sequence[CollisionPair]

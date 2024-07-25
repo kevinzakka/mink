@@ -1,6 +1,6 @@
 """Build and solve the inverse kinematics problem."""
 
-from typing import Sequence
+from typing import Optional, Sequence
 
 import numpy as np
 import qpsolvers
@@ -23,8 +23,8 @@ def _compute_qp_objective(
 
 
 def _compute_qp_inequalities(
-    configuration: Configuration, limits: Sequence[Limit] | None, dt: float
-) -> tuple[np.ndarray | None, np.ndarray | None]:
+    configuration: Configuration, limits: Optional[Sequence[Limit]], dt: float
+) -> tuple[Optional[np.ndarray], Optional[np.ndarray]]:
     if limits is None:
         limits = [ConfigurationLimit(configuration.model)]
     G_list = []
@@ -45,7 +45,7 @@ def build_ik(
     tasks: Sequence[Task],
     dt: float,
     damping: float = 1e-12,
-    limits: Sequence[Limit] | None = None,
+    limits: Optional[Sequence[Limit]] = None,
 ) -> qpsolvers.Problem:
     """Build quadratic program from current configuration and tasks.
 
@@ -72,7 +72,7 @@ def solve_ik(
     solver: str,
     damping: float = 1e-12,
     safety_break: bool = False,
-    limits: Sequence[Limit] | None = None,
+    limits: Optional[Sequence[Limit]] = None,
     **kwargs,
 ) -> np.ndarray:
     """Solve the differential inverse kinematics problem.

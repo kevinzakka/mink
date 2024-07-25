@@ -1,7 +1,8 @@
 import abc
-from typing import Self, overload
+from typing import Union, overload
 
 import numpy as np
+from typing_extensions import Self
 
 
 class MatrixLieGroup(abc.ABC):
@@ -25,7 +26,7 @@ class MatrixLieGroup(abc.ABC):
     @overload
     def __matmul__(self, other: np.ndarray) -> np.ndarray: ...
 
-    def __matmul__(self, other: Self | np.ndarray) -> Self | np.ndarray:
+    def __matmul__(self, other: Union[Self, np.ndarray]) -> Union[Self, np.ndarray]:
         """Overload of the @ operator."""
         if isinstance(other, np.ndarray):
             return self.apply(target=other)

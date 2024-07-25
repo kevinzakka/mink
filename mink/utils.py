@@ -1,3 +1,5 @@
+from typing import Optional
+
 import mujoco
 import numpy as np
 
@@ -48,7 +50,7 @@ def get_freejoint_dims(model: mujoco.MjModel) -> tuple[list[int], list[int]]:
 
 def custom_configuration_vector(
     model: mujoco.MjModel,
-    key_name: str | None = None,
+    key_name: Optional[str] = None,
     **kwargs,
 ) -> np.ndarray:
     """Generate a configuration vector where named joints have specific values.

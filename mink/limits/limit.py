@@ -1,5 +1,5 @@
 import abc
-from typing import NamedTuple
+from typing import NamedTuple, Optional
 
 import numpy as np
 
@@ -12,8 +12,8 @@ class Constraint(NamedTuple):
     The limit is considered inactive when G or h are None.
     """
 
-    G: np.ndarray | None = None  # (nv, nv)
-    h: np.ndarray | None = None  # (nv,)
+    G: Optional[np.ndarray] = None  # (nv, nv)
+    h: Optional[np.ndarray] = None  # (nv,)
 
     @property
     def inactive(self) -> bool:

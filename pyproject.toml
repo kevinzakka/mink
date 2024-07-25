@@ -8,7 +8,7 @@ readme = "README.md"
 authors = [
     {name = "Kevin Zakka", email = "zakka@berkeley.edu"},
 ]
-requires-python = ">=3.10"
+requires-python = ">=3.9"
 dynamic = ["version", "description"]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
@@ -26,6 +26,7 @@ dependencies = [
     "mujoco >= 3.1.6",
     "qpsolvers >= 4.3.1",
     "quadprog >= 0.1.11",
+    "typing_extensions",
 ]
 keywords = ["inverse", "kinematics", "mujoco"]
 

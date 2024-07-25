@@ -22,7 +22,7 @@ class Configuration:
     def __init__(
         self,
         model: mujoco.MjModel,
-        q: np.ndarray | None = None,
+        q: Optional[np.ndarray] = None,
     ):
         """Constructor.
 

@@ -1,5 +1,7 @@
 """Center of mass task implementation."""
 
+from typing import Optional
+
 import mujoco
 import numpy as np
 import numpy.typing as npt
@@ -17,7 +19,7 @@ class ComTask(Task):
     """
 
     k: int = 3
-    target_com: np.ndarray | None
+    target_com: Optional[np.ndarray]
 
     def __init__(
         self,
