@@ -47,6 +47,11 @@ dev = [
     "mink[test]"
 ]
 
+[project.urls]
+Source = "https://github.com/kevinzakka/mink"
+Tracker = "https://github.com/kevinzakka/mink/issues"
+Changelog = "https://github.com/kevinzakka/mink/blob/main/CHANGELOG.md"
+
 [tool.flit.module]
 name = "mink"
 
