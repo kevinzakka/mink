@@ -16,7 +16,7 @@ from .exceptions import (
     NotWithinConfigurationLimits,
     UnsupportedFrame,
 )
-from .lie import SE3, SO3
+from .lie import SE3, SO3, MatrixLieGroup
 from .limits import (
     CollisionAvoidanceLimit,
     ConfigurationLimit,
@@ -52,6 +52,7 @@ __all__ = (
     "Limit",
     "SO3",
     "SE3",
+    "MatrixLieGroup",
     "MinkError",
     "UnsupportedFrame",
     "InvalidFrame",
