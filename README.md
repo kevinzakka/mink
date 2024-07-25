@@ -6,6 +6,8 @@
 
 mink is a library for differential inverse kinematics in Python, based on the [MuJoCo](https://github.com/google-deepmind/mujoco) physics engine.
 
+![Banner for mink](https://github.com/kevinzakka/mink/blob/assets/banner.png?raw=true)
+
 ## Installation
 
 ```bash

@@ -80,6 +80,7 @@
         <default class="foot">
           <geom type="sphere" size="0.036" pos="0 0 -0.3365" priority="1" condim="6" solimp="0.015 1 0.036"
             friction="0.8 0.02 0.01"/>
+          <site type="sphere" size="0.01" pos="0 0 -0.3365" group="4" rgba="0 0 0 1"/>
         </default>
       </default>
     </default>
@@ -112,6 +113,7 @@
             <geom material="BlackAbs" mesh="front_left_lower_leg" class="visual"/>
             <geom mesh="left_lower_leg_collision" class="collision"/>
             <geom name="FL" class="foot"/>
+            <site name="FL" class="foot"/>
           </body>
         </body>
       </body>
@@ -133,6 +135,7 @@
             <geom material="BlackAbs" mesh="front_right_lower_leg" class="visual"/>
             <geom mesh="right_lower_leg_collision" class="collision"/>
             <geom name="FR" class="foot"/>
+            <site name="FR" class="foot"/>
           </body>
         </body>
       </body>
@@ -154,6 +157,7 @@
             <geom material="BlackAbs" mesh="rear_left_lower_leg" class="visual"/>
             <geom mesh="left_lower_leg_collision" class="collision"/>
             <geom name="HL" class="foot"/>
+            <site name="HL" class="foot"/>
           </body>
         </body>
       </body>
@@ -175,6 +179,7 @@
             <geom material="BlackAbs" mesh="rear_left_lower_leg" class="visual"/>
             <geom mesh="right_lower_leg_collision" class="collision"/>
             <geom name="HR" class="foot"/>
+            <site name="HR" class="foot"/>
           </body>
         </body>
       </body>
@@ -227,7 +232,7 @@
                     <geom class="collision" mesh="front_jaw_coll"/>
                     <geom class="collision" mesh="middle_jaw_coll"/>
                     <geom class="collision" mesh="jaw_tooth_coll"/>
-                    <site name="EE" pos="0.15 0 0" group="5"/>
+                    <site name="EE" pos="0.15 0 0" group="4"/>
                     <body name="arm_link_fngr" pos="0.11745 0 0.01482">
                       <inertial pos="0.0478787 -0.000206768 -0.0162879" quat="0 1 0 1" mass="0.2"
                         diaginertia="0.000391278 0.000300713 0.000143996"/>

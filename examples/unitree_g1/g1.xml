@@ -116,7 +116,7 @@
                 <geom type="mesh" class="visual" mesh="left_ankle_pitch_link"/>
                 <geom type="mesh" mesh="left_ankle_pitch_link" class="collision"/>
                 <body name="left_ankle_roll_link" pos="0 0 -0.017558">
-                  <site name="left_foot" pos="0 0 0"/>
+                  <site name="left_foot" pos="0 0 0" group="4"/>
                   <inertial pos="0.024762 2e-05 -0.012526" quat="0.000771333 0.734476 0.000921291 0.678634" mass="0.391"
                     diaginertia="0.00110394 0.0010657 0.000149255"/>
                   <joint name="left_ankle_roll_joint" axis="1 0 0" range="-0.2618 0.2618"/>
@@ -162,7 +162,7 @@
                 <geom type="mesh" class="visual" mesh="right_ankle_pitch_link"/>
                 <geom type="mesh" mesh="right_ankle_pitch_link" class="collision"/>
                 <body name="right_ankle_roll_link" pos="0 0 -0.017558">
-                  <site name="right_foot" pos="0 0 0"/>
+                  <site name="right_foot" pos="0 0 0" group="4"/>
                   <inertial pos="0.024762 -2e-05 -0.012526" quat="-0.000771333 0.734476 -0.000921291 0.678634"
                     mass="0.391" diaginertia="0.00110394 0.0010657 0.000149255"/>
                   <joint name="right_ankle_roll_joint" axis="1 0 0" range="-0.2618 0.2618"/>
@@ -226,7 +226,7 @@
                       mass="0.0509893" diaginertia="8.68047e-06 7.23365e-06 4.58058e-06"/>
                     <joint name="left_zero_joint" axis="0 1 0" range="-0.523598 0.523598"/>
                     <geom type="mesh" class="visual" mesh="left_zero_link"/>
-                    <site name="left_palm" pos="0 0 0"/>
+                    <site name="left_palm" pos="0 0 0" group="4"/>
                     <body name="left_one_link" pos="-0.026525 -0.0188 -5e-05">
                       <inertial pos="-0.00181538 -0.0327057 -0.000185871" quat="0.701646 0.698199 0.0817825 -0.116289"
                         mass="0.047762" diaginertia="8.03051e-06 7.8455e-06 3.65282e-06"/>
@@ -313,7 +313,7 @@
                       mass="0.0509893" diaginertia="8.68047e-06 7.23365e-06 4.58058e-06"/>
                     <joint name="right_zero_joint" axis="0 1 0" range="-0.523598 0.523598"/>
                     <geom type="mesh" class="visual" mesh="right_zero_link"/>
-                    <site name="right_palm" pos="0 0 0"/>
+                    <site name="right_palm" pos="0 0 0" group="4"/>
                     <body name="right_one_link" pos="-0.026525 0.0188 -5e-05">
                       <inertial pos="-0.00181538 0.0327057 -0.000185871" quat="0.698199 0.701646 0.116289 -0.0817825"
                         mass="0.047762" diaginertia="8.03051e-06 7.8455e-06 3.65282e-06"/>
@@ -430,5 +430,6 @@
       0 0 0 0 0
       0 0 0 0 0 0 0
       0 0 0 0 0 0 0"/>
+      <key qpos='-0.027293 0.003903 0.467012 0.997137 -0.0105655 -0.0497799 0.0559357 -0.845241 -0.103131 -0.0491502 1.72735 -0.68 0.00729141 -1.72027 0.0447156 0.270222 0.821107 0.73 0.2618 -0.0290199 -0.17169 0.336986 0.237654 0.5156 0.0110067 -0.0110071 -0.00556663 -6.6778e-21 -0.000262526 1.65111e-22 -0.000262526 4.50744e-22 -0.529163 -0.844625 -0.39995 0.416593 -0.00542283 -0.00517309 0.00942461 0.00124986 -0.00131234 -0.000275854 -0.00131234 -0.000275854'/>
   </keyframe>
 </mujoco>
