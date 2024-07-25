@@ -73,7 +73,6 @@ lint.ignore = [
     "PLW0603",  # Global statement updates are discouraged.
     "PLW2901"  # For loop variable overwritten.
 ]
-extend-exclude = ["**/_argparse.py"]
 
 [tool.mypy]
 python_version = "3.12"
