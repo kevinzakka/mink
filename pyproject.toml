@@ -37,6 +37,7 @@ examples = [
 ]
 test = [
     "absl-py",
+    "coveralls",
     "pytest",
     "robot_descriptions >= 1.9.0"
 ]
@@ -44,7 +45,7 @@ dev = [
     "mypy",
     "ruff",
     "black",
-    "mink[test]"
+    "mink[test]",
 ]
 
 [project.urls]

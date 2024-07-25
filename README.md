@@ -1,6 +1,7 @@
 # mink
 
 [![Build](https://img.shields.io/github/actions/workflow/status/kevinzakka/mink/ci.yml?branch=main)](https://github.com/kevinzakka/mink/actions)
+[![PyPI version](https://img.shields.io/pypi/v/mink)](https://pypi.org/project/mink/)
 
 mink is a library for differential inverse kinematics in Python, based on the [MuJoCo](https://github.com/google-deepmind/mujoco) physics engine.
 
