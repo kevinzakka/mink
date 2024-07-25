@@ -41,7 +41,7 @@ class Task(abc.ABC):
         if not 0.0 <= gain <= 1.0:
             raise InvalidGain("`gain` must be in the range [0, 1]")
 
-        if not lm_damping >= 0.0:
+        if lm_damping < 0.0:
             raise InvalidDamping("`lm_damping` must be >= 0")
 
         self.cost = cost
