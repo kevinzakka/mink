@@ -1,0 +1,43 @@
+name: Documentation
+
+on:
+    push:
+        branches: [ main ]
+    pull_request:
+        branches: [ main ]
+
+defaults:
+    run:
+        # See https://github.com/mamba-org/provision-with-micromamba#important
+        shell: bash -l {0}
+
+jobs:
+    docs:
+        name: "GitHub Pages"
+        runs-on: ubuntu-latest
+        permissions:
+            contents: write
+        steps:
+            - name: "Checkout Git repository"
+              uses: actions/checkout@v4
+
+            - name: "Install Conda environment with Micromamba"
+              uses: mamba-org/provision-with-micromamba@main
+              with:
+                  cache-downloads: true
+                  cache-env: true
+                  environment-file: doc/environment.yml
+                  environment-name: mink
+
+            - name: "Build documentation"
+              run: |
+                  sphinx-build doc _build -W
+
+            - name: "Deploy to GitHub Pages"
+              uses: peaceiris/actions-gh-pages@v3
+              if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+              with:
+                  publish_branch: gh-pages
+                  github_token: ${{ secrets.GITHUB_TOKEN }}
+                  publish_dir: _build/
+                  force_orphan: true
