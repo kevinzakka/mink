@@ -1,6 +1,7 @@
 # mink
 
 [![Build](https://img.shields.io/github/actions/workflow/status/kevinzakka/mink/ci.yml?branch=main)](https://github.com/kevinzakka/mink/actions)
+[![Documentation](https://img.shields.io/github/actions/workflow/status/kevinzakka/mink/docs.yml?branch=main&label=docs)](https://kevinzakka.github.io/mink/)
 [![Coverage Status](https://coveralls.io/repos/github/kevinzakka/mink/badge.svg)](https://coveralls.io/github/kevinzakka/mink)
 [![PyPI version](https://img.shields.io/pypi/v/mink)](https://pypi.org/project/mink/)
 
