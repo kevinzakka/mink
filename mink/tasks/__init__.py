@@ -1,6 +1,7 @@
 """Kinematic tasks."""
 
 from .com_task import ComTask
+from .damping_task import DampingTask
 from .exceptions import (
     InvalidDamping,
     InvalidGain,
@@ -16,6 +17,7 @@ __all__ = (
     "ComTask",
     "FrameTask",
     "Objective",
+    "DampingTask",
     "PostureTask",
     "Task",
     "TargetNotSet",

@@ -119,7 +119,7 @@ class Configuration:
                     )
 
     def get_frame_jacobian(self, frame_name: str, frame_type: str) -> np.ndarray:
-        """Compute the Jacobian matrix of a frame velocity.
+        r"""Compute the Jacobian matrix of a frame velocity.
 
         Denoting our frame by :math:`B` and the world frame by :math:`W`, the
         Jacobian matrix :math:`{}_B J_{WB}` is related to the body velocity

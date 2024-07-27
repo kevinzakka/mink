@@ -14,7 +14,7 @@ from mink.tasks import (
 
 
 class TestPostureTask(absltest.TestCase):
-    """Test consistency of the com task."""
+    """Test consistency of the posture task."""
 
     @classmethod
     def setUpClass(cls):
