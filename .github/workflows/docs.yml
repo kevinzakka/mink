@@ -26,12 +26,12 @@ jobs:
               with:
                   cache-downloads: true
                   cache-env: true
-                  environment-file: doc/environment.yml
+                  environment-file: docs/environment.yml
                   environment-name: mink
 
             - name: "Build documentation"
               run: |
-                  sphinx-build doc _build -W
+                  sphinx-build docs _build -W
 
             - name: "Deploy to GitHub Pages"
               uses: peaceiris/actions-gh-pages@v3
