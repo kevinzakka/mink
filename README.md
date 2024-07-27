@@ -1,13 +1,21 @@
 # mink
 
 [![Build](https://img.shields.io/github/actions/workflow/status/kevinzakka/mink/ci.yml?branch=main)](https://github.com/kevinzakka/mink/actions)
-[![Documentation](https://img.shields.io/github/actions/workflow/status/kevinzakka/mink/docs.yml?branch=main&label=docs)](https://kevinzakka.github.io/mink/)
 [![Coverage Status](https://coveralls.io/repos/github/kevinzakka/mink/badge.svg)](https://coveralls.io/github/kevinzakka/mink)
 [![PyPI version](https://img.shields.io/pypi/v/mink)](https://pypi.org/project/mink/)
 
+![Banner for mink](https://github.com/kevinzakka/mink/blob/assets/banner.png?raw=true)
+
 mink is a library for differential inverse kinematics in Python, based on the [MuJoCo](https://github.com/google-deepmind/mujoco) physics engine.
 
-![Banner for mink](https://github.com/kevinzakka/mink/blob/assets/banner.png?raw=true)
+Features include:
+
+* Task specification in configuration or operational space;
+* Limits on joint positions and velocities;
+* Collision avoidance between any geom pair;
+* Lie group interface for rigid body transformations.
+
+For usage and API reference, see the [documentation](https://kevinzakka.github.io/mink/).
 
 ## Installation
 
@@ -40,7 +48,7 @@ Install the library, use it and report any bugs in the [issue tracker](https://g
 
 ## Acknowledgements
 
-mink is a direct port of [pink](https://github.com/stephane-caron/pink) which uses [Pinocchio](https://github.com/stack-of-tasks/pinocchio) under the hood. Stéphane Caron, the original author of pink, is a role model for open-source software in robotics. This library would not have been possible without his work and assistance throughout this project.
+mink is a direct port of [Pink](https://github.com/stephane-caron/pink) which uses [Pinocchio](https://github.com/stack-of-tasks/pinocchio) under the hood. Stéphane Caron, the author of Pink, is a role model for open-source software in robotics. This library would not have been possible without his work and assistance throughout this project.
 
 mink also heavily adapts code from the following libraries:
 

@@ -10,8 +10,8 @@ class MatrixLieGroup(abc.ABC):
 
     Attributes:
         matrix_dim: Dimension of square matrix output.
-        parameters_dim:: Dimension of underlying parameters.
-        tangent_dim:: Dimension of tangent space.
+        parameters_dim: Dimension of underlying parameters.
+        tangent_dim: Dimension of tangent space.
         space_dim: Dimension of coordinates that can be transformed.
     """
 
