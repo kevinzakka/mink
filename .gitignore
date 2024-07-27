@@ -1,1 +1,4 @@
 scripts/
+_build/
+_static/
+_templates/

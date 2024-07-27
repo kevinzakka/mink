@@ -1,4 +1,4 @@
-"""Center of mass task implementation."""
+"""Center-of-mass task implementation."""
 
 from typing import Optional
 
@@ -12,7 +12,7 @@ from .task import Task
 
 
 class ComTask(Task):
-    """Regulate the center of mass (CoM) of a robot.
+    """Regulate the center-of-mass (CoM) of a robot.
 
     Attributes:
         target_com: Target position of the CoM.
@@ -46,7 +46,11 @@ class ComTask(Task):
         self.cost[:] = cost
 
     def set_target(self, target_com: npt.ArrayLike) -> None:
-        """Set the target CoM position in the world frame."""
+        """Set the target CoM position in the world frame.
+
+        Args:
+            target_com: Desired center-of-mass position in the world frame.
+        """
         target_com = np.atleast_1d(target_com)
         if target_com.ndim != 1 or target_com.shape[0] != (self.k):
             raise InvalidTarget(
@@ -56,24 +60,44 @@ class ComTask(Task):
         self.target_com = target_com.copy()
 
     def set_target_from_configuration(self, configuration: Configuration) -> None:
-        """Set the target CoM from a given robot configuration."""
+        """Set the target CoM from a given robot configuration.
+
+        Args:
+            configuration: Robot configuration :math:`q`.
+        """
         self.set_target(configuration.data.subtree_com[1])
 
     def compute_error(self, configuration: Configuration) -> np.ndarray:
-        """Compute the CoM task error.
+        r"""Compute the CoM task error.
 
-        The error is the difference between the target CoM and current CoM positions,
-        expressed in the world frame.
+        The error is defined as:
+
+        .. math::
+
+            e(q) = c^* - c
+
+        Args:
+            configuration: Robot configuration :math:`q`.
+
+        Returns:
+            Center-of-mass task error vector :math:`e(q)`.
         """
         if self.target_com is None:
             raise TargetNotSet(self.__class__.__name__)
         return configuration.data.subtree_com[1] - self.target_com
 
     def compute_jacobian(self, configuration: Configuration) -> np.ndarray:
-        """Compute the CoM task Jacobian.
+        r"""Compute the CoM task Jacobian.
 
-        The task Jacobian is the derivative of the task error with respect to the
-        current configuration. It has dimension (3, nv).
+        The task Jacobian :math:`J(q) \in \mathbb{R}^{3 \times n_v}` is the
+        derivative of the CoM position with respect to the current configuration
+        :math:`q`.
+
+        Args:
+            configuration: Robot configuration :math:`q`.
+
+        Returns:
+            Center-of-mass task jacobian :math:`J(q)`.
         """
         if self.target_com is None:
             raise TargetNotSet(self.__class__.__name__)

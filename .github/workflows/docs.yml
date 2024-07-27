@@ -1,0 +1,46 @@
+name: Documentation
+
+on:
+    push:
+        branches: [ main ]
+    pull_request:
+        branches: [ main ]
+
+defaults:
+    run:
+        # See https://github.com/mamba-org/provision-with-micromamba#important
+        shell: bash -l {0}
+
+jobs:
+    docs:
+        name: "GitHub Pages"
+        runs-on: ubuntu-latest
+        permissions:
+            contents: write
+        steps:
+            - name: "Checkout Git repository"
+              uses: actions/checkout@v4
+
+            - name: Set up Python 3.12
+              uses: actions/setup-python@v5
+              with:
+                python-version: "3.12"
+
+            - name: Set up dependencies
+              run: |
+                  pip install uv
+                  uv pip install --system -e ".[dev]"
+                  uv pip install --system -r docs/requirements.txt
+
+            - name: "Build documentation"
+              run: |
+                  sphinx-build docs _build -W
+
+            - name: "Deploy to GitHub Pages"
+              uses: peaceiris/actions-gh-pages@v4
+              if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+              with:
+                  publish_branch: gh-pages
+                  github_token: ${{ secrets.GITHUB_TOKEN }}
+                  publish_dir: _build/
+                  force_orphan: true

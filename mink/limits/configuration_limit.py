@@ -1,24 +1,4 @@
-"""Limit on joint positions.
-
-Derivation
-==========
-
-Using a first order Taylor expansion on the configuration, we can write the limit as:
-
-    q_min     <= q + v * dt <= q_max
-    q_min     <= q + dq     <= q_max
-    q_min - q <= dq         <= q_max - q
-
-Rewriting as G dq <= h:
-
-    +I * dq <= q_max - q
-    -I * dq <= q - q_min
-
-Stacking them together, we get:
-
-    G = [+I, -I]
-    h = [q_max - q, q - q_min]
-"""
+"""Joint position limit."""
 
 import mujoco
 import numpy as np
@@ -30,16 +10,9 @@ from .limit import Constraint, Limit
 
 
 class ConfigurationLimit(Limit):
-    """Limit for joint positions in a model.
+    """Inequality constraint on joint positions in a robot model.
 
-    Floating base joints (joint type="free") are ignored.
-
-    Attributes:
-        indices: Tangent indices corresponding to configuration-limited joints.
-        projection_matrix: Projection from tangent space to subspace with
-            configuration-limited joints.
-        lower: Lower configuration limit.
-        upper: Upper configuration limit.
+    Floating base joints are ignored.
     """
 
     def __init__(
@@ -95,6 +68,26 @@ class ConfigurationLimit(Limit):
         configuration: Configuration,
         dt: float,
     ) -> Constraint:
+        r"""Compute the configuration-dependent joint position limits.
+
+        The limits are defined as:
+
+        .. math::
+
+            {q \ominus q_{min}} \leq \Delta q \leq {q_{max} \ominus q}
+
+        where :math:`q \in {\cal C}` is the robot's configuration and
+        :math:`\Delta q \in T_q({\cal C})` is the displacement in the tangent
+        space at :math:`q`. See the :ref:`derivations` section for more information.
+
+        Args:
+            configuration: Robot configuration :math:`q`.
+            dt: Integration timestep in [s].
+
+        Returns:
+            Pair :math:`(G, h)` representing the inequality constraint as
+            :math:`G \Delta q \leq h`, or ``None`` if there is no limit.
+        """
         del dt  # Unused.
 
         # Upper.

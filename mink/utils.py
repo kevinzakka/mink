@@ -17,8 +17,8 @@ def move_mocap_to_frame(
     """Initialize mocap body pose at a desired frame.
 
     Args:
-        model: An instance of mujoco.MjModel.
-        data: An instance of mujoco.MjData.
+        model: Mujoco model.
+        data: Mujoco data.
         mocap_name: The name of the mocap body.
         frame_name: The desired frame name.
         frame_type: The desired frame type. Can be "body", "geom" or "site".
@@ -36,7 +36,15 @@ def move_mocap_to_frame(
 
 
 def get_freejoint_dims(model: mujoco.MjModel) -> tuple[list[int], list[int]]:
-    """Get all floating joint configuration and tangent indices."""
+    """Get all floating joint configuration and tangent indices.
+
+    Args:
+        model: Mujoco model.
+
+    Returns:
+        A (q_ids, v_ids) pair containing all floating joint indices in the
+        configuration and tangent spaces respectively.
+    """
     q_ids: list[int] = []
     v_ids: list[int] = []
     for j in range(model.njnt):
@@ -56,9 +64,9 @@ def custom_configuration_vector(
     """Generate a configuration vector where named joints have specific values.
 
     Args:
-        model: An MjModel instance.
+        model: Mujoco model.
         key_name: Optional keyframe name to initialize the configuration vector from.
-            Otherwise, the default pose qpos0 is used.
+            Otherwise, the default pose `qpos0` is used.
         kwargs: Custom values for joint coordinates.
 
     Returns:
@@ -93,7 +101,7 @@ def get_subtree_geom_ids(model: mujoco.MjModel, body_id: int) -> list[int]:
     """Get all geoms belonging to subtree starting at a given body.
 
     Args:
-        model: An MjModel instance.
+        model: Mujoco model.
         body_id: ID of body where subtree starts.
 
     Returns:
@@ -117,7 +125,7 @@ def get_body_geom_ids(model: mujoco.MjModel, body_id: int) -> list[int]:
     """Get all geoms belonging to a given body.
 
     Args:
-        model: An MjModel instance.
+        model: Mujoco model.
         body_id: ID of body.
 
     Returns:

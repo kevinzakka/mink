@@ -1,3 +1,5 @@
+"""Posture task implementation."""
+
 from typing import Optional
 
 import mujoco
@@ -11,7 +13,7 @@ from .task import Task
 
 
 class PostureTask(Task):
-    """Regulate joint angles to a desired posture.
+    """Regulate the joint angles of the robot towards a desired posture.
 
     A posture is a vector of actuated joint angles. Floating-base coordinates are not
     affected by this task.
@@ -50,7 +52,11 @@ class PostureTask(Task):
         self.nq = model.nq
 
     def set_target(self, target_q: npt.ArrayLike) -> None:
-        """Set the target posture."""
+        """Set the target posture.
+
+        Args:
+            target_q: Desired joint configuration.
+        """
         target_q = np.atleast_1d(target_q)
         if target_q.ndim != 1 or target_q.shape[0] != (self.nq):
             raise InvalidTarget(
@@ -60,14 +66,27 @@ class PostureTask(Task):
         self.target_q = target_q.copy()
 
     def set_target_from_configuration(self, configuration: Configuration) -> None:
-        """Set the target posture from the current configuration."""
+        r"""Set the target posture from the current configuration.
+
+        Args:
+            configuration: Robot configuration :math:`q`.
+        """
         self.set_target(configuration.q)
 
     def compute_error(self, configuration: Configuration) -> np.ndarray:
-        """Compute the posture task error.
+        r"""Compute the posture task error.
 
-        The error is defined as the right minus error between the target posture and
-        the current posture: `q^* ⊖ q`.
+        The error is defined as:
+
+        .. math::
+
+            e(q) = q^* \ominus q
+
+        Args:
+            configuration: Robot configuration :math:`q`.
+
+        Returns:
+            Posture task error vector :math:`e(q)`.
         """
         if self.target_q is None:
             raise TargetNotSet(self.__class__.__name__)
@@ -88,10 +107,15 @@ class PostureTask(Task):
         return qvel
 
     def compute_jacobian(self, configuration: Configuration) -> np.ndarray:
-        """Compute the posture task Jacobian.
+        r"""Compute the posture task Jacobian.
 
-        The task Jacobian is the derivative of the task error with respect to the
-        current configuration. It is equal to -I and has dimension (nv, nv).
+        The task Jacobian is the identity :math:`I_{n_v}`.
+
+        Args:
+            configuration: Robot configuration :math:`q`.
+
+        Returns:
+            Posture task jacobian :math:`J(q)`.
         """
         if self.target_q is None:
             raise TargetNotSet(self.__class__.__name__)

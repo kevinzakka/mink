@@ -33,20 +33,24 @@ keywords = ["inverse", "kinematics", "mujoco"]
 
 [project.optional-dependencies]
 examples = [
-    "loop-rate-limiters >= 0.1.0",
     "dm_control >= 1.0.20",
+    "loop-rate-limiters >= 0.1.0",
+    "qpsolvers[open_source_solvers] >= 4.3.1",
 ]
 test = [
     "absl-py",
     "coveralls",
     "pytest",
-    "robot_descriptions >= 1.9.0"
+    "robot_descriptions >= 1.9.0",
 ]
 dev = [
-    "mypy",
-    "ruff",
     "black",
     "mink[test]",
+    "mypy",
+    "ruff",
+]
+all = [
+    "mink[examples,dev]",
 ]
 
 [project.urls]

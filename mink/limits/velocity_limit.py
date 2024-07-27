@@ -1,24 +1,4 @@
-"""Limit on joint velocities.
-
-Derivation
-==========
-
-Given maximum joint velocity magnitudes v_max, we can express joint velocity limits as:
-
-    -v_max      <= v       <= v_max
-    -v_max      <= dq / dt <= v_max
-    -v_max * dt <= dq      <= v_max * dt
-
-Rewriting as G dq <= h:
-
-    +I * dq <= v_max * dt
-    -I * dq <= v_max * dt
-
-Stacking them together, we get:
-
-    G = [+I, -I]
-    h = [v_max * dt, v_max * dt]
-"""
+"""Joint velocity limit."""
 
 from typing import Mapping
 
@@ -33,16 +13,21 @@ from .limit import Constraint, Limit
 
 
 class VelocityLimit(Limit):
-    """Limit for joint velocities in a model.
+    """Inequality constraint on joint velocities in a robot model.
 
     Floating base joints are ignored.
 
     Attributes:
         indices: Tangent indices corresponding to velocity-limited joints.
-        limit: Maximum allowed velocity magnitude for velocity-limited joints.
+        limit: Maximum allowed velocity magnitude for velocity-limited joints, in
+            [m]/[s] for slide joints and [rad]/[s] for hinge joints.
         projection_matrix: Projection from tangent space to subspace with
             velocity-limited joints.
     """
+
+    indices: np.ndarray
+    limit: np.ndarray
+    projection_matrix: np.ndarray
 
     def __init__(
         self,
@@ -52,6 +37,7 @@ class VelocityLimit(Limit):
         """Initialize velocity limits.
 
         Args:
+            model: MuJoCo model.
             velocities: Dictionary mapping joint name to maximum allowed magnitude in
                 [m]/[s] for slide joints and [rad]/[s] for hinge joints.
         """
@@ -84,6 +70,27 @@ class VelocityLimit(Limit):
     def compute_qp_inequalities(
         self, configuration: Configuration, dt: float
     ) -> Constraint:
+        r"""Compute the configuration-dependent joint velocity limits.
+
+        The limits are defined as:
+
+        .. math::
+
+            -v_{\text{max}} \cdot dt \leq \Delta q \leq v_{\text{max}} \cdot dt
+
+        where :math:`v_{max} \in {\cal T}` is the robot's velocity limit
+        vector and :math:`\Delta q \in T_q({\cal C})` is the displacement in the
+        tangent space at :math:`q`. See the :ref:`derivations` section for
+        more information.
+
+        Args:
+            configuration: Robot configuration :math:`q`.
+            dt: Integration timestep in [s].
+
+        Returns:
+            Pair :math:`(G, h)` representing the inequality constraint as
+            :math:`G \Delta q \leq h`, or ``None`` if there is no limit.
+        """
         del configuration  # Unused.
         if self.projection_matrix is None:
             return Constraint()

@@ -1,32 +1,4 @@
-"""Collision avoidance limit.
-
-Derivation
-==========
-
-p1, p2: closest points between g1 and g2
-d: distance between g1 and g2 (d = ||p1 - p2||)
-n: normal vector from g1 to g2 (n = (p2 - p1) / ||p2 - p1||)
-
-The relative velocity constraint between g1 and g2 is given by:
-
-    n^T [J2(p2) - J1(p1)] dq <= -k * (d - d_min) / dt
-    V_n <= -k * (d - d_min)
-
-where [J2(p2) - J1(p1)] dq denotes the relative velocity between g1 and g2, and
-n^T [J2(p2) - J1(p1)] dq projects this velocity onto the direction connecting the
-closest points p1 and p2.
-
-We have three cases for the distance d:
-
-1. V_n <= R_b                                if dist_c < dist_m
-2. V_n <= -k * (dist_c - dist_m) / dt + R_b  if dist_m <= d <= dist_d
-3. V_n <= inf                                otherwise
-
-where:
-- dist_c: current normal distance between g1 and g2
-- dist_m: minimum allowed distance between g1 and g2
-- dist_d: collision detection distance
-"""
+"""Collision avoidance limit."""
 
 import itertools
 from dataclasses import dataclass
@@ -46,7 +18,7 @@ CollisionPairs = Sequence[CollisionPair]
 
 
 @dataclass(frozen=True)
-class Contact:
+class _Contact:
     dist: float
     fromto: np.ndarray
     geom1: int
@@ -107,7 +79,31 @@ def _is_pass_contype_conaffinity_check(
 
 
 class CollisionAvoidanceLimit(Limit):
-    """Normal velocity limit between geom pairs."""
+    """Normal velocity limit between geom pairs.
+
+    Attributes:
+        model: MuJoCo model.
+        geom_pairs: Set of collision pairs in which to perform active collision
+            avoidance. A collision pair is defined as a pair of geom groups. A geom
+            group is a set of geom names. For each collision pair, the mapper will
+            attempt to compute joint velocities that avoid collisions between every
+            geom in the first geom group with every geom in the second geom group.
+            Self collision is achieved by adding a collision pair with the same
+            geom group in both pair fields.
+        gain: Gain factor in (0, 1] that determines how fast the geoms are
+            allowed to move towards each other at each iteration. Smaller values
+            are safer but may make the geoms move slower towards each other.
+        minimum_distance_from_collisions: The minimum distance to leave between
+            any two geoms. A negative distance allows the geoms to penetrate by
+            the specified amount.
+        collision_detection_distance: The distance between two geoms at which the
+            active collision avoidance limit will be active. A large value will
+            cause collisions to be detected early, but may incur high computational
+            cost. A negative value will cause the geoms to be detected only after
+            they penetrate by the specified amount.
+        bound_relaxation: An offset on the upper bound of each collision avoidance
+            constraint.
+    """
 
     def __init__(
         self,
@@ -141,7 +137,7 @@ class CollisionAvoidanceLimit(Limit):
                 cost. A negative value will cause the geoms to be detected only after
                 they penetrate by the specified amount.
             bound_relaxation: An offset on the upper bound of each collision avoidance
-                constraint to tighten or relax
+                constraint.
         """
         self.model = model
         self.gain = gain
@@ -178,7 +174,7 @@ class CollisionAvoidanceLimit(Limit):
 
     def _compute_contact_with_minimum_distance(
         self, data: mujoco.MjData, geom1_id: int, geom2_id: int
-    ) -> Contact:
+    ) -> _Contact:
         """Returns the smallest signed distance between a geom pair."""
         fromto = np.empty(6)
         dist = mujoco.mj_geomDistance(
@@ -189,12 +185,12 @@ class CollisionAvoidanceLimit(Limit):
             self.collision_detection_distance,
             fromto,
         )
-        return Contact(
+        return _Contact(
             dist, fromto, geom1_id, geom2_id, self.collision_detection_distance
         )
 
     def _compute_contact_normal_jacobian(
-        self, data: mujoco.MjData, contact: Contact
+        self, data: mujoco.MjData, contact: _Contact
     ) -> np.ndarray:
         """Computes the Jacobian mapping joint velocities to the normal component of
         the relative Cartesian linear velocity between the geom pair.
