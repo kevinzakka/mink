@@ -85,7 +85,7 @@ class CollisionAvoidanceLimit(Limit):
         model: MuJoCo model.
         geom_pairs: Set of collision pairs in which to perform active collision
             avoidance. A collision pair is defined as a pair of geom groups. A geom
-            group is a set of geom names. For each collision pair, the mapper will
+            group is a set of geom names. For each geom pair, the solver will
             attempt to compute joint velocities that avoid collisions between every
             geom in the first geom group with every geom in the second geom group.
             Self collision is achieved by adding a collision pair with the same

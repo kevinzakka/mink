@@ -10,8 +10,8 @@ mink is a library for differential inverse kinematics in Python, based on the [M
 
 Features include:
 
-* Flexbible task specification in configuration or operational space;
-* Limits on joint positions and velocities for safe operation;
+* Task specification in configuration or operational space;
+* Limits on joint positions and velocities;
 * Collision avoidance between any geom pair;
 * Lie group interface for rigid body transformations.
 
