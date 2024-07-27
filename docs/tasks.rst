@@ -1,0 +1,31 @@
+:github_url: https://github.com/kevinzakka/mink/tree/main/doc/tasks.rst
+
+.. _Tasks:
+
+*****
+Tasks
+*****
+
+Definition
+==========
+
+.. automodule:: mink.tasks.task
+    :members:
+
+Frame task
+==========
+
+.. automodule:: mink.tasks.frame_task
+    :members:
+
+Center of mass task
+===================
+
+.. automodule:: mink.tasks.com_task
+    :members:
+
+Posture task
+============
+
+.. automodule:: mink.tasks.posture_task
+    :members:
