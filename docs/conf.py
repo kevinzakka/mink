@@ -19,10 +19,8 @@ extensions = [
     "sphinx-mathjax-offline",
     "sphinx.ext.napoleon",
     "sphinx_favicon",
-    # "sphinx.ext.intersphinx",
 ]
 
-# Pull documentation types from hints
 autodoc_typehints = "both"
 autodoc_class_signature = "separated"
 autodoc_default_options = {
