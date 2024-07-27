@@ -17,7 +17,9 @@ _XML = _HERE / "kuka_iiwa_14" / "iiwa14.xml"
 def construct_model():
     root = mjcf.RootElement()
     root.statistic.meansize = 0.08
-    getattr(root.visual, "global").azimuth = -120
+    root.statistic.extent = 1.0
+    root.statistic.center = (0, 0, 0.5)
+    getattr(root.visual, "global").azimuth = -180
     getattr(root.visual, "global").elevation = -20
 
     root.worldbody.add("light", pos="0 0 1.5", directional="true")

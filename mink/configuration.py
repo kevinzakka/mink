@@ -114,8 +114,8 @@ class Configuration:
                     )
                 else:
                     print(
-                        f"Value {qval} at index {jnt} is out of limits: "
-                        f"[{qmin}, {qmax}]"
+                        f"Value {qval:.2f} at index {jnt} is outside of its limits: "
+                        f"[{qmin:.2f}, {qmax:.2f}]"
                     )
 
     def get_frame_jacobian(self, frame_name: str, frame_type: str) -> np.ndarray:
