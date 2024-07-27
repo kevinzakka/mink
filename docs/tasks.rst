@@ -26,3 +26,9 @@ Posture task
 
 .. automodule:: mink.tasks.posture_task
     :members:
+
+Damping task
+============
+
+.. automodule:: mink.tasks.damping_task
+    :members:

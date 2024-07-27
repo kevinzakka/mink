@@ -25,7 +25,15 @@ from .limits import (
     VelocityLimit,
 )
 from .solve_ik import build_ik, solve_ik
-from .tasks import ComTask, FrameTask, Objective, PostureTask, TargetNotSet, Task
+from .tasks import (
+    ComTask,
+    DampingTask,
+    FrameTask,
+    Objective,
+    PostureTask,
+    TargetNotSet,
+    Task,
+)
 from .utils import (
     custom_configuration_vector,
     get_body_geom_ids,
@@ -41,6 +49,7 @@ __all__ = (
     "Configuration",
     "build_ik",
     "solve_ik",
+    "DampingTask",
     "FrameTask",
     "PostureTask",
     "Task",
