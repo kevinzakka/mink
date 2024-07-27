@@ -48,7 +48,7 @@ Install the library, use it and report any bugs in the [issue tracker](https://g
 
 ## Acknowledgements
 
-mink is a direct port of [pink](https://github.com/stephane-caron/pink) which uses [Pinocchio](https://github.com/stack-of-tasks/pinocchio) under the hood. Stéphane Caron, the original author of pink, is a role model for open-source software in robotics. This library would not have been possible without his work and assistance throughout this project.
+mink is a direct port of [Pink](https://github.com/stephane-caron/pink) which uses [Pinocchio](https://github.com/stack-of-tasks/pinocchio) under the hood. Stéphane Caron, the author of Pink, is a role model for open-source software in robotics. This library would not have been possible without his work and assistance throughout this project.
 
 mink also heavily adapts code from the following libraries:
 
