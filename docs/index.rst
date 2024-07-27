@@ -37,3 +37,4 @@ To include example dependencies:
     inverse_kinematics.rst
     utilities.rst
     derivations.rst
+    references.rst

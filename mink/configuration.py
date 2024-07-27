@@ -1,9 +1,12 @@
 """Configuration space of a robot model.
 
-The :class:`Configuration` class bundles a MuJoCo model and its associated data,
-enabling easy access to kinematic quantities such as frame transforms and Jacobians. It
-automatically performs forward kinematics at each time step, ensuring that all
-kinematic queries return up-to-date information.
+The :class:`Configuration` class bundles a MuJoCo `model <https://mujoco.readthedocs.io/en/latest/APIreference/APItypes.html#mjmodel>`__
+and `data <https://mujoco.readthedocs.io/en/latest/APIreference/APItypes.html#mjdata>`__,
+and enables easy access to kinematic quantities such as frame transforms and frame
+Jacobians.
+
+Frames are coordinate systems that can be attached to different elements of
+the robot model. mink supports frames of type `body`, `geom` and `site`.
 """
 
 from typing import Optional

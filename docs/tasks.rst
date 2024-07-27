@@ -6,9 +6,6 @@
 Tasks
 *****
 
-Definition
-==========
-
 .. automodule:: mink.tasks.task
     :members:
 

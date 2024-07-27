@@ -1,5 +1,7 @@
 """Center-of-mass task implementation."""
 
+from __future__ import annotations
+
 from typing import Optional
 
 import mujoco
@@ -33,7 +35,6 @@ class ComTask(Task):
         self.set_cost(cost)
 
     def set_cost(self, cost: npt.ArrayLike) -> None:
-        """Set a new cost for all CoM coordinates."""
         cost = np.atleast_1d(cost)
         if cost.ndim != 1 or cost.shape[0] not in (1, self.k):
             raise TaskDefinitionError(
@@ -68,13 +69,7 @@ class ComTask(Task):
         self.set_target(configuration.data.subtree_com[1])
 
     def compute_error(self, configuration: Configuration) -> np.ndarray:
-        r"""Compute the CoM task error.
-
-        The error is defined as:
-
-        .. math::
-
-            e(q) = c^* - c
+        """Compute the CoM task error.
 
         Args:
             configuration: Robot configuration :math:`q`.
@@ -87,11 +82,7 @@ class ComTask(Task):
         return configuration.data.subtree_com[1] - self.target_com
 
     def compute_jacobian(self, configuration: Configuration) -> np.ndarray:
-        r"""Compute the CoM task Jacobian.
-
-        The task Jacobian :math:`J(q) \in \mathbb{R}^{3 \times n_v}` is the
-        derivative of the CoM position with respect to the current configuration
-        :math:`q`.
+        """Compute the CoM task Jacobian.
 
         Args:
             configuration: Robot configuration :math:`q`.
