@@ -11,7 +11,7 @@ class TestUtils(absltest.TestCase):
         with self.assertRaises(AssertionError):
             utils.skew(np.zeros((5,)))
 
-    def test_skew_equals_negative(self):
+    def test_skew_transpose_equals_negative(self):
         m = utils.skew(np.random.randn(3))
         np.testing.assert_allclose(m.T, -m)
 
