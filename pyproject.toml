@@ -91,3 +91,11 @@ python_version = "3.12"
 ignore_missing_imports = true
 warn_unused_configs = true
 exclude = ["scripts/"]
+
+[tool.coverage.report]
+exclude_also = [
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "class .*\\bProtocol\\):",
+    "@(abc\\.)?abstractmethod",
+]

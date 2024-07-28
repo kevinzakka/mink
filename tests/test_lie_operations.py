@@ -5,9 +5,10 @@ from typing import Type
 import numpy as np
 from absl.testing import absltest, parameterized
 
-from ..base import MatrixLieGroup
-from ..se3 import SE3
-from ..so3 import SO3
+from mink.lie.base import MatrixLieGroup
+from mink.lie.se3 import SE3
+from mink.lie.so3 import SO3
+
 from .utils import assert_transforms_close
 
 

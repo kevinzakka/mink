@@ -7,6 +7,7 @@ from robot_descriptions.loaders.mujoco import load_robot_description
 
 from mink import Configuration
 from mink.limits import ConfigurationLimit, VelocityLimit
+from mink.limits.exceptions import LimitDefinitionError
 
 
 class TestConfigurationLimit(absltest.TestCase):
@@ -28,6 +29,12 @@ class TestConfigurationLimit(absltest.TestCase):
             "wrist_3_joint": np.pi,
         }
         self.vel_limit = VelocityLimit(self.model, self.velocities)
+
+    def test_throws_error_if_gain_invalid(self):
+        with self.assertRaises(LimitDefinitionError):
+            ConfigurationLimit(self.model, gain=-1)
+        with self.assertRaises(LimitDefinitionError):
+            ConfigurationLimit(self.model, gain=1.1)
 
     def test_dimensions(self):
         limit = ConfigurationLimit(self.model)

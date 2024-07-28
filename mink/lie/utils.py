@@ -1,4 +1,3 @@
-import mujoco
 import numpy as np
 
 
@@ -17,13 +16,6 @@ def skew(x: np.ndarray) -> np.ndarray:
             [0.0, -wz, wy],
             [wz, 0.0, -wx],
             [-wy, wx, 0.0],
-        ]
+        ],
+        dtype=x.dtype,
     )
-
-
-def mat2quat(mat: np.ndarray):
-    """Convert a MuJoCo matrix (9,) to a quaternion (4,)."""
-    assert mat.shape == (9,)
-    quat = np.empty(4, dtype=np.float64)
-    mujoco.mju_mat2Quat(quat, mat)
-    return quat

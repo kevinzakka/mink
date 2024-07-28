@@ -5,8 +5,8 @@ from typing import Type
 from absl.testing import absltest, parameterized
 
 from mink import lie
+from mink.lie.base import MatrixLieGroup
 
-from ..base import MatrixLieGroup
 from .utils import assert_transforms_close
 
 
