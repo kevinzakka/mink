@@ -42,7 +42,7 @@ from .utils import (
     move_mocap_to_frame,
 )
 
-__version__ = "0.0.1"
+__version__ = "0.0.2"
 
 __all__ = (
     "ComTask",

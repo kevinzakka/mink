@@ -25,9 +25,9 @@ classifiers = [
 dependencies = [
     # 3.1.6 for mj_geomDistance.
     "mujoco >= 3.1.6",
-    "qpsolvers >= 4.3.1",
-    "quadprog >= 0.1.11",
+    "qpsolvers[quadprog] >= 4.3.1",
     "typing_extensions",
+    "numpy < 2.0.0",
 ]
 keywords = ["inverse", "kinematics", "mujoco"]
 
@@ -35,7 +35,7 @@ keywords = ["inverse", "kinematics", "mujoco"]
 examples = [
     "dm_control >= 1.0.20",
     "loop-rate-limiters >= 0.1.0",
-    "qpsolvers[open_source_solvers] >= 4.3.1",
+    "qpsolvers[quadprog,osqp] >= 4.3.1",
 ]
 test = [
     "absl-py",
