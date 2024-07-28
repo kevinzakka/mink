@@ -47,16 +47,27 @@ class TestOperations(parameterized.TestCase):
         )
 
     def test_rminus(self, group: Type[MatrixLieGroup]):
-        T_wa = group.sample_uniform()
-        T_wb = group.sample_uniform()
-        T_ab = T_wa.inverse() @ T_wb
-        np.testing.assert_allclose(T_wb.rminus(T_wa), T_ab.log())
+        T_a = group.sample_uniform()
+        T_b = group.sample_uniform()
+        T_c = T_a.inverse() @ T_b
+        np.testing.assert_allclose(T_b.rminus(T_a), T_c.log())
+
+    def test_lminus(self, group: Type[MatrixLieGroup]):
+        T_a = group.sample_uniform()
+        T_b = group.sample_uniform()
+        np.testing.assert_allclose(T_a.lminus(T_b), (T_a @ T_b.inverse()).log())
 
     def test_rplus(self, group: Type[MatrixLieGroup]):
-        T_wa = group.sample_uniform()
-        T_wb = group.sample_uniform()
-        T_ab = T_wa.inverse() @ T_wb
-        assert_transforms_close(T_wa.rplus(T_ab.log()), T_wb)
+        T_a = group.sample_uniform()
+        T_b = group.sample_uniform()
+        T_c = T_a.inverse() @ T_b
+        assert_transforms_close(T_a.rplus(T_c.log()), T_b)
+
+    def test_lplus(self, group: Type[MatrixLieGroup]):
+        T_a = group.sample_uniform()
+        T_b = group.sample_uniform()
+        T_c = T_a @ T_b.inverse()
+        assert_transforms_close(T_b.lplus(T_c.log()), T_a)
 
     def test_jlog(self, group: Type[MatrixLieGroup]):
         state = group.sample_uniform()

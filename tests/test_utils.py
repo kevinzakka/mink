@@ -24,6 +24,18 @@ class TestUtils(absltest.TestCase):
         with self.assertRaises(InvalidKeyframe):
             utils.custom_configuration_vector(self.model, "stand123")
 
+    def test_custom_configuration_vector_from_keyframe(self):
+        q = utils.custom_configuration_vector(self.model, "stand")
+        np.testing.assert_allclose(q, self.model.key("stand").qpos)
+
+    def test_custom_configuration_vector_raises_error_if_jnt_shape_invalid(self):
+        with self.assertRaises(ValueError):
+            utils.custom_configuration_vector(
+                self.model,
+                "stand",
+                left_ankle_pitch_joint=(0.1, 0.1),
+            )
+
     def test_custom_configuration_vector(self):
         custom_joints = dict(
             left_ankle_pitch_joint=0.2,  # Hinge.
@@ -95,6 +107,37 @@ class TestUtils(absltest.TestCase):
             np.asarray(v_ids),
             np.asarray(list(range(0, 6))),
         )
+
+    def test_get_subtree_geom_ids(self):
+        xml_str = """
+        <mujoco>
+          <worldbody>
+            <body name="b1" pos=".1 -.1 0">
+              <joint type="free"/>
+              <geom name="b1/g1" type="sphere" size=".1" mass=".1"/>
+              <geom name="b1/g2" type="sphere" size=".1" mass=".1" pos="0 0 .5"/>
+              <body name="b2">
+                <joint type="hinge" range="0 1.57" limited="true"/>
+                <geom name="b2/g1" type="sphere" size=".1" mass=".1"/>
+              </body>
+            </body>
+            <body name="b3" pos="1 1 1">
+              <joint type="free"/>
+              <geom name="b3/g1" type="sphere" size=".1" mass=".1"/>
+              <body name="b4">
+                <joint type="hinge" range="0 1.57" limited="true"/>
+                <geom name="b4/g1" type="sphere" size=".1" mass=".1"/>
+              </body>
+            </body>
+          </worldbody>
+        </mujoco>
+        """
+        model = mujoco.MjModel.from_xml_string(xml_str)
+        b1_id = model.body("b1").id
+        actual_geom_ids = utils.get_subtree_geom_ids(model, b1_id)
+        geom_names = ["b1/g1", "b1/g2", "b2/g1"]
+        expected_geom_ids = [model.geom(g).id for g in geom_names]
+        self.assertListEqual(actual_geom_ids, expected_geom_ids)
 
 
 if __name__ == "__main__":
