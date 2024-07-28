@@ -64,7 +64,7 @@ class TestFrameTask(absltest.TestCase):
             FrameTask(
                 frame_name="pelvis",
                 frame_type="body",
-                position_cost=[-1.0, 1.5],
+                position_cost=[-1.0, -1.0, -1.0],
                 orientation_cost=[1, 2, 3],
             )
 

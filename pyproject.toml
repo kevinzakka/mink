@@ -99,3 +99,6 @@ exclude_also = [
     "class .*\\bProtocol\\):",
     "@(abc\\.)?abstractmethod",
 ]
+omit = [
+    "*exceptions.py",
+]

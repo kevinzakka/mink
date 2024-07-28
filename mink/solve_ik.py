@@ -27,8 +27,8 @@ def _compute_qp_inequalities(
 ) -> tuple[Optional[np.ndarray], Optional[np.ndarray]]:
     if limits is None:
         limits = [ConfigurationLimit(configuration.model)]
-    G_list = []
-    h_list = []
+    G_list: list[np.ndarray] = []
+    h_list: list[np.ndarray] = []
     for limit in limits:
         inequality = limit.compute_qp_inequalities(configuration, dt)
         if not inequality.inactive:

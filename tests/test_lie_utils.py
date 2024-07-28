@@ -1,6 +1,5 @@
 """Tests utils.py."""
 
-
 import numpy as np
 from absl.testing import absltest
 

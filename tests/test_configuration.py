@@ -22,6 +22,10 @@ class TestConfiguration(absltest.TestCase):
         self.assertEqual(configuration.nq, self.model.nq)
         self.assertEqual(configuration.nv, self.model.nv)
 
+    def test_initialize_from_q(self):
+        configuration = mink.Configuration(self.model, self.q_ref)
+        np.testing.assert_array_equal(configuration.q, self.q_ref)
+
     def test_initialize_from_keyframe(self):
         """Test that keyframe initialization correctly updates the configuration."""
         configuration = mink.Configuration(self.model)
@@ -60,6 +64,18 @@ class TestConfiguration(absltest.TestCase):
         with self.assertRaises(mink.UnsupportedFrame):
             configuration.get_transform_frame_to_world("name_does_not_matter", "joint")
 
+    def test_site_jacobian_raises_error_if_frame_name_is_invalid(self):
+        """Raise an error when the requested frame does not exist."""
+        configuration = mink.Configuration(self.model)
+        with self.assertRaises(mink.InvalidFrame):
+            configuration.get_frame_jacobian("invalid_name", "site")
+
+    def test_site_jacobian_raises_error_if_frame_type_is_invalid(self):
+        """Raise an error when the requested frame type is invalid."""
+        configuration = mink.Configuration(self.model)
+        with self.assertRaises(mink.UnsupportedFrame):
+            configuration.get_frame_jacobian("name_does_not_matter", "joint")
+
     def test_update_raises_error_if_keyframe_is_invalid(self):
         """Raise an error when the request keyframe does not exist."""
         configuration = mink.Configuration(self.model)
@@ -91,6 +107,15 @@ class TestConfiguration(absltest.TestCase):
         configuration.update(q=self.q_ref)
         with self.assertRaises(mink.NotWithinConfigurationLimits):
             configuration.check_limits()
+        configuration.check_limits(safety_break=False)  # Should not raise.
+
+    def test_check_limits_freejoint(self):
+        model = load_robot_description("g1_mj_description")
+        configuration = mink.Configuration(model)
+        q = configuration.q.copy()
+        q[0] = 1e4  # x-coordinate of freejoint.
+        configuration.update(q=q)
+        configuration.check_limits(safety_break=True)  # Should not raise.
 
 
 if __name__ == "__main__":
