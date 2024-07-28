@@ -2,9 +2,11 @@
 
 from typing import Type
 
+import mujoco
 import numpy as np
 from absl.testing import absltest, parameterized
 
+from mink.exceptions import InvalidMocapBody
 from mink.lie.base import MatrixLieGroup
 from mink.lie.se3 import SE3
 from mink.lie.so3 import SO3
@@ -80,9 +82,78 @@ class TestOperations(parameterized.TestCase):
 class TestGroupSpecificOperations(absltest.TestCase):
     """Group specific tests."""
 
+    # SO3.
+
     def test_so3_rpy_bijective(self):
         T = SO3.sample_uniform()
         assert_transforms_close(T, SO3.from_rpy_radians(*T.as_rpy_radians()))
+
+    def test_so3_raises_error_if_invalid_shape(self):
+        with self.assertRaises(ValueError):
+            SO3(wxyz=np.random.rand(2))
+
+    def test_so3_copy(self):
+        T = SO3.sample_uniform()
+        T_c = T.copy()
+        np.testing.assert_allclose(T_c.wxyz, T.wxyz)
+        T.wxyz[0] = 1.0
+        with np.testing.assert_raises(AssertionError):
+            np.testing.assert_allclose(T_c.wxyz, T.wxyz)
+
+    # SE3.
+
+    def test_se3_from_mocap_id(self):
+        xml_str = """
+        <mujoco>
+          <worldbody>
+            <body name="mocap" mocap="true" pos=".5 1 5" quat="1 1 0 0">
+              <geom type="sphere" size=".1" mass=".1"/>
+            </body>
+          </worldbody>
+        </mujoco>
+        """
+        model = mujoco.MjModel.from_xml_string(xml_str)
+        data = mujoco.MjData(model)
+        mujoco.mj_forward(model, data)
+
+        mid = model.body("mocap").mocapid[0]
+        pose = SE3.from_mocap_id(data, mocap_id=mid)
+        np.testing.assert_allclose(pose.translation(), data.mocap_pos[mid])
+        np.testing.assert_allclose(pose.rotation().wxyz, data.mocap_quat[mid])
+
+    def test_se3_from_mocap_name(self):
+        xml_str = """
+        <mujoco>
+          <worldbody>
+            <body name="mocap" mocap="true" pos=".5 1 5" quat="1 1 0 0">
+              <geom type="sphere" size=".1" mass=".1"/>
+            </body>
+          </worldbody>
+        </mujoco>
+        """
+        model = mujoco.MjModel.from_xml_string(xml_str)
+        data = mujoco.MjData(model)
+        mujoco.mj_forward(model, data)
+
+        pose = SE3.from_mocap_name(model, data, "mocap")
+        mid = model.body("mocap").mocapid[0]
+        np.testing.assert_allclose(pose.translation(), data.mocap_pos[mid])
+        np.testing.assert_allclose(pose.rotation().wxyz, data.mocap_quat[mid])
+
+    def test_se3_from_mocap_name_raises_error_if_body_not_mocap(self):
+        xml_str = """
+        <mujoco>
+          <worldbody>
+            <body name="test" pos=".5 1 5" quat="1 1 0 0">
+              <geom type="sphere" size=".1" mass=".1"/>
+            </body>
+          </worldbody>
+        </mujoco>
+        """
+        model = mujoco.MjModel.from_xml_string(xml_str)
+        data = mujoco.MjData(model)
+        with self.assertRaises(InvalidMocapBody):
+            SE3.from_mocap_name(model, data, "test")
 
 
 if __name__ == "__main__":

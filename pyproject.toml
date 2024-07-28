@@ -98,6 +98,7 @@ exclude_also = [
     "if __name__ == .__main__.:",
     "class .*\\bProtocol\\):",
     "@(abc\\.)?abstractmethod",
+    "def __repr__",
 ]
 omit = [
     "*exceptions.py",
