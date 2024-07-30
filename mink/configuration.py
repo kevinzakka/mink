@@ -1,12 +1,10 @@
 """Configuration space of a robot model.
 
-The :class:`Configuration` class bundles a MuJoCo `model <https://mujoco.readthedocs.io/en/latest/APIreference/APItypes.html#mjmodel>`__
+The :class:`Configuration` class encapsulates a MuJoCo
+`model <https://mujoco.readthedocs.io/en/latest/APIreference/APItypes.html#mjmodel>`__
 and `data <https://mujoco.readthedocs.io/en/latest/APIreference/APItypes.html#mjdata>`__,
-and enables easy access to kinematic quantities such as frame transforms and frame
-Jacobians.
-
-Frames are coordinate systems that can be attached to different elements of
-the robot model. mink supports frames of type `body`, `geom` and `site`.
+offering easy access to frame transforms and frame Jacobians. A frame refers to a coordinate
+system that can be attached to various parts of the robot, such as a body, geom, or site.
 """
 
 from typing import Optional
@@ -22,22 +20,17 @@ from .lie import SE3, SO3
 class Configuration:
     """Encapsulates a model and data for convenient access to kinematic quantities.
 
-    This class provides convenient methods to access and update the kinematic quantities
-    of a robot model, such as frame transforms and Jacobians. It ensures that forward
-    kinematics is computed at each time step, allowing the user to query up-to-date
-    information about the robot's state.
-
-    In this context, a frame refers to a coordinate system that can be attached to
-    different elements of the robot model. Currently supported frames include
-    `body`, `geom` and `site`.
+    This class provides methods to access and update the kinematic quantities of a robot
+    model, such as frame transforms and Jacobians. It performs forward kinematics at every
+    time step, ensuring up-to-date information about the robot's state.
 
     Key functionalities include:
 
-        - Running forward kinematics to update the state.
-        - Checking configuration limits.
-        - Computing Jacobians for different frames.
-        - Retrieving frame transforms relative to the world frame.
-        - Integrating velocities to update configurations.
+    * Running forward kinematics to update the state.
+    * Checking configuration limits.
+    * Computing Jacobians for different frames.
+    * Retrieving frame transforms relative to the world frame.
+    * Integrating velocities to update configurations.
     """
 
     def __init__(
@@ -50,7 +43,7 @@ class Configuration:
         Args:
             model: Mujoco model.
             q: Configuration to initialize from. If None, the configuration
-                is initialized to the reference configuration `qpos0`.
+                is initialized to the default configuration `qpos0`.
         """
         self.model = model
         self.data = mujoco.MjData(model)
@@ -60,7 +53,7 @@ class Configuration:
         """Run forward kinematics.
 
         Args:
-            q: Optional configuration vector to override internal data.qpos with.
+            q: Optional configuration vector to override internal `data.qpos` with.
         """
         if q is not None:
             self.data.qpos = q
@@ -74,9 +67,6 @@ class Configuration:
 
         Args:
             key_name: The name of the keyframe.
-
-        Raises:
-            ValueError: if no key named `key` was found in the model.
         """
         key_id = mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_KEY, key_name)
         if key_id == -1:

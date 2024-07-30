@@ -1,4 +1,5 @@
-sphinx >= 7.2.2
+sphinx==7.2.6
 sphinx-favicon
 sphinx-mathjax-offline
 sphinx_rtd_theme
+toml==0.10.2
