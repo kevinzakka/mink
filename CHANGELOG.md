@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## Unreleased
+
+### Added
+
+- New bimanual manipulator example: [aloha.py](examples/arm_aloha.py).
+
 ## [0.0.2] - 2024-07-27
 
 ### Added
