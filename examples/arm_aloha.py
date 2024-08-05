@@ -59,16 +59,35 @@ if __name__ == "__main__":
         ),
     ]
 
+    # Enable collision avoidance between the following geoms:
+    # geoms starting at subtree "right wrist" - "table"
+    # geoms starting at subtree "left wrist"  - "table"
+    # geoms starting at subtree "right wrist" - geoms starting at subtree "left wrist"
+    l_wrist_geoms = mink.get_subtree_geom_ids(model, model.body("left/wrist_link").id)
+    r_wrist_geoms = mink.get_subtree_geom_ids(model, model.body("right/wrist_link").id)
+    collision_pairs = [
+        (l_wrist_geoms, ["table"]),
+        (r_wrist_geoms, ["table"]),
+        (l_wrist_geoms, r_wrist_geoms),
+    ]
+    collision_avoidance_limit = mink.CollisionAvoidanceLimit(
+        model=model,
+        geom_pairs=collision_pairs,
+        minimum_distance_from_collisions=0.05,
+        collision_detection_distance=0.1,
+    )
+
     limits = [
         mink.ConfigurationLimit(model=model),
         mink.VelocityLimit(model, velocity_limits),
+        collision_avoidance_limit,
     ]
 
     l_mid = model.body("left/target").mocapid[0]
     r_mid = model.body("right/target").mocapid[0]
-    solver = "osqp"
-    pos_threshold = 1e-4
-    ori_threshold = 1e-4
+    solver = "quadprog"
+    pos_threshold = 1e-3
+    ori_threshold = 1e-3
     max_iters = 20
 
     with mujoco.viewer.launch_passive(
@@ -94,7 +113,12 @@ if __name__ == "__main__":
             # Compute velocity and integrate into the next configuration.
             for i in range(max_iters):
                 vel = mink.solve_ik(
-                    configuration, tasks, rate.dt, solver, limits=limits
+                    configuration,
+                    tasks,
+                    rate.dt,
+                    solver,
+                    limits=limits,
+                    damping=1e-3,
                 )
                 configuration.integrate_inplace(vel, rate.dt)
 
