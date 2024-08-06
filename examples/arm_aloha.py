@@ -60,19 +60,19 @@ if __name__ == "__main__":
     ]
 
     # Enable collision avoidance between the following geoms:
-    # geoms starting at subtree "right wrist" - "table"
-    # geoms starting at subtree "left wrist"  - "table"
-    # geoms starting at subtree "right wrist" - geoms starting at subtree "left wrist"
+    # geoms starting at subtree "right wrist" - "table",
+    # geoms starting at subtree "left wrist"  - "table",
+    # geoms starting at subtree "right wrist" - geoms starting at subtree "left wrist".
     l_wrist_geoms = mink.get_subtree_geom_ids(model, model.body("left/wrist_link").id)
     r_wrist_geoms = mink.get_subtree_geom_ids(model, model.body("right/wrist_link").id)
+    frame_geoms = mink.get_body_geom_ids(model, model.body("metal_frame").id)
     collision_pairs = [
-        (l_wrist_geoms, ["table"]),
-        (r_wrist_geoms, ["table"]),
         (l_wrist_geoms, r_wrist_geoms),
+        (l_wrist_geoms + r_wrist_geoms, frame_geoms + ["table"]),
     ]
     collision_avoidance_limit = mink.CollisionAvoidanceLimit(
         model=model,
-        geom_pairs=collision_pairs,
+        geom_pairs=collision_pairs,  # type: ignore
         minimum_distance_from_collisions=0.05,
         collision_detection_distance=0.1,
     )
@@ -86,8 +86,8 @@ if __name__ == "__main__":
     l_mid = model.body("left/target").mocapid[0]
     r_mid = model.body("right/target").mocapid[0]
     solver = "quadprog"
-    pos_threshold = 1e-3
-    ori_threshold = 1e-3
+    pos_threshold = 1e-4
+    ori_threshold = 1e-4
     max_iters = 20
 
     with mujoco.viewer.launch_passive(
