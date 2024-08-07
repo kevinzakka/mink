@@ -15,6 +15,12 @@ Frame task
 .. automodule:: mink.tasks.frame_task
     :members:
 
+Relative frame task
+===================
+
+.. automodule:: mink.tasks.relative_frame_task
+    :members:
+
 Center of mass task
 ===================
 

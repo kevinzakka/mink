@@ -30,20 +30,15 @@ def construct_model():
     arm_mjcf = mjcf.from_path(_ARM_XML.as_posix())
     arm_mjcf.find("key", "home").remove()
 
-    attach_site = arm_mjcf.worldbody.find("site", "attachment_site")
-    assert attach_site is not None
-
     hand_mjcf = mjcf.from_path(_HAND_XML.as_posix())
-
     palm = hand_mjcf.worldbody.find("body", "palm")
     palm.quat = (1, 0, 0, 0)
-    palm.pos = (0, 0, 0.1)
-
+    palm.pos = (0, 0, 0.095)
+    attach_site = arm_mjcf.worldbody.find("site", "attachment_site")
     attach_site.attach(hand_mjcf)
 
     arm_mjcf.keyframe.add("key", name="home", qpos=HOME_QPOS)
 
-    # For each finger, add a mocap site.
     for finger in fingers:
         body = arm_mjcf.worldbody.add("body", name=f"{finger}_target", mocap=True)
         body.add(
@@ -73,13 +68,15 @@ if __name__ == "__main__":
         lm_damping=1.0,
     )
 
-    posture_task = mink.PostureTask(model=model, cost=1e-2)
+    posture_task = mink.PostureTask(model=model, cost=5e-2)
 
     finger_tasks: list[mink.RelativeFrameTask] = []
     for finger in fingers:
-        task = mink.FrameTask(
+        task = mink.RelativeFrameTask(
             frame_name=f"allegro_left/{finger}",
             frame_type="site",
+            root_name="allegro_left/palm",
+            root_type="body",
             position_cost=1.0,
             orientation_cost=0.0,
             lm_damping=1.0,
@@ -113,9 +110,6 @@ if __name__ == "__main__":
                 model, data, f"{finger}_target", f"allegro_left/{finger}", "site"
             )
 
-        for finger_task in finger_tasks:
-            finger_task.set_target_from_configuration(configuration)
-
         T_eef_prev = configuration.get_transform_frame_to_world(
             "attachment_site", "site"
         )
@@ -128,8 +122,11 @@ if __name__ == "__main__":
 
             # Update finger tasks.
             for finger, task in zip(fingers, finger_tasks):
-                T_w_mocap = mink.SE3.from_mocap_name(model, data, f"{finger}_target")
-                task.set_target(T_w_mocap)
+                T_mocap = mink.SE3.from_mocap_name(model, data, f"{finger}_target")
+                T_palm = configuration.get_transform_frame_to_world(
+                    "allegro_left/palm", "body"
+                )
+                task.set_target(T_palm.inverse() @ T_mocap)
 
             for finger in fingers:
                 T_eef = configuration.get_transform_frame_to_world(

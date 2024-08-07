@@ -31,6 +31,7 @@ from .tasks import (
     FrameTask,
     Objective,
     PostureTask,
+    RelativeFrameTask,
     TargetNotSet,
     Task,
 )
@@ -49,6 +50,7 @@ __all__ = (
     "solve_ik",
     "DampingTask",
     "FrameTask",
+    "RelativeFrameTask",
     "PostureTask",
     "Task",
     "Objective",

@@ -183,6 +183,21 @@ class Configuration:
             translation=xpos,
         )
 
+    def get_transform(
+        self,
+        source_name: str,
+        source_type: str,
+        dest_name: str,
+        dest_type: str,
+    ) -> SE3:
+        transform_source_to_world = self.get_transform_frame_to_world(
+            source_name, source_type
+        )
+        transform_dest_to_world = self.get_transform_frame_to_world(
+            dest_name, dest_type
+        )
+        return transform_dest_to_world.inverse() @ transform_source_to_world
+
     def integrate(self, velocity: np.ndarray, dt: float) -> np.ndarray:
         """Integrate a velocity starting from the current configuration.
 
