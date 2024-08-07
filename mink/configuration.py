@@ -190,6 +190,18 @@ class Configuration:
         dest_name: str,
         dest_type: str,
     ) -> SE3:
+        """Get the pose of a frame with respect to another frame at the current
+        configuration.
+
+        Args:
+            source_name: Name of the frame in the MJCF.
+            source_type: Source type of frame. Can be a geom, a body or a site.
+            dest_name: Name of the frame to get the pose in.
+            dest_type: Dest type of frame. Can be a geom, a body or a site.
+
+        Returns:
+            The pose of `source_name` in `dest_name`.
+        """
         transform_source_to_world = self.get_transform_frame_to_world(
             source_name, source_type
         )
