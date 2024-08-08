@@ -70,7 +70,7 @@ if __name__ == "__main__":
 
     posture_task = mink.PostureTask(model=model, cost=5e-2)
 
-    finger_tasks: list[mink.RelativeFrameTask] = []
+    finger_tasks = []
     for finger in fingers:
         task = mink.RelativeFrameTask(
             frame_name=f"allegro_left/{finger}",
@@ -114,7 +114,7 @@ if __name__ == "__main__":
             "attachment_site", "site"
         )
 
-        rate = RateLimiter(frequency=200.0)
+        rate = RateLimiter(frequency=100.0)
         while viewer.is_running():
             # Update kuka end-effector task.
             T_wt = mink.SE3.from_mocap_name(model, data, "target")
@@ -122,11 +122,10 @@ if __name__ == "__main__":
 
             # Update finger tasks.
             for finger, task in zip(fingers, finger_tasks):
-                T_mocap = mink.SE3.from_mocap_name(model, data, f"{finger}_target")
-                T_palm = configuration.get_transform_frame_to_world(
-                    "allegro_left/palm", "body"
+                T_pm = configuration.get_transform(
+                    f"{finger}_target", "body", "allegro_left/palm", "body"
                 )
-                task.set_target(T_palm.inverse() @ T_mocap)
+                task.set_target(T_pm)
 
             for finger in fingers:
                 T_eef = configuration.get_transform_frame_to_world(
