@@ -6,6 +6,8 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+- Relative frame task.
+- New arm and hand example: [arm_hand_iiwa_allegro.py](examples/arm_hand_iiwa_allegro.py).
 - New bimanual manipulator example: [aloha.py](examples/arm_aloha.py).
 
 ## [0.0.2] - 2024-07-27

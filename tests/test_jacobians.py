@@ -77,6 +77,18 @@ class TestJacobians(absltest.TestCase):
         frame_task.set_target(lie.SE3.sample_uniform())
         self.check_jacobian_finite_diff(frame_task, tol=1e-5)
 
+    def test_relative_frame_task(self):
+        relative_frame_task = mink.RelativeFrameTask(
+            frame_name="left_foot",
+            frame_type="site",
+            root_name="torso_link",
+            root_type="body",
+            position_cost=1.0,
+            orientation_cost=1.0,
+        )
+        relative_frame_task.set_target(lie.SE3.sample_uniform())
+        self.check_jacobian_finite_diff(relative_frame_task, tol=1e-5)
+
     def test_posture_task(self):
         posture_task = mink.PostureTask(model=self.model, cost=1.0)
         data = mujoco.MjData(self.model)

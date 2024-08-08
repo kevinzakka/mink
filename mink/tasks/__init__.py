@@ -11,6 +11,7 @@ from .exceptions import (
 )
 from .frame_task import FrameTask
 from .posture_task import PostureTask
+from .relative_frame_task import RelativeFrameTask
 from .task import Objective, Task
 
 __all__ = (
@@ -19,6 +20,7 @@ __all__ = (
     "Objective",
     "DampingTask",
     "PostureTask",
+    "RelativeFrameTask",
     "Task",
     "TargetNotSet",
     "InvalidTarget",
