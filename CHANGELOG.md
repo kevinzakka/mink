@@ -6,10 +6,15 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
-- Mobile manipulator example: [mobile_tidybot.py](examples/mobile_tidybot.py).
 - Relative frame task.
-- New arm and hand example: [arm_hand_iiwa_allegro.py](examples/arm_hand_iiwa_allegro.py).
-- New bimanual manipulator example: [aloha.py](examples/arm_aloha.py).
+- More examples:
+    - Mobile manipulator: [mobile_tidybot.py](examples/mobile_tidybot.py)
+    - Bimanual manipulator: [aloha.py](examples/arm_aloha.py)
+    - Arm + dexterous hand: [arm_hand_iiwa_allegro.py](examples/arm_hand_iiwa_allegro.py)
+
+### Changed
+
+- Posture task cost can now be a scalar or a vector. Vector costs are useful for specifying different costs for different dofs.
 
 ## [0.0.2] - 2024-07-27
 
