@@ -26,7 +26,7 @@ class TestPostureTask(absltest.TestCase):
     def test_task_raises_error_if_cost_negative(self):
         with self.assertRaises(TaskDefinitionError) as cm:
             PostureTask(model=self.model, cost=(-1))
-        self.assertEqual(str(cm.exception), "PostureTask cost must be >= 0")
+        self.assertEqual(str(cm.exception), "PostureTask cost should be >= 0")
 
     def test_task_raises_error_if_target_is_invalid(self):
         task = PostureTask(model=self.model, cost=1.0)
