@@ -51,16 +51,16 @@ if __name__ == "__main__":
         lm_damping=1.0,
     )
 
-    damping_cost = np.ones((model.nv,)) * 1e-4
-    immobile_base_cost = np.zeros(model.nv)
-    immobile_base_cost[:3] = 10.0
-    damping_task = mink.DampingTask(model, damping_cost)
+    posture_cost = np.zeros((model.nv,))
+    posture_cost[3:] = 1e-3
+    posture_task = mink.PostureTask(model, cost=posture_cost)
 
-    posture_task = mink.PostureTask(model, cost=1e-3)
+    immobile_base_cost = np.zeros((model.nv,))
+    immobile_base_cost[:3] = 100
+    damping_task = mink.DampingTask(model, immobile_base_cost)
 
     tasks = [
         end_effector_task,
-        damping_task,
         posture_task,
     ]
 
@@ -87,8 +87,8 @@ if __name__ == "__main__":
 
         mujoco.mj_resetDataKeyframe(model, data, model.key("home").id)
         configuration.update(data.qpos)
-        mujoco.mj_forward(model, data)
         posture_task.set_target_from_configuration(configuration)
+        mujoco.mj_forward(model, data)
 
         # Initialize the mocap target at the end-effector site.
         mink.move_mocap_to_frame(model, data, "pinch_site_target", "pinch_site", "site")
@@ -103,7 +103,12 @@ if __name__ == "__main__":
 
             # Compute velocity and integrate into the next configuration.
             for i in range(max_iters):
-                vel = mink.solve_ik(configuration, tasks, rate.dt, solver, 1e-3)
+                if key_callback.fix_base:
+                    vel = mink.solve_ik(
+                        configuration, [*tasks, damping_task], rate.dt, solver, 1e-3
+                    )
+                else:
+                    vel = mink.solve_ik(configuration, tasks, rate.dt, solver, 1e-3)
                 configuration.integrate_inplace(vel, rate.dt)
 
                 # Exit condition.
@@ -113,7 +118,6 @@ if __name__ == "__main__":
                 pos_achieved &= bool(np.linalg.norm(err[:3]) <= pos_threshold)
                 ori_achieved &= bool(np.linalg.norm(err[3:]) <= ori_threshold)
                 if pos_achieved and ori_achieved:
-                    print(f"Exiting after {i} iterations.")
                     break
 
             if not key_callback.pause:
@@ -121,11 +125,6 @@ if __name__ == "__main__":
                 mujoco.mj_step(model, data)
             else:
                 mujoco.mj_forward(model, data)
-
-            if key_callback.fix_base:
-                damping_task.set_cost(immobile_base_cost)
-            else:
-                damping_task.set_cost(damping_cost)
 
             # Visualize at fixed FPS.
             viewer.sync()
