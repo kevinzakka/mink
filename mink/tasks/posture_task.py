@@ -29,15 +29,12 @@ class PostureTask(Task):
     def __init__(
         self,
         model: mujoco.MjModel,
-        cost: float,
+        cost: npt.ArrayLike,
         gain: float = 1.0,
         lm_damping: float = 0.0,
     ):
-        if cost < 0.0:
-            raise TaskDefinitionError(f"{self.__class__.__name__} cost must be >= 0")
-
         super().__init__(
-            cost=np.asarray([cost] * model.nv),
+            cost=np.zeros((model.nv,)),
             gain=gain,
             lm_damping=lm_damping,
         )
@@ -52,6 +49,18 @@ class PostureTask(Task):
 
         self.k = model.nv
         self.nq = model.nq
+        self.set_cost(cost)
+
+    def set_cost(self, cost: npt.ArrayLike) -> None:
+        cost = np.atleast_1d(cost)
+        if cost.ndim != 1 or cost.shape[0] not in (1, self.k):
+            raise TaskDefinitionError(
+                f"{self.__class__.__name__} cost should be a vector of shape 1"
+                "(aka identical cost for all dofs) or ({self.k},) but got {cost.shape}"
+            )
+        if not np.all(cost >= 0.0):
+            raise TaskDefinitionError(f"{self.__class__.__name__} cost should be >= 0")
+        self.cost[: self.k] = cost
 
     def set_target(self, target_q: npt.ArrayLike) -> None:
         """Set the target posture.
