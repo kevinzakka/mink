@@ -28,6 +28,24 @@ class TestPostureTask(absltest.TestCase):
             PostureTask(model=self.model, cost=(-1))
         self.assertEqual(str(cm.exception), "PostureTask cost should be >= 0")
 
+    def test_cost_correctly_broadcast(self):
+        task = PostureTask(model=self.model, cost=5.0)
+        np.testing.assert_array_equal(task.cost, np.ones((self.model.nv,)) * 5.0)
+        task = PostureTask(model=self.model, cost=[5.0])
+        np.testing.assert_array_equal(task.cost, np.ones((self.model.nv,)) * 5.0)
+        cost = np.random.random(size=(self.model.nv,))
+        task = PostureTask(model=self.model, cost=cost)
+        np.testing.assert_array_equal(task.cost, cost)
+
+    def test_cost_invalid_shape(self):
+        with self.assertRaises(TaskDefinitionError) as cm:
+            PostureTask(model=self.model, cost=(0.5, 2.0))
+        expected_error_message = (
+            "PostureTask cost must be a vector of shape (1,) (aka identical cost for "
+            f"all dofs) or ({self.model.nv},). Got (2,)"
+        )
+        self.assertEqual(str(cm.exception), expected_error_message)
+
     def test_task_raises_error_if_target_is_invalid(self):
         task = PostureTask(model=self.model, cost=1.0)
         with self.assertRaises(InvalidTarget) as cm:
