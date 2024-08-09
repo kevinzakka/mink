@@ -1,4 +1,4 @@
-"""Tests for frame_task.py."""
+"""Tests for relative_frame_task.py."""
 
 import numpy as np
 from absl.testing import absltest
