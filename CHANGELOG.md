@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+- Mobile manipulator example: [mobile_tidybot.py](examples/mobile_tidybot.py).
 - Relative frame task.
 - New arm and hand example: [arm_hand_iiwa_allegro.py](examples/arm_hand_iiwa_allegro.py).
 - New bimanual manipulator example: [aloha.py](examples/arm_aloha.py).
