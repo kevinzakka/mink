@@ -55,8 +55,8 @@ class PostureTask(Task):
         cost = np.atleast_1d(cost)
         if cost.ndim != 1 or cost.shape[0] not in (1, self.k):
             raise TaskDefinitionError(
-                f"{self.__class__.__name__} cost should be a vector of shape 1"
-                "(aka identical cost for all dofs) or ({self.k},) but got {cost.shape}"
+                f"{self.__class__.__name__} cost must be a vector of shape (1,) "
+                f"(aka identical cost for all dofs) or ({self.k},). Got {cost.shape}"
             )
         if not np.all(cost >= 0.0):
             raise TaskDefinitionError(f"{self.__class__.__name__} cost should be >= 0")
