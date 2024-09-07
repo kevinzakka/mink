@@ -31,7 +31,6 @@
   </asset>
 
   <worldbody>
-    <light pos="0 0 2"/>
     <body name="palm_lower" childclass="right_leap">
       <inertial pos="0 0 0" quat="0.497095 0.495942 -0.509424 0.497419" mass="0.237"
         diaginertia="0.000529322 0.000354076 0.000260868"/>
