@@ -1,0 +1,25 @@
+<mujoco model="xarm7 scene">
+  <include file="xarm7_nohand.xml"/>
+
+  <statistic center="0.2 0 0.4" extent=".65" meansize="0.08"/>
+
+  <visual>
+    <headlight diffuse="0.3 0.3 0.3" ambient="0.3 0.3 0.3"/>
+    <rgba haze="0.15 0.25 0.35 1"/>
+    <global azimuth="150" elevation="-20"/>
+  </visual>
+
+  <asset>
+    <texture name="grid" type="2d" builtin="checker" rgb1=".2 .3 .4" rgb2=".1 0.15 0.2" width="512" height="512"
+      mark="cross" markrgb=".8 .8 .8"/>
+    <material name="grid" texture="grid" texrepeat="1 1" texuniform="true"/>
+  </asset>
+
+  <worldbody>
+    <light pos="0 0 5"/>
+    <geom name="floor" size="1 1 0.01" type="plane" material="grid"/>
+    <body name="target" pos="0.5 0 .5" quat="0 1 0 0" mocap="true">
+      <geom type="box" size=".05 .05 .05" contype="0" conaffinity="0" rgba=".6 .3 .3 .2"/>
+    </body>
+  </worldbody>
+</mujoco>
