@@ -17,9 +17,8 @@ fingers = ["tip_1", "tip_2", "tip_3", "th_tip"]
 # fmt: off
 HOME_QPOS = [
     # xarm.
-    # -0.0759329, 0.153982, 0.104381, -1.8971, 0.245996, 0.34972, -0.239115,
     0, -.247, 0, .909, 0, 1.15644, 0,
-    # leap
+    # leap.
     0, 0, 0, 0,
     0, 0, 0, 0,
     0, 0, 0, 0,
@@ -116,7 +115,7 @@ if __name__ == "__main__":
             "attachment_site", "site"
         )
 
-        rate = RateLimiter(frequency=100.0)
+        rate = RateLimiter(frequency=200.0)
         while viewer.is_running():
             # Update kuka end-effector task.
             T_wt = mink.SE3.from_mocap_name(model, data, "target")
