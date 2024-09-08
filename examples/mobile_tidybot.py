@@ -52,11 +52,11 @@ if __name__ == "__main__":
     )
 
     posture_cost = np.zeros((model.nv,))
-    posture_cost[2:] = 1e-3
+    posture_cost[3:] = 1e-3
     posture_task = mink.PostureTask(model, cost=posture_cost)
 
     immobile_base_cost = np.zeros((model.nv,))
-    immobile_base_cost[:3] = 100  # Assign high damping to x-y-theta DoFs.
+    immobile_base_cost[:3] = 100
     damping_task = mink.DampingTask(model, immobile_base_cost)
 
     tasks = [
