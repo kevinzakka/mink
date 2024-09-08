@@ -16,37 +16,19 @@ _HAND_XML = _HERE / "leap_hand" / "right_hand.xml"
 
 fingers = ["tip_1", "tip_2", "tip_3", "th_tip"]
 
+# fmt: off
 HOME_QPOS = [
     # Mobile Base.
-    0,
-    0,
-    0,
-    # Kinova
-    0,
-    0.26179939,
-    3.14159265,
-    -2.26892803,
-    0,
-    0.95993109,
-    1.57079633,
+    0, 0, 0,
+    # Kinova.
+    0, 0.26179939, 3.14159265, -2.26892803, 0, 0.95993109, 1.57079633,
     # Leap hand.
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
+    0, 0, 0, 0,
+    0, 0, 0, 0,
+    0, 0, 0, 0,
+    0, 0, 0, 0,
 ]
+# fmt: on
 
 
 def construct_model():
@@ -104,7 +86,8 @@ if __name__ == "__main__":
         lm_damping=1.0,
     )
 
-    # When move the base, mainly focus on the motion on xy plane, minimize the rotation.
+    # When we move the base, we want to mainly focus on motion in the xy plane.
+    # Minimize movement in all other DOFs.
     posture_cost = np.zeros((model.nv,))
     posture_cost[2] = 1e-3  # Mobile Base
     # posture_cost[-16:] = 5e-2  # Leap Hand
