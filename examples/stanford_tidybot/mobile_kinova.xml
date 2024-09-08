@@ -1,0 +1,161 @@
+<mujoco model="tidybot">
+  <compiler angle="radian" meshdir="assets"/>
+
+  <option integrator="implicitfast"/>
+  <option cone="elliptic" impratio="10"/>
+
+  <default>
+    <default class="base">
+      <default class="base_visual">
+        <geom type="mesh" contype="0" conaffinity="0" group="2"/>
+      </default>
+      <default class="base_collision">
+        <geom type="mesh" group="3"/>
+      </default>
+    </default>
+
+    <default class="gen3">
+      <default class="gen3_visual">
+        <geom type="mesh" contype="0" conaffinity="0" group="2" rgba="0.75294 0.75294 0.75294 1"/>
+      </default>
+      <default class="gen3_collision">
+        <geom type="mesh" group="3"/>
+      </default>
+      <default class="large_actuator">
+        <position kp="2000" kv="100" forcerange="-105 105"/>
+      </default>
+      <default class="small_actuator">
+        <position kp="500" kv="50" forcerange="-52 52"/>
+      </default>
+    </default>
+    <site size="0.001" rgba="0.5 0.5 0.5 0.3" group="4"/>
+  </default>
+
+  <asset>
+    <material name="black" rgba="0.11372549 0.11372549 0.10196078 1"/>
+    <material name="gray" rgba="0.62745098 0.65098039 0.64705882 1"/>
+    <material name="dark_gray" rgba="0.35294118 0.37647059 0.37254902 1"/>
+    <mesh file="base/bumper.stl"/>
+    <mesh file="base/bottom_plate.stl"/>
+    <mesh file="base/body.stl"/>
+    <mesh file="base/top_plate.stl"/>
+    <mesh file="base/arm_plate.stl"/>
+
+    <mesh name="gen3_base_link" file="gen3/base_link.stl"/>
+    <mesh name="shoulder_link" file="gen3/shoulder_link.stl"/>
+    <mesh name="half_arm_1_link" file="gen3/half_arm_1_link.stl"/>
+    <mesh name="half_arm_2_link" file="gen3/half_arm_2_link.stl"/>
+    <mesh name="forearm_link" file="gen3/forearm_link.stl"/>
+    <mesh name="spherical_wrist_1_link" file="gen3/spherical_wrist_1_link.stl"/>
+    <mesh name="spherical_wrist_2_link" file="gen3/spherical_wrist_2_link.stl"/>
+    <mesh name="bracelet_with_vision_link" file="gen3/bracelet_with_vision_link.stl"/>
+
+    <material name="metal" rgba="0.58 0.58 0.58 1"/>
+    <material name="silicone" rgba="0.1882 0.1882 0.1882 1"/>
+  </asset>
+
+  <worldbody>
+    <body name="base_link">
+      <inertial pos="0 0 0.035" mass="60" diaginertia="0.001 0.001 0.001"/>
+      <joint name="joint_x" type="slide" axis="1 0 0"/>
+      <joint name="joint_y" type="slide" axis="0 1 0"/>
+      <joint name="joint_th"/>
+      <geom class="base_visual" mesh="bumper" material="black"/>
+      <geom class="base_visual" mesh="bottom_plate" material="dark_gray"/>
+      <geom class="base_visual" mesh="body" material="gray"/>
+      <geom class="base_visual" mesh="top_plate" material="dark_gray"/>
+      <geom class="base_visual" mesh="arm_plate" material="gray"/>
+      <geom class="base_collision" mesh="bumper"/>
+      <geom class="base_collision" mesh="bottom_plate"/>
+      <geom class="base_collision" mesh="body"/>
+      <geom class="base_collision" mesh="top_plate"/>
+      <geom class="base_collision" mesh="arm_plate"/>
+      <camera name="base" pos="0.2525 0 0.335" euler="0 -0.7853981634 -1.5707963268" fovy="52.23384539951277"
+        resolution="640 360"/>
+      <body name="gen3_base_link" pos="0 0 0.335" quat="1 0 0 0">
+        <inertial pos="-0.000648 -0.000166 0.084487" quat="0.999294 0.00139618 -0.0118387 0.035636" mass="1.697"
+          diaginertia="0.00462407 0.00449437 0.00207755"/>
+        <geom class="gen3_visual" mesh="gen3_base_link"/>
+        <geom class="gen3_collision" mesh="gen3_base_link"/>
+        <body name="shoulder_link" pos="0 0 0.15643" quat="0 1 0 0">
+          <inertial pos="-2.3e-05 -0.010364 -0.07336" quat="0.707051 0.0451246 -0.0453544 0.704263" mass="1.3773"
+            diaginertia="0.00488868 0.00457 0.00135132"/>
+          <joint name="joint_1"/>
+          <geom class="gen3_visual" mesh="shoulder_link"/>
+          <geom class="gen3_collision" mesh="shoulder_link"/>
+          <body name="half_arm_1_link" pos="0 0.005375 -0.12838" quat="1 1 0 0">
+            <inertial pos="-4.4e-05 -0.09958 -0.013278" quat="0.482348 0.516286 -0.516862 0.483366" mass="1.1636"
+              diaginertia="0.0113017 0.011088 0.00102532"/>
+            <joint name="joint_2" range="-2.24 2.24"/>
+            <geom class="gen3_visual" mesh="half_arm_1_link"/>
+            <geom class="gen3_collision" mesh="half_arm_1_link"/>
+            <body name="half_arm_2_link" pos="0 -0.21038 -0.006375" quat="1 -1 0 0">
+              <inertial pos="-4.4e-05 -0.006641 -0.117892" quat="0.706144 0.0213722 -0.0209128 0.707437" mass="1.1636"
+                diaginertia="0.0111633 0.010932 0.00100671"/>
+              <joint name="joint_3"/>
+              <geom class="gen3_visual" mesh="half_arm_2_link"/>
+              <geom class="gen3_collision" mesh="half_arm_2_link"/>
+              <body name="forearm_link" pos="0 0.006375 -0.21038" quat="1 1 0 0">
+                <inertial pos="-1.8e-05 -0.075478 -0.015006" quat="0.483678 0.515961 -0.515859 0.483455" mass="0.9302"
+                  diaginertia="0.00834839 0.008147 0.000598606"/>
+                <joint name="joint_4" range="-2.57 2.57"/>
+                <geom class="gen3_visual" mesh="forearm_link"/>
+                <geom class="gen3_collision" mesh="forearm_link"/>
+                <body name="spherical_wrist_1_link" pos="0 -0.20843 -0.006375" quat="1 -1 0 0">
+                  <inertial pos="1e-06 -0.009432 -0.063883" quat="0.703558 0.0707492 -0.0707492 0.703558" mass="0.6781"
+                    diaginertia="0.00165901 0.001596 0.000346988"/>
+                  <joint name="joint_5"/>
+                  <geom class="gen3_visual" mesh="spherical_wrist_1_link"/>
+                  <geom class="gen3_collision" mesh="spherical_wrist_1_link"/>
+                  <body name="spherical_wrist_2_link" pos="0 0.00017505 -0.10593" quat="1 1 0 0">
+                    <inertial pos="1e-06 -0.045483 -0.00965" quat="0.44426 0.550121 -0.550121 0.44426" mass="0.6781"
+                      diaginertia="0.00170087 0.001641 0.00035013"/>
+                    <joint name="joint_6" range="-2.09 2.09"/>
+                    <geom class="gen3_visual" mesh="spherical_wrist_2_link"/>
+                    <geom class="gen3_collision" mesh="spherical_wrist_2_link"/>
+                    <body name="bracelet_link" pos="0 -0.10593 -0.00017505" quat="1 -1 0 0">
+                      <inertial pos="0.000281 0.011402 -0.029798" quat="0.394358 0.596779 -0.577293 0.393789" mass="0.5"
+                        diaginertia="0.000657336 0.000587019 0.000320645"/>
+                      <joint name="joint_7"/>
+                      <geom class="gen3_visual" mesh="bracelet_with_vision_link"/>
+                      <geom class="gen3_collision" mesh="bracelet_with_vision_link"/>
+                      <camera name="wrist" pos="0 -0.05639 -0.058475" quat="0 0 0 1" fovy="41.83792730009236"
+                        resolution="640 480"/>           
+                      <site name="pinch_site" pos="0 0 -0.181525" quat="0 1 0 0"/>
+                    </body>
+                  </body>
+                </body>
+              </body>
+            </body>
+          </body>
+        </body>
+      </body>
+    </body>
+  </worldbody>
+
+  <contact>
+  </contact>
+
+  <equality>
+  </equality>
+
+  <actuator>
+    <position name="joint_x" joint="joint_x" kp="1000000" kv="50000"/>
+    <position name="joint_y" joint="joint_y" kp="1000000" kv="50000"/>
+    <position name="joint_th" joint="joint_th" kp="50000" kv="1000"/>
+    <position class="large_actuator" name="joint_1" joint="joint_1"/>
+    <position class="large_actuator" name="joint_2" joint="joint_2" ctrlrange="-2.2497294058206907 2.2497294058206907"/>
+    <position class="large_actuator" name="joint_3" joint="joint_3"/>
+    <position class="large_actuator" name="joint_4" joint="joint_4" ctrlrange="-2.5795966344476193 2.5795966344476193"/>
+    <position class="small_actuator" name="joint_5" joint="joint_5"/>
+    <position class="small_actuator" name="joint_6" joint="joint_6" ctrlrange="-2.0996310901491784 2.0996310901491784"/>
+    <position class="small_actuator" name="joint_7" joint="joint_7"/>
+  </actuator>
+
+  <keyframe>
+    <key name="home" qpos="0 0 0 0 0.26179939 3.14159265 -2.26892803 0 0.95993109 1.57079633"
+      ctrl="0 0 0 0 0.26179939 3.14159265 -2.26892803 0 0.95993109 1.57079633"/>
+    <key name="retract" qpos="0 0 0 0 -0.34906585 3.14159265 -2.54818071 0 -0.87266463 1.57079633"
+      ctrl="0 0 0 0 -0.34906585 3.14159265 -2.54818071 0 -0.87266463 1.57079633"/>
+  </keyframe>
+</mujoco>
