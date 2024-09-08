@@ -51,15 +51,12 @@ if __name__ == "__main__":
         lm_damping=1.0,
     )
 
-    # When we move the base, we want to mainly focus on motion in the xy plane.
-    # Minimize movement in all other DOFs.
     posture_cost = np.zeros((model.nv,))
-    posture_cost[2] = 1e-3
+    posture_cost[2:] = 1e-3
     posture_task = mink.PostureTask(model, cost=posture_cost)
 
     immobile_base_cost = np.zeros((model.nv,))
-    immobile_base_cost[:2] = 100
-    immobile_base_cost[2] = 1e-3
+    immobile_base_cost[:3] = 100  # Assign high damping to x-y-theta DoFs.
     damping_task = mink.DampingTask(model, immobile_base_cost)
 
     tasks = [
