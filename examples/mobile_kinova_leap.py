@@ -18,14 +18,34 @@ fingers = ["tip_1", "tip_2", "tip_3", "th_tip"]
 
 HOME_QPOS = [
     # Mobile Base.
-    0, 0, 0,
+    0,
+    0,
+    0,
     # Kinova
-    0, 0.26179939, 3.14159265, -2.26892803, 0, 0.95993109, 1.57079633,
+    0,
+    0.26179939,
+    3.14159265,
+    -2.26892803,
+    0,
+    0.95993109,
+    1.57079633,
     # Leap hand.
-    0, 0, 0, 0,
-    0, 0, 0, 0,
-    0, 0, 0, 0,
-    0, 0, 0, 0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
 ]
 
 
@@ -97,7 +117,6 @@ if __name__ == "__main__":
     immobile_base_cost[2] = 1e-3
     damping_task = mink.DampingTask(model, immobile_base_cost)
 
-
     finger_tasks = []
     for finger in fingers:
         task = mink.RelativeFrameTask(
@@ -152,9 +171,7 @@ if __name__ == "__main__":
                 model, data, f"{finger}_target", f"leap_right/{finger}", "site"
             )
 
-        T_eef_prev = configuration.get_transform_frame_to_world(
-            "pinch_site", "site"
-        )
+        T_eef_prev = configuration.get_transform_frame_to_world("pinch_site", "site")
 
         rate = RateLimiter(frequency=50.0)
         dt = rate.period
@@ -170,7 +187,6 @@ if __name__ == "__main__":
                     f"{finger}_target", "body", "leap_right/palm_lower", "body"
                 )
                 task.set_target(T_pm)
-            
 
             for finger in fingers:
                 T_eef = configuration.get_transform_frame_to_world("pinch_site", "site")
@@ -208,7 +224,7 @@ if __name__ == "__main__":
                 mujoco.mj_step(model, data)
             else:
                 mujoco.mj_forward(model, data)
-            
+
             T_eef_prev = T_eef.copy()
 
             # Visualize at fixed FPS.

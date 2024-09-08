@@ -51,7 +51,8 @@ if __name__ == "__main__":
         lm_damping=1.0,
     )
 
-    # When move the base, mainly focus on the motion on xy plane, minimize the rotation.
+    # When we move the base, we want to mainly focus on motion in the xy plane.
+    # Minimize movement in all other DOFs.
     posture_cost = np.zeros((model.nv,))
     posture_cost[2] = 1e-3
     posture_task = mink.PostureTask(model, cost=posture_cost)
