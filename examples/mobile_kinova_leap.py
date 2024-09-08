@@ -88,9 +88,9 @@ if __name__ == "__main__":
 
     # When move the base, mainly focus on the motion on xy plane, minimize the rotation.
     posture_cost = np.zeros((model.nv,))
-    posture_cost[2] = 1e-3  # Mobile Base
-    # posture_cost[-16:] = 5e-2  # Leap Hand
-    posture_cost[-16:] = 1e-3  # Leap Hand
+    posture_cost[2] = 1e-3  # Mobile Base.
+    # posture_cost[-16:] = 5e-2  # Leap Hand.
+    posture_cost[-16:] = 1e-3  # Leap Hand.
 
     posture_task = mink.PostureTask(model, cost=posture_cost)
 
