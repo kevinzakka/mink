@@ -7,6 +7,14 @@ All notable changes to this project will be documented in this file.
 ### Added
 
 - Examples:
+    - Mobile Kinova loaded from a module-oriented MJCF description: [mobile_kinova.py](examples/mobile_kinova.py)
+      - remove the nested class naming convention in the [tidybot.xml](tidybot.xml) file, allowing for seamless swapping of end-effectors.
+    - Mobile Kinova with LEAP hand: [mobile_kinova_leap.py](examples/mobile_kinova_leap.py)
+    - The example scripts also include updated recommendations for controlling the mobile base, aiming to minimize unnecessary rotation.
+
+### Added
+
+- Examples:
     - UFactory xArm7 with LEAP hand: [xarm_leap.py](examples/arm_hand_xarm_leap.py)
 
 ## [0.0.3] - 2024-08-10
