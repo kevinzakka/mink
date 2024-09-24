@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+### Changed
+
+- Changed `print` statement in `Configuration::check_limits` to `logging.warning`.
+
 ### Added
 
 - Examples:

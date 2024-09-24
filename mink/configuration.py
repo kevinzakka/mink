@@ -7,6 +7,7 @@ offering easy access to frame transforms and frame Jacobians. A frame refers to 
 system that can be attached to various parts of the robot, such as a body, geom, or site.
 """
 
+import logging
 from typing import Optional
 
 import mujoco
@@ -103,7 +104,7 @@ class Configuration:
                         model=self.model,
                     )
                 else:
-                    print(
+                    logging.warning(
                         f"Value {qval:.2f} at index {jnt} is outside of its limits: "
                         f"[{qmin:.2f}, {qmax:.2f}]"
                     )
