@@ -35,7 +35,6 @@ if __name__ == "__main__":
     ## =================== ##
 
     # IK settings.
-    solver = "quadprog"
     pos_threshold = 1e-4
     ori_threshold = 1e-4
     max_iters = 20
@@ -54,6 +53,7 @@ if __name__ == "__main__":
         mink.move_mocap_to_frame(model, data, "target", "attachment_site", "site")
 
         rate = RateLimiter(frequency=500.0)
+        vel = None
         while viewer.is_running():
             # Update task target.
             T_wt = mink.SE3.from_mocap_name(model, data, "target")
@@ -61,7 +61,7 @@ if __name__ == "__main__":
 
             # Compute velocity and integrate into the next configuration.
             for i in range(max_iters):
-                vel = mink.solve_ik(configuration, tasks, rate.dt, solver, 1e-3)
+                vel = mink.solve_ik(configuration, tasks, rate.dt, 1e-3, prev_sol=vel)
                 configuration.integrate_inplace(vel, rate.dt)
                 err = end_effector_task.compute_error(configuration)
                 pos_achieved = np.linalg.norm(err[:3]) <= pos_threshold

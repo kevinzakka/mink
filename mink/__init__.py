@@ -18,9 +18,9 @@ from .exceptions import (
 )
 from .lie import SE3, SO3, MatrixLieGroup
 from .limits import (
-    CollisionAvoidanceLimit,
+    # CollisionAvoidanceLimit,
     ConfigurationLimit,
-    Constraint,
+    BoxConstraint,
     Limit,
     VelocityLimit,
 )
@@ -56,8 +56,8 @@ __all__ = (
     "Objective",
     "ConfigurationLimit",
     "VelocityLimit",
-    "CollisionAvoidanceLimit",
-    "Constraint",
+    # "CollisionAvoidanceLimit",
+    "BoxConstraint",
     "Limit",
     "SO3",
     "SE3",

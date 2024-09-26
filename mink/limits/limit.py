@@ -8,21 +8,16 @@ import numpy as np
 from ..configuration import Configuration
 
 
-class Constraint(NamedTuple):
-    r"""Linear inequality constraint of the form :math:`G(q) \Delta q \leq h(q)`.
+class BoxConstraint(NamedTuple):
+    """Box constraint of the form lower <= x <= upper."""
 
-    Inactive if G and h are None.
-    """
-
-    G: Optional[np.ndarray] = None
-    """Shape (nv, nv)."""
-    h: Optional[np.ndarray] = None
-    """Shape (nv,)."""
+    lower: Optional[np.ndarray] = None
+    upper: Optional[np.ndarray] = None
 
     @property
     def inactive(self) -> bool:
         """Returns True if the constraint is inactive."""
-        return self.G is None and self.h is None
+        return self.lower is None and self.upper is None
 
 
 class Limit(abc.ABC):
@@ -38,22 +33,5 @@ class Limit(abc.ABC):
         self,
         configuration: Configuration,
         dt: float,
-    ) -> Constraint:
-        r"""Compute limit as linearized QP inequalities of the form:
-
-        .. math::
-
-            G(q) \Delta q \leq h(q)
-
-        where :math:`q \in {\cal C}` is the robot's configuration and
-        :math:`\Delta q \in T_q({\cal C})` is the displacement in the tangent
-        space at :math:`q`.
-
-        Args:
-            configuration: Robot configuration :math:`q`.
-            dt: Integration time step in [s].
-
-        Returns:
-            Pair :math:`(G, h)`.
-        """
+    ) -> BoxConstraint:
         raise NotImplementedError

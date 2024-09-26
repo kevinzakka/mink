@@ -9,7 +9,7 @@ import numpy.typing as npt
 from ..configuration import Configuration
 from ..constants import dof_width
 from .exceptions import LimitDefinitionError
-from .limit import Constraint, Limit
+from .limit import BoxConstraint, Limit
 
 
 class VelocityLimit(Limit):
@@ -69,7 +69,7 @@ class VelocityLimit(Limit):
 
     def compute_qp_inequalities(
         self, configuration: Configuration, dt: float
-    ) -> Constraint:
+    ) -> BoxConstraint:
         r"""Compute the configuration-dependent joint velocity limits.
 
         The limits are defined as:
@@ -93,7 +93,5 @@ class VelocityLimit(Limit):
         """
         del configuration  # Unused.
         if self.projection_matrix is None:
-            return Constraint()
-        G = np.vstack([self.projection_matrix, -self.projection_matrix])
-        h = np.hstack([dt * self.limit, dt * self.limit])
-        return Constraint(G=G, h=h)
+            return BoxConstraint()
+        return BoxConstraint(-dt * self.limit, dt * self.limit)
