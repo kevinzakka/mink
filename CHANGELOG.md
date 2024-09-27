@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+### Changed
+
+- Changed `inf` to `mujoco.mjMAXVAL` for unbounded joint limits in `ConfigurationLimit`.
+
 ## [0.0.4] - 2024-09-26
 
 ### Changed

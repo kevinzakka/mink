@@ -1,4 +1,4 @@
-"""Tests for configuration_limit.py."""
+"""Tests for collision_avoidance_limit.py."""
 
 import itertools
 

@@ -134,7 +134,6 @@ if __name__ == "__main__":
                     and r_pos_achieved
                     and r_ori_achieved
                 ):
-                    print(f"Exiting after {i} iterations.")
                     break
 
             data.ctrl[actuator_ids] = configuration.q[dof_ids]
