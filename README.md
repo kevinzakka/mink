@@ -19,11 +19,14 @@ For usage and API reference, see the [documentation](https://kevinzakka.github.i
 If you use mink in your research, please cite it as follows:
 
 ```bibtex
-@software{mink2024,
+@software{Zakka_Mink_Python_inverse_2024,
   author = {Zakka, Kevin},
+  license = {Apache-2.0},
+  month = jul,
   title = {{Mink: Python inverse kinematics based on MuJoCo}},
-  url = {http://github.com/kevinzakka/mink},
-  year = {2024},
+  url = {https://github.com/kevinzakka/mink},
+  version = {0.0.4},
+  year = {2024}
 }
 ```
 
