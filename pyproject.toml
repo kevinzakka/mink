@@ -4,7 +4,7 @@ build-backend = "flit_core.buildapi"
 
 [project]
 name = "mink"
-version = "0.0.3"
+version = "0.0.4"
 readme = "README.md"
 authors = [
     {name = "Kevin Zakka", email = "zakka@berkeley.edu"},
