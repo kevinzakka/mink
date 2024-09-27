@@ -36,7 +36,6 @@ if __name__ == "__main__":
 
     model = configuration.model
     data = configuration.data
-    solver = "quadprog"
 
     with mujoco.viewer.launch_passive(
         model=model, data=data, show_left_ui=False, show_right_ui=False
@@ -53,6 +52,7 @@ if __name__ == "__main__":
         rate = RateLimiter(frequency=1000.0)
         dt = rate.dt
         t = 0
+        vel = None
         while viewer.is_running():
             # Update task target.
             for finger, task in zip(fingers, finger_tasks):
@@ -60,7 +60,7 @@ if __name__ == "__main__":
                     mink.SE3.from_mocap_name(model, data, f"{finger}_target")
                 )
 
-            vel = mink.solve_ik(configuration, tasks, rate.dt, solver, 1e-5)
+            vel = mink.solve_ik(configuration, tasks, rate.dt, 1e-5, prev_sol=vel)
             configuration.integrate_inplace(vel, rate.dt)
             mujoco.mj_camlight(model, data)
 

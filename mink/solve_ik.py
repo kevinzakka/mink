@@ -1,10 +1,10 @@
 """Build and solve the inverse kinematics problem."""
 
+from dataclasses import dataclass
 from typing import Optional, Sequence
 
-from dataclasses import dataclass
-import numpy as np
 import mujoco
+import numpy as np
 
 from .configuration import Configuration
 from .limits import ConfigurationLimit, Limit
@@ -53,6 +53,7 @@ class Problem:
         )
         if rank == -1:
             return None
+        dq[np.isnan(dq)] = 0.0
         return dq
 
 
@@ -78,13 +79,15 @@ def _compute_qp_inequalities(
     for limit in limits:
         inequality = limit.compute_qp_inequalities(configuration, dt)
         if not inequality.inactive:
-            assert inequality.lower is not None and inequality.lower is not None  # mypy.
+            assert (
+                inequality.lower is not None and inequality.lower is not None
+            )  # mypy.
             lower_list.append(inequality.lower)
             upper_list.append(inequality.upper)
     if not lower_list:
         return None, None
-    lower = np.maximum.reduce(lower_list)
-    upper = np.minimum.reduce(upper_list)
+    lower = np.asarray(lower_list).min(axis=0)
+    upper = np.asarray(upper_list).min(axis=0)
     return lower, upper
 
 

@@ -33,7 +33,7 @@ if __name__ == "__main__":
 
     limits = [
         mink.ConfigurationLimit(model=model),
-        mink.CollisionAvoidanceLimit(model=model, geom_pairs=collision_pairs),
+        # mink.CollisionAvoidanceLimit(model=model, geom_pairs=collision_pairs),
     ]
 
     max_velocities = {
@@ -64,6 +64,7 @@ if __name__ == "__main__":
         mink.move_mocap_to_frame(model, data, "target", "attachment_site", "site")
 
         rate = RateLimiter(frequency=500.0)
+        vel = None
         while viewer.is_running():
             # Update task target.
             T_wt = mink.SE3.from_mocap_name(model, data, "target")
@@ -71,7 +72,7 @@ if __name__ == "__main__":
 
             # Compute velocity and integrate into the next configuration.
             vel = mink.solve_ik(
-                configuration, tasks, rate.dt, solver, 1e-3, limits=limits
+                configuration, tasks, rate.dt, 1e-3, limits=limits, prev_sol=vel
             )
             configuration.integrate_inplace(vel, rate.dt)
             mujoco.mj_camlight(model, data)

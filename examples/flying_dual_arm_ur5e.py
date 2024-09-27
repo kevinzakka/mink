@@ -130,6 +130,7 @@ if __name__ == "__main__":
 
         rate = RateLimiter(frequency=200.0)
         t = 0.0
+        vel = None
         while viewer.is_running():
             data.mocap_pos[base_mid][2] = 0.3 * np.sin(2.0 * t)
             base_task.set_target(mink.SE3.from_mocap_name(model, data, "base_target"))
@@ -142,7 +143,9 @@ if __name__ == "__main__":
             data.mocap_pos[right_mid][2] = 0.2
             right_ee_task.set_target(mink.SE3.from_mocap_name(model, data, "r_target"))
 
-            vel = mink.solve_ik(configuration, tasks, rate.dt, solver, 1e-2)
+            vel = mink.solve_ik(
+                configuration, tasks, rate.dt, damping=1e-2, prev_sol=vel
+            )
             configuration.integrate_inplace(vel, rate.dt)
             mujoco.mj_camlight(model, data)
 

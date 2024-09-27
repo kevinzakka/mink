@@ -115,6 +115,7 @@ if __name__ == "__main__":
         )
 
         rate = RateLimiter(frequency=100.0)
+        vel = None
         while viewer.is_running():
             # Update kuka end-effector task.
             T_wt = mink.SE3.from_mocap_name(model, data, "target")
@@ -143,7 +144,7 @@ if __name__ == "__main__":
 
             # Compute velocity and integrate into the next configuration.
             vel = mink.solve_ik(
-                configuration, tasks, rate.dt, solver, 1e-3, limits=limits
+                configuration, tasks, rate.dt, damping=1e-3, limits=limits, prev_sol=vel
             )
             configuration.integrate_inplace(vel, rate.dt)
             mujoco.mj_camlight(model, data)

@@ -18,9 +18,9 @@ from .exceptions import (
 )
 from .lie import SE3, SO3, MatrixLieGroup
 from .limits import (
+    BoxConstraint,
     # CollisionAvoidanceLimit,
     ConfigurationLimit,
-    BoxConstraint,
     Limit,
     VelocityLimit,
 )

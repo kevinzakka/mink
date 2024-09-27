@@ -4,7 +4,7 @@ import mujoco
 import numpy as np
 
 from ..configuration import Configuration
-from ..constants import qpos_width
+from ..constants import dof_width, qpos_width
 from .exceptions import LimitDefinitionError
 from .limit import BoxConstraint, Limit
 
@@ -12,7 +12,7 @@ from .limit import BoxConstraint, Limit
 class ConfigurationLimit(Limit):
     """Inequality constraint on joint positions in a robot model.
 
-    Floating base joints are ignored.
+    Floating base joints and unlimited joints are ignored.
     """
 
     def __init__(
@@ -27,7 +27,7 @@ class ConfigurationLimit(Limit):
             model: MuJoCo model.
             gain: Gain factor in (0, 1] that determines how fast each joint is
                 allowed to move towards the joint limits at each timestep. Values lower
-                ttan 1 are safer but may make the joints move slowly.
+                than 1 are safer but may make the joints move slowly.
             min_distance_from_limits: Offset in meters (slide joints) or radians
                 (hinge joints) to be added to the limits. Positive values decrease the
                 range of motion, negative values increase it (i.e. negative values
@@ -38,7 +38,7 @@ class ConfigurationLimit(Limit):
                 f"{self.__class__.__name__} gain must be in the range (0, 1]"
             )
 
-        index_list: list[int] = []
+        ignore_list: list[int] = []
         lower = np.full(model.nq, -np.inf)
         upper = np.full(model.nq, np.inf)
         for jnt in range(model.njnt):
@@ -47,16 +47,14 @@ class ConfigurationLimit(Limit):
             jnt_range = model.jnt_range[jnt]
             padr = model.jnt_qposadr[jnt]
             if jnt_type == mujoco.mjtJoint.mjJNT_FREE or not model.jnt_limited[jnt]:
-                continue
-            lower[padr : padr + qpos_dim] = jnt_range[0] + min_distance_from_limits
-            upper[padr : padr + qpos_dim] = jnt_range[1] - min_distance_from_limits
-            index_list.append(jnt)
+                vadr = model.jnt_dofadr[jnt]
+                ignore_list.extend(range(vadr, vadr + dof_width(jnt_type)))
+            else:
+                lower[padr : padr + qpos_dim] = jnt_range[0] + min_distance_from_limits
+                upper[padr : padr + qpos_dim] = jnt_range[1] - min_distance_from_limits
 
-        self.indices = np.array(index_list)
-        self.indices.setflags(write=False)
-
-        dim = len(self.indices)
-        self.projection_matrix = np.eye(model.nv)[self.indices] if dim > 0 else None
+        self.ignore_indices = np.array(ignore_list)
+        self.ignore_indices.setflags(write=False)
 
         self.lower = lower
         self.upper = upper
@@ -106,17 +104,14 @@ class ConfigurationLimit(Limit):
             m=self.model,
             qvel=delta_q_min,
             dt=1.0,
-            # NOTE: mujoco.mj_differentiatePos does `qpos2 - qpos1` so notice the order
-            # swap here compared to above.
-            qpos1=self.lower,
-            qpos2=configuration.q,
+            qpos1=configuration.q,
+            qpos2=self.lower,
         )
 
-        return BoxConstraint(
-            lower=self.gain * delta_q_max,
-            upper=self.gain * delta_q_max,
-        )
+        lower = self.gain * delta_q_min
+        upper = self.gain * delta_q_max
+        if self.ignore_indices.size > 0:
+            lower[self.ignore_indices] = -np.inf
+            upper[self.ignore_indices] = np.inf
 
-        # G = np.vstack([self.projection_matrix, -self.projection_matrix])
-        # h = np.hstack([p_max, p_min])
-        # return Constraint(G=G, h=h)
+        return BoxConstraint(lower=lower, upper=upper)

@@ -36,17 +36,10 @@ class TestConfigurationLimit(absltest.TestCase):
         with self.assertRaises(LimitDefinitionError):
             ConfigurationLimit(self.model, gain=1.1)
 
-    def test_dimensions(self):
-        limit = ConfigurationLimit(self.model)
-        nv = self.configuration.nv
-        self.assertEqual(limit.projection_matrix.shape, (nv, nv))
-        self.assertEqual(len(limit.indices), nv)
-
     def test_model_with_no_limit(self):
         empty_model = mujoco.MjModel.from_xml_string("<mujoco></mujoco>")
         empty_bounded = ConfigurationLimit(empty_model)
-        self.assertEqual(len(empty_bounded.indices), 0)
-        self.assertIsNone(empty_bounded.projection_matrix)
+        self.assertEqual(len(empty_bounded.ignore_indices), 0)
 
     def test_model_with_subset_of_velocities_limited(self):
         xml_str = """
@@ -67,8 +60,7 @@ class TestConfigurationLimit(absltest.TestCase):
         limit = ConfigurationLimit(model)
         nb = 1
         nv = model.nv
-        self.assertEqual(limit.projection_matrix.shape, (nb, nv))
-        self.assertEqual(len(limit.indices), nb)
+        self.assertEqual(len(limit.ignore_indices), nv - nb)
 
     def test_freejoint_ignored(self):
         xml_str = """
@@ -89,8 +81,7 @@ class TestConfigurationLimit(absltest.TestCase):
         limit = ConfigurationLimit(model)
         nb = 1
         nv = model.nv
-        self.assertEqual(limit.projection_matrix.shape, (nb, nv))
-        self.assertEqual(len(limit.indices), nb)
+        self.assertEqual(len(limit.ignore_indices), nv - nb)
 
     def test_far_from_limit(self, tol=1e-10):
         """Limit has no effect when the configuration is far away."""
