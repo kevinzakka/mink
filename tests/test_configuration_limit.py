@@ -42,7 +42,7 @@ class TestConfigurationLimit(absltest.TestCase):
 
     def test_indices(self):
         limit = ConfigurationLimit(self.model)
-        expected = np.arange(6, self.model.nv)
+        expected = np.arange(6, self.model.nv)  # Freejoint (0-5) is not limited.
         self.assertTrue(np.allclose(limit.indices, expected))
 
     def test_model_with_no_limit(self):
@@ -50,10 +50,14 @@ class TestConfigurationLimit(absltest.TestCase):
         empty_bounded = ConfigurationLimit(empty_model)
         self.assertEqual(len(empty_bounded.indices), 0)
         self.assertIsNone(empty_bounded.projection_matrix)
+        G, h = empty_bounded.compute_qp_inequalities(self.configuration, 1e-3)
+        self.assertIsNone(G)
+        self.assertIsNone(h)
 
     def test_model_with_subset_of_velocities_limited(self):
         xml_str = """
         <mujoco>
+          <compiler angle="radian"/>
           <worldbody>
             <body>
               <joint type="hinge" name="hinge_unlimited"/>
@@ -72,10 +76,15 @@ class TestConfigurationLimit(absltest.TestCase):
         nv = model.nv
         self.assertEqual(limit.projection_matrix.shape, (nb, nv))
         self.assertEqual(len(limit.indices), nb)
+        expected_lower = np.array([-mujoco.mjMAXVAL, 0])
+        expected_upper = np.array([mujoco.mjMAXVAL, 1.57])
+        np.testing.assert_allclose(limit.lower, expected_lower)
+        np.testing.assert_allclose(limit.upper, expected_upper)
 
     def test_freejoint_ignored(self):
         xml_str = """
         <mujoco>
+          <compiler angle="radian"/>
           <worldbody>
             <body>
               <joint type="free" name="floating"/>
@@ -94,6 +103,22 @@ class TestConfigurationLimit(absltest.TestCase):
         nv = model.nv
         self.assertEqual(limit.projection_matrix.shape, (nb, nv))
         self.assertEqual(len(limit.indices), nb)
+        expected_lower = np.asarray(
+            [
+                -mujoco.mjMAXVAL,
+            ]
+            * 7
+            + [0]
+        )
+        expected_upper = np.asarray(
+            [
+                mujoco.mjMAXVAL,
+            ]
+            * 7
+            + [1.57]
+        )
+        np.testing.assert_allclose(limit.lower, expected_lower)
+        np.testing.assert_allclose(limit.upper, expected_upper)
 
     def test_far_from_limit(self, tol=1e-10):
         """Limit has no effect when the configuration is far away."""
