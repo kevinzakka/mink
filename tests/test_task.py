@@ -1,3 +1,5 @@
+"""Tests for task.py."""
+
 from absl.testing import absltest
 
 from mink.tasks.exceptions import InvalidDamping, InvalidGain

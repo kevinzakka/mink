@@ -38,23 +38,30 @@ class ConfigurationLimit(Limit):
                 f"{self.__class__.__name__} gain must be in the range (0, 1]"
             )
 
-        ignore_list: list[int] = []
-        lower = np.full(model.nq, -np.inf)
-        upper = np.full(model.nq, np.inf)
+        index_list: list[int] = []  # DoF indices that are limited.
+        ignore_list: list[int] = []  # DoF indices that are not limited.
+        lower = np.full(model.nq, -mujoco.mjMAXVAL)
+        upper = np.full(model.nq, mujoco.mjMAXVAL)
         for jnt in range(model.njnt):
             jnt_type = model.jnt_type[jnt]
             qpos_dim = qpos_width(jnt_type)
             jnt_range = model.jnt_range[jnt]
             padr = model.jnt_qposadr[jnt]
+            vadr = model.jnt_dofadr[jnt]
+            vdim = dof_width(jnt_type)
+            # Skip free joints and joints without limits.
             if jnt_type == mujoco.mjtJoint.mjJNT_FREE or not model.jnt_limited[jnt]:
-                vadr = model.jnt_dofadr[jnt]
-                ignore_list.extend(range(vadr, vadr + dof_width(jnt_type)))
+                ignore_list.extend(range(vadr, vadr + vdim))
             else:
                 lower[padr : padr + qpos_dim] = jnt_range[0] + min_distance_from_limits
                 upper[padr : padr + qpos_dim] = jnt_range[1] - min_distance_from_limits
+                vdim = dof_width(jnt_type)
+                index_list.extend(range(vadr, vadr + vdim))
 
-        self.ignore_indices = np.array(ignore_list)
-        self.ignore_indices.setflags(write=False)
+        self.indices = np.array(index_list)
+        self.indices.setflags(write=False)
+        self.ignore = np.array(ignore_list)
+        self.ignore.setflags(write=False)
 
         self.lower = lower
         self.upper = upper
@@ -87,9 +94,11 @@ class ConfigurationLimit(Limit):
             :math:`G \Delta q \leq h`, or ``None`` if there is no limit.
         """
         del dt  # Unused.
+        if len(self.indices) == 0:
+            return BoxConstraint()
 
         # Upper.
-        delta_q_max = np.zeros(self.model.nv)
+        delta_q_max = np.zeros((self.model.nv,))
         mujoco.mj_differentiatePos(
             m=self.model,
             qvel=delta_q_max,
@@ -99,7 +108,7 @@ class ConfigurationLimit(Limit):
         )
 
         # Lower.
-        delta_q_min = np.zeros(self.model.nv)
+        delta_q_min = np.zeros((self.model.nv,))
         mujoco.mj_differentiatePos(
             m=self.model,
             qvel=delta_q_min,
@@ -110,8 +119,7 @@ class ConfigurationLimit(Limit):
 
         lower = self.gain * delta_q_min
         upper = self.gain * delta_q_max
-        if self.ignore_indices.size > 0:
-            lower[self.ignore_indices] = -np.inf
-            upper[self.ignore_indices] = np.inf
-
+        if self.ignore.size > 0:
+            lower[self.ignore] = -mujoco.mjMAXVAL
+            upper[self.ignore] = mujoco.mjMAXVAL
         return BoxConstraint(lower=lower, upper=upper)
