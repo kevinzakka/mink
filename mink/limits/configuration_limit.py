@@ -38,7 +38,7 @@ class ConfigurationLimit(Limit):
                 f"{self.__class__.__name__} gain must be in the range (0, 1]"
             )
 
-        index_list: list[int] = []
+        index_list: list[int] = []  # DoF indices that are limited.
         lower = np.full(model.nq, -np.inf)
         upper = np.full(model.nq, np.inf)
         for jnt in range(model.njnt):
@@ -50,7 +50,7 @@ class ConfigurationLimit(Limit):
                 continue
             lower[padr : padr + qpos_dim] = jnt_range[0] + min_distance_from_limits
             upper[padr : padr + qpos_dim] = jnt_range[1] - min_distance_from_limits
-            index_list.append(jnt)
+            index_list.append(model.jnt_dofadr[jnt])
 
         self.indices = np.array(index_list)
         self.indices.setflags(write=False)

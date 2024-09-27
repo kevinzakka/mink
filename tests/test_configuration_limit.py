@@ -8,6 +8,7 @@ from robot_descriptions.loaders.mujoco import load_robot_description
 from mink import Configuration
 from mink.limits import ConfigurationLimit, VelocityLimit
 from mink.limits.exceptions import LimitDefinitionError
+from mink.utils import get_freejoint_dims
 
 
 class TestConfigurationLimit(absltest.TestCase):
@@ -15,18 +16,14 @@ class TestConfigurationLimit(absltest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.model = load_robot_description("ur5e_mj_description")
+        cls.model = load_robot_description("g1_mj_description")
 
     def setUp(self):
         self.configuration = Configuration(self.model)
-        self.configuration.update_from_keyframe("home")
+        self.configuration.update_from_keyframe("stand")
+        # NOTE(kevin): These velocities are arbitrary and do not match real hardware.
         self.velocities = {
-            "shoulder_pan_joint": np.pi,
-            "shoulder_lift_joint": np.pi,
-            "elbow_joint": np.pi,
-            "wrist_1_joint": np.pi,
-            "wrist_2_joint": np.pi,
-            "wrist_3_joint": np.pi,
+            self.model.joint(i).name: 3.14 for i in range(1, self.model.njnt)
         }
         self.vel_limit = VelocityLimit(self.model, self.velocities)
 
@@ -39,8 +36,14 @@ class TestConfigurationLimit(absltest.TestCase):
     def test_dimensions(self):
         limit = ConfigurationLimit(self.model)
         nv = self.configuration.nv
-        self.assertEqual(limit.projection_matrix.shape, (nv, nv))
-        self.assertEqual(len(limit.indices), nv)
+        nb = nv - len(get_freejoint_dims(self.model)[1])
+        self.assertEqual(len(limit.indices), nb)
+        self.assertEqual(limit.projection_matrix.shape, (nb, nv))
+
+    def test_indices(self):
+        limit = ConfigurationLimit(self.model)
+        expected = np.arange(6, self.model.nv)
+        self.assertTrue(np.allclose(limit.indices, expected))
 
     def test_model_with_no_limit(self):
         empty_model = mujoco.MjModel.from_xml_string("<mujoco></mujoco>")
@@ -65,7 +68,7 @@ class TestConfigurationLimit(absltest.TestCase):
         """
         model = mujoco.MjModel.from_xml_string(xml_str)
         limit = ConfigurationLimit(model)
-        nb = 1
+        nb = 1  # 1 limited joint.
         nv = model.nv
         self.assertEqual(limit.projection_matrix.shape, (nb, nv))
         self.assertEqual(len(limit.indices), nb)
@@ -87,7 +90,7 @@ class TestConfigurationLimit(absltest.TestCase):
         """
         model = mujoco.MjModel.from_xml_string(xml_str)
         limit = ConfigurationLimit(model)
-        nb = 1
+        nb = 1  # 1 limited joint.
         nv = model.nv
         self.assertEqual(limit.projection_matrix.shape, (nb, nv))
         self.assertEqual(len(limit.indices), nb)
@@ -95,12 +98,21 @@ class TestConfigurationLimit(absltest.TestCase):
     def test_far_from_limit(self, tol=1e-10):
         """Limit has no effect when the configuration is far away."""
         dt = 1e-3  # [s]
-        limit = ConfigurationLimit(self.model)
-        G, h = limit.compute_qp_inequalities(self.configuration, dt=dt)
-        # When we are far away from configuration limits, the velocity limit is
-        # simply the configuration-agnostic one from the robot.
-        self.assertLess(np.max(+G @ self.vel_limit.limit * dt - h), -tol)
-        self.assertLess(np.max(-G @ self.vel_limit.limit * dt - h), -tol)
+        model = load_robot_description("ur5e_mj_description")
+        configuration = Configuration(model)
+        limit = ConfigurationLimit(model)
+        G, h = limit.compute_qp_inequalities(configuration, dt=dt)
+        velocities = {
+            "shoulder_pan_joint": np.pi,
+            "shoulder_lift_joint": np.pi,
+            "elbow_joint": np.pi,
+            "wrist_1_joint": np.pi,
+            "wrist_2_joint": np.pi,
+            "wrist_3_joint": np.pi,
+        }
+        vel_limit = VelocityLimit(model, velocities)
+        self.assertLess(np.max(+G @ vel_limit.limit * dt - h), -tol)
+        self.assertLess(np.max(-G @ vel_limit.limit * dt - h), -tol)
 
     def test_configuration_limit_repulsion(self, tol=1e-10):
         """Velocities are scaled down when close to a configuration limit."""
