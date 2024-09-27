@@ -35,7 +35,7 @@ pip install "mink[examples]"
 mink works with a variety of robots, including:
 
 * Arms: [UR5e](https://github.com/kevinzakka/mink/blob/main/examples/arm_ur5e_actuators.py), [iiwa14](https://github.com/kevinzakka/mink/blob/main/examples/arm_iiwa.py), [bimanual iiwa14](https://github.com/kevinzakka/mink/blob/main/examples/dual_iiwa.py)
-* Humanoids: [Unitree G1](https://github.com/kevinzakka/mink/blob/main/examples/humanoid_g1.py)
+* Humanoids: [Unitree G1](https://github.com/kevinzakka/mink/blob/main/examples/humanoid_g1.py), [Unitree H1](https://github.com/kevinzakka/mink/blob/main/examples/humanoid_h1.py)
 * Quadrupeds: [Unitree Go1](https://github.com/kevinzakka/mink/blob/main/examples/quadruped_go1.py), [Boston Dynamics Spot](https://github.com/kevinzakka/mink/blob/main/examples/quadruped_spot.py)
 * Hands: [Shadow Hand](https://github.com/kevinzakka/mink/blob/main/examples/hand_shadow.py), [Allegro Hand](https://github.com/kevinzakka/mink/blob/main/examples/arm_hand_iiwa_allegro.py)
 * Mobile manipulators: [Stanford TidyBot](https://github.com/kevinzakka/mink/blob/main/examples/mobile_tidybot.py), [Hello Robot Stretch](https://github.com/kevinzakka/mink/blob/main/examples/mobile_stretch.py)
