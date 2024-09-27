@@ -1,0 +1,10 @@
+cff-version: 1.2.0
+message: "If you find this code helpful, please cite it as below."
+title: "Mink: Python inverse kinematics based on MuJoCo"
+version: 0.0.4
+date-released: 2024-07-25
+url: "https://github.com/kevinzakka/mink"
+license: "Apache-2.0"
+authors:
+  - family-names: Zakka
+    given-names: Kevin

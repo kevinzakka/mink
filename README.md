@@ -16,6 +16,17 @@ Features include:
 
 For usage and API reference, see the [documentation](https://kevinzakka.github.io/mink/).
 
+If you use mink in your research, please cite it as follows:
+
+```bibtex
+@software{mink2024,
+  author = {Zakka, Kevin},
+  title = {{Mink: Python inverse kinematics based on MuJoCo}},
+  url = {http://github.com/kevinzakka/mink},
+  year = {2024},
+}
+```
+
 ## Installation
 
 You can install `mink` using `pip`:
