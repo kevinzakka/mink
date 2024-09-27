@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
+- Fixed a bug in `ConfigurationLimit` where the indices of the limited DoFs were storing the wrong values.
 - Changed `print` statement in `Configuration::check_limits` to `logging.warning`.
 
 ### Added
