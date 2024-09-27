@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+## [0.0.4] - 2024-09-26
+
 ### Changed
 
 - Fixed a bug in `ConfigurationLimit` where the indices of the limited DoFs were storing the wrong values.
@@ -17,7 +19,7 @@ All notable changes to this project will be documented in this file.
     - Mobile Kinova with LEAP hand: [mobile_kinova_leap.py](examples/mobile_kinova_leap.py) (thanks @Zi-ang-Cao)
         - The example scripts also includes updated recommendations for controlling the mobile base, aiming to minimize unnecessary rotation.
     - UFactory xArm7 with LEAP hand: [xarm_leap.py](examples/arm_hand_xarm_leap.py)
-    - Unitee H1: [humanoid_h1.py](examples/humanoid_h1.py)
+    - Unitree H1: [humanoid_h1.py](examples/humanoid_h1.py)
 
 ## [0.0.3] - 2024-08-10
 
