@@ -32,7 +32,7 @@ class Contact:
 
     @property
     def inactive(self) -> bool:
-        return self.dist == self.distmax and not self.fromto.any()
+        return self.dist == self.distmax
 
 
 def compute_contact_normal_jacobian(
