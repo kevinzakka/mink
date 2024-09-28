@@ -4,7 +4,7 @@ build-backend = "flit_core.buildapi"
 
 [project]
 name = "mink"
-version = "0.0.4"
+version = "0.0.5"
 readme = "README.md"
 authors = [
     {name = "Kevin Zakka", email = "zakka@berkeley.edu"},
@@ -58,6 +58,8 @@ all = [
 Source = "https://github.com/kevinzakka/mink"
 Tracker = "https://github.com/kevinzakka/mink/issues"
 Changelog = "https://github.com/kevinzakka/mink/blob/main/CHANGELOG.md"
+Homepage = "https://kevinzakka.github.io/mink/"
+Documentation = "https://kevinzakka.github.io/mink/"
 
 [tool.flit.module]
 name = "mink"
