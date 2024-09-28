@@ -137,6 +137,7 @@
                   <inertial pos="0.0395662 -2.56311e-07 0.00400649" quat="0.62033 0.619916 -0.339682 0.339869"
                     mass="0.251652" diaginertia="0.000689546 0.000650316 0.000468142"/>
                   <joint name="left/wrist_rotate" class="wrist_rotate"/>
+                  <geom name="left_ee_sphere" type="sphere" size=".05" pos=".1 0 0" class="collision" rgba=".5 .5 .5 .3"/>
                   <site name="left/gripper" pos="0.13 0 -.003" group="5"/>
                   <body name="left/gripper_base" euler="0 1.57 -1.57" pos="0.035 0 0">
                     <inertial pos="0.000182154 -0.0341589 -0.0106026" quat="0.435286 0.557074 -0.551539 0.442718"
@@ -148,7 +149,8 @@
                     <geom class="visual" pos="0 -0.03525 -0.0227" quat="0 -1 0 -1" type="mesh" mesh="vx300s_7_gripper_wrist_mount"/>
                     <!-- <geom class="collision" pos="0 -0.03525 -0.0227" quat="0 -1 0 -1" type="capsule" mesh="vx300s_7_gripper_wrist_mount"/> -->
                     <geom class="visual" pos="0 -0.0824748 -0.0095955" quat="0 0 -0.21644 -0.976296" type="mesh" mesh="d405_solid"/>
-                    <geom class="collision" pos="0 -0.0824748 -0.0095955" quat="0 0 -0.21644 -0.976296" type="box" mesh="d405_solid"/>
+                    <!-- <geom class="collision" pos="0 -0.0824748 -0.0095955" quat="0 0 -0.21644 -0.976296" type="box" mesh="d405_solid"/> -->
+                    <geom name="left_camera" class="collision" pos="0 -0.08 -0.02" quat="0 0 -0.21644 -0.976296" type="sphere" size=".035"/>
                     <camera name="wrist_cam_left" pos="0 -0.0824748 -0.0095955" mode="fixed" euler="2.70525955359 0 0"
                             focal="1.93e-3 1.93e-3" resolution="1280 720" sensorsize="3896e-6 2140e-6"/>
                    <body name="left/left_finger_link" pos="0.0191 -0.0141637 0.0211727" quat="1 -1 -1 1">
@@ -225,6 +227,7 @@
                   <inertial pos="0.0395662 -2.56311e-07 0.00400649" quat="0.62033 0.619916 -0.339682 0.339869"
                     mass="0.251652" diaginertia="0.000689546 0.000650316 0.000468142"/>
                   <joint name="right/wrist_rotate" class="wrist_rotate"/>
+                  <geom name="right_ee_sphere" type="sphere" size=".05" pos=".1 0 0" class="collision" rgba=".5 .5 .5 .3"/>
                   <site name="right/gripper" pos="0.13 0 -.003" group="5"/>
                   <body name="right/gripper_base" euler="0 1.57 -1.57" pos="0.035 0 0">
                     <inertial pos="0.000182154 -0.0341589 -0.0106026" quat="0.435286 0.557074 -0.551539 0.442718"
@@ -236,7 +239,8 @@
                     <geom class="visual" pos="0 -0.03525 -0.0227" quat="0 -0.707107 0 -0.707107" type="mesh" mesh="vx300s_7_gripper_wrist_mount"/>
                     <!-- <geom class="collision" pos="0 -0.03525 -0.0227" quat="0 -0.707107 0 -0.707107" type="capsule" mesh="vx300s_7_gripper_wrist_mount"/> -->
                     <geom class="visual" pos="0 -0.0824748 -0.0095955" quat="0 0 -0.21644 -0.976296" type="mesh" mesh="d405_solid"/>
-                    <geom class="collision" pos="0 -0.0824748 -0.0095955" quat="0 0 -0.21644 -0.976296" type="box" mesh="d405_solid"/>
+                    <!-- <geom class="collision" pos="0 -0.0824748 -0.0095955" quat="0 0 -0.21644 -0.976296" type="box" mesh="d405_solid"/> -->
+                    <geom name="right_camera" class="collision" pos="0 -0.08 -0.02" quat="0 0 -0.21644 -0.976296" type="sphere" size=".035"/>
                     <camera name="wrist_cam_right" pos="0 -0.0824748 -0.0095955" mode="fixed" euler="2.70525955359 0 0"
                             focal="1.93e-3 1.93e-3" resolution="1280 720" sensorsize="3896e-6 2140e-6"/>
                     <body name="right/left_finger_link" pos="0.0191 -0.0141637 0.0211727" quat="1 -1 -1 1">
