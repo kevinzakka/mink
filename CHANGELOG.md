@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file.
 ### Changed
 
 - Improved ALOHA example script.
+- Split `mobile_tidybot` into 2 separate examples: one with `mj_forward` only and one with full physics.
 
 ## [0.0.5] - 2024-09-27
 
