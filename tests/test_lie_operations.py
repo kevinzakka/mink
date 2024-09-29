@@ -100,6 +100,13 @@ class TestGroupSpecificOperations(absltest.TestCase):
         with np.testing.assert_raises(AssertionError):
             np.testing.assert_allclose(T_c.wxyz, T.wxyz)
 
+    def test_se3_apply(self):
+        T = SE3.sample_uniform()
+        v = np.random.rand(3)
+        np.testing.assert_allclose(
+            T.apply(v), T.as_matrix()[:3, :3] @ v + T.translation()
+        )
+
     # SE3.
 
     def test_se3_from_mocap_id(self):
