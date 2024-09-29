@@ -15,9 +15,7 @@ class Constraint(NamedTuple):
     """
 
     G: Optional[np.ndarray] = None
-    """Shape (nv, nv)."""
     h: Optional[np.ndarray] = None
-    """Shape (nv,)."""
 
     @property
     def inactive(self) -> bool:

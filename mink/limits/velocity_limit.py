@@ -18,11 +18,12 @@ class VelocityLimit(Limit):
     Floating base joints are ignored.
 
     Attributes:
-        indices: Tangent indices corresponding to velocity-limited joints.
+        indices: Tangent indices corresponding to velocity-limited joints. Shape (nb,).
         limit: Maximum allowed velocity magnitude for velocity-limited joints, in
-            [m]/[s] for slide joints and [rad]/[s] for hinge joints.
+            [m]/[s] for slide joints and [rad]/[s] for hinge joints. Shape (nb,).
         projection_matrix: Projection from tangent space to subspace with
-            velocity-limited joints.
+            velocity-limited joints. Shape (nb, nv) where nb is the dimension of the
+            velocity-limited subspace and nv is the dimension of the tangent space.
     """
 
     indices: np.ndarray
@@ -46,17 +47,17 @@ class VelocityLimit(Limit):
         for joint_name, max_vel in velocities.items():
             jid = model.joint(joint_name).id
             jnt_type = model.jnt_type[jid]
-            jnt_dim = dof_width(jnt_type)
-            jnt_id = model.jnt_dofadr[jid]
             if jnt_type == mujoco.mjtJoint.mjJNT_FREE:
                 raise LimitDefinitionError(f"Free joint {joint_name} is not supported")
+            vadr = model.jnt_dofadr[jid]
+            vdim = dof_width(jnt_type)
             max_vel = np.atleast_1d(max_vel)
-            if max_vel.shape != (jnt_dim,):
+            if max_vel.shape != (vdim,):
                 raise LimitDefinitionError(
-                    f"Joint {joint_name} must have a limit of shape ({jnt_dim},). "
+                    f"Joint {joint_name} must have a limit of shape ({vdim},). "
                     f"Got: {max_vel.shape}"
                 )
-            index_list.extend(range(jnt_id, jnt_id + jnt_dim))
+            index_list.extend(range(vadr, vadr + vdim))
             limit_list.extend(max_vel.tolist())
 
         self.indices = np.array(index_list)
@@ -64,8 +65,8 @@ class VelocityLimit(Limit):
         self.limit = np.array(limit_list)
         self.limit.setflags(write=False)
 
-        dim = len(self.indices)
-        self.projection_matrix = np.eye(model.nv)[self.indices] if dim > 0 else None
+        nb = len(self.indices)
+        self.projection_matrix = np.eye(model.nv)[self.indices] if nb > 0 else None
 
     def compute_qp_inequalities(
         self, configuration: Configuration, dt: float
@@ -89,7 +90,8 @@ class VelocityLimit(Limit):
 
         Returns:
             Pair :math:`(G, h)` representing the inequality constraint as
-            :math:`G \Delta q \leq h`, or ``None`` if there is no limit.
+            :math:`G \Delta q \leq h`, or ``None`` if there is no limit. G has
+            shape (2nb, nv) and h has shape (2nb,).
         """
         del configuration  # Unused.
         if self.projection_matrix is None:

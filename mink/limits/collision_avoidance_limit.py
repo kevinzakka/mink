@@ -19,6 +19,23 @@ CollisionPairs = Sequence[CollisionPair]
 
 @dataclass(frozen=True)
 class Contact:
+    """Struct to store contact information between two geoms.
+
+    Attributes:
+        dist: Smallest signed distance between geom1 and geom2. If no collision of
+            distance smaller than distmax is found, this value is equal to distmax [1].
+        fromto: Segment connecting the closest points on geom1 and geom2. The first
+            three elements are the coordinates of the closest point on geom1, and the
+            last three elements are the coordinates of the closest point on geom2.
+        geom1: ID of geom1.
+        geom2: ID of geom2.
+        distmax: Maximum distance between geom1 and geom2.
+
+    References:
+        [1] MuJoCo API documentation. `mj_geomDistance` function.
+            https://mujoco.readthedocs.io/en/latest/APIreference/APIfunctions.html
+    """
+
     dist: float
     fromto: np.ndarray
     geom1: int
@@ -27,12 +44,16 @@ class Contact:
 
     @property
     def normal(self) -> np.ndarray:
+        """Contact normal pointing from geom1 to geom2."""
         normal = self.fromto[3:] - self.fromto[:3]
-        return normal / (np.linalg.norm(normal) + 1e-9)
+        mujoco.mju_normalize3(normal)
+        return normal
 
     @property
     def inactive(self) -> bool:
-        return self.dist == self.distmax and not self.fromto.any()
+        """Returns True if no distance smaller than distmax is detected between geom1
+        and geom2."""
+        return self.dist == self.distmax
 
 
 def compute_contact_normal_jacobian(
