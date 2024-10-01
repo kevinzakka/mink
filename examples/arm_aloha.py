@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Optional, Sequence
 
 import mujoco
 import mujoco.viewer
@@ -25,20 +26,30 @@ _JOINT_NAMES = [
 _VELOCITY_LIMITS = {k: np.pi for k in _JOINT_NAMES}
 
 
-def gravcomp(
+def compensate_gravity(
     model: mujoco.MjModel,
     data: mujoco.MjData,
-    body_ids: np.ndarray,
-) -> np.ndarray:
-    """Compute force to counteract gravity for the given bodies."""
+    subtree_ids: Sequence[int],
+    qfrc_applied: Optional[np.ndarray] = None,
+) -> None:
+    """Compute forces to counteract gravity for the given subtrees.
+
+    Args:
+        model: Mujoco model.
+        data: Mujoco data.
+        subtree_ids: List of subtree ids. A subtree is defined as the kinematic tree
+            starting at the body and including all its descendants. Gravity
+            compensation forces will be applied to all bodies in the subtree.
+        qfrc_applied: Optional array to store the computed forces. If not provided,
+            the applied forces in `data` are used.
+    """
+    qfrc_applied = data.qfrc_applied if qfrc_applied is None else qfrc_applied
+    qfrc_applied[:] = 0.0  # Don't accumulate from previous calls.
     jac = np.empty((3, model.nv))
-    qfrc_gravcomp = np.zeros((model.nv))
-    for i in body_ids:
-        body_weight = model.opt.gravity * model.body(i).mass
-        mujoco.mj_jac(model, data, jac, None, data.body(i).xipos, i)
-        q_weight = jac.T @ body_weight
-        qfrc_gravcomp -= q_weight
-    return qfrc_gravcomp
+    for subtree_id in subtree_ids:
+        total_mass = model.body_subtreemass[subtree_id]
+        mujoco.mj_jacSubtreeCom(model, data, jac, subtree_id)
+        qfrc_applied[:] -= model.opt.gravity * total_mass @ jac
 
 
 if __name__ == "__main__":
@@ -46,9 +57,8 @@ if __name__ == "__main__":
     data = mujoco.MjData(model)
 
     # Bodies for which to apply gravity compensation.
-    left_bodies = mink.get_subtree_body_ids(model, model.body("left/base_link").id)
-    right_bodies = mink.get_subtree_body_ids(model, model.body("right/base_link").id)
-    gravcomp_bodies = np.concatenate([left_bodies, right_bodies])
+    left_subtree_id = model.body("left/base_link").id
+    right_subtree_id = model.body("right/base_link").id
 
     # Get the dof and actuator ids for the joints we wish to control.
     joint_names: list[str] = []
@@ -81,10 +91,7 @@ if __name__ == "__main__":
         posture_task := mink.PostureTask(model, cost=1e-4),
     ]
 
-    # Enable collision avoidance between the following geoms:
-    # geoms starting at subtree "right wrist" - "table",
-    # geoms starting at subtree "left wrist"  - "table",
-    # geoms starting at subtree "right wrist" - geoms starting at subtree "left wrist".
+    # Enable collision avoidance between the following geoms.
     l_wrist_geoms = mink.get_subtree_geom_ids(model, model.body("left/wrist_link").id)
     r_wrist_geoms = mink.get_subtree_geom_ids(model, model.body("right/wrist_link").id)
     l_geoms = mink.get_subtree_geom_ids(model, model.body("left/upper_arm_link").id)
@@ -110,9 +117,9 @@ if __name__ == "__main__":
     l_mid = model.body("left/target").mocapid[0]
     r_mid = model.body("right/target").mocapid[0]
     solver = "quadprog"
-    pos_threshold = 1e-2
-    ori_threshold = 1e-2
-    max_iters = 2
+    pos_threshold = 5e-3
+    ori_threshold = 5e-3
+    max_iters = 5
 
     with mujoco.viewer.launch_passive(
         model=model, data=data, show_left_ui=False, show_right_ui=False
@@ -162,7 +169,7 @@ if __name__ == "__main__":
                     break
 
             data.ctrl[actuator_ids] = configuration.q[dof_ids]
-            data.qfrc_applied = gravcomp(model, data, gravcomp_bodies)
+            compensate_gravity(model, data, [left_subtree_id, right_subtree_id])
             mujoco.mj_step(model, data)
 
             # Visualize at fixed FPS.
