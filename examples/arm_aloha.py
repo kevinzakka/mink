@@ -25,9 +25,30 @@ _JOINT_NAMES = [
 _VELOCITY_LIMITS = {k: np.pi for k in _JOINT_NAMES}
 
 
+def gravcomp(
+    model: mujoco.MjModel,
+    data: mujoco.MjData,
+    body_ids: np.ndarray,
+) -> np.ndarray:
+    """Compute force to counteract gravity for the given bodies."""
+    jac = np.empty((3, model.nv))
+    qfrc_gravcomp = np.zeros((model.nv))
+    for i in body_ids:
+        body_weight = model.opt.gravity * model.body(i).mass
+        mujoco.mj_jac(model, data, jac, None, data.body(i).xipos, i)
+        q_weight = jac.T @ body_weight
+        qfrc_gravcomp -= q_weight
+    return qfrc_gravcomp
+
+
 if __name__ == "__main__":
-    model = mujoco.MjModel.from_xml_path(_XML.as_posix())
+    model = mujoco.MjModel.from_xml_path(str(_XML))
     data = mujoco.MjData(model)
+
+    # Bodies for which to apply gravity compensation.
+    left_bodies = mink.get_subtree_body_ids(model, model.body("left/base_link").id)
+    right_bodies = mink.get_subtree_body_ids(model, model.body("right/base_link").id)
+    gravcomp_bodies = np.concatenate([left_bodies, right_bodies])
 
     # Get the dof and actuator ids for the joints we wish to control.
     joint_names: list[str] = []
@@ -141,6 +162,7 @@ if __name__ == "__main__":
                     break
 
             data.ctrl[actuator_ids] = configuration.q[dof_ids]
+            data.qfrc_applied = gravcomp(model, data, gravcomp_bodies)
             mujoco.mj_step(model, data)
 
             # Visualize at fixed FPS.

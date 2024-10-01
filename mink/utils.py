@@ -107,18 +107,18 @@ def get_subtree_geom_ids(model: mujoco.MjModel, body_id: int) -> list[int]:
     Returns:
         A list containing all subtree geom ids.
     """
-
-    def gather_geoms(body_id: int) -> list[int]:
-        geoms: list[int] = []
-        geom_start = model.body_geomadr[body_id]
-        geom_end = geom_start + model.body_geomnum[body_id]
-        geoms.extend(range(geom_start, geom_end))
-        children = [i for i in range(model.nbody) if model.body_parentid[i] == body_id]
-        for child_id in children:
-            geoms.extend(gather_geoms(child_id))
-        return geoms
-
-    return gather_geoms(body_id)
+    geom_ids = []
+    stack = [body_id]
+    while stack:
+        body_id = stack.pop()
+        geom_ids.extend(get_body_geom_ids(model, body_id))
+        children = [
+            i
+            for i in range(model.nbody)
+            if model.body_parentid[i] == body_id and body_id != i
+        ]
+        stack.extend(children)
+    return geom_ids
 
 
 def get_body_geom_ids(model: mujoco.MjModel, body_id: int) -> list[int]:
@@ -134,3 +134,27 @@ def get_body_geom_ids(model: mujoco.MjModel, body_id: int) -> list[int]:
     geom_start = model.body_geomadr[body_id]
     geom_end = geom_start + model.body_geomnum[body_id]
     return list(range(geom_start, geom_end))
+
+
+def get_subtree_body_ids(model: mujoco.MjModel, body_id: int) -> list[int]:
+    """Get all bodies belonging to subtree starting at a given body.
+
+    Args:
+        model: Mujoco model.
+        body_id: ID of body where subtree starts.
+
+    Returns:
+        A list containing all subtree body ids.
+    """
+    body_ids = []
+    stack = [body_id]
+    while stack:
+        body_id = stack.pop()
+        body_ids.append(body_id)
+        children = [
+            i
+            for i in range(model.nbody)
+            if model.body_parentid[i] == body_id and body_id != i
+        ]
+        stack.extend(children)
+    return body_ids
