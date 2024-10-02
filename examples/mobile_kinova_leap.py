@@ -155,7 +155,7 @@ if __name__ == "__main__":
 
         T_eef_prev = configuration.get_transform_frame_to_world("pinch_site", "site")
 
-        rate = RateLimiter(frequency=50.0)
+        rate = RateLimiter(frequency=50.0, warn=False)
         dt = rate.period
         t = 0.0
         while viewer.is_running():

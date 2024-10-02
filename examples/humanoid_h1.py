@@ -77,7 +77,7 @@ if __name__ == "__main__":
             mink.move_mocap_to_frame(model, data, f"{hand}_target", hand, "site")
         data.mocap_pos[com_mid] = data.subtree_com[1]
 
-        rate = RateLimiter(frequency=200.0)
+        rate = RateLimiter(frequency=200.0, warn=False)
         while viewer.is_running():
             # Update task targets.
             com_task.set_target(data.mocap_pos[com_mid])

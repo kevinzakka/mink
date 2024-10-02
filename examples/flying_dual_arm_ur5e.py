@@ -128,7 +128,7 @@ if __name__ == "__main__":
         ):
             mink.move_mocap_to_frame(model, data, mocap, frame, "site")
 
-        rate = RateLimiter(frequency=200.0)
+        rate = RateLimiter(frequency=200.0, warn=False)
         t = 0.0
         while viewer.is_running():
             data.mocap_pos[base_mid][2] = 0.3 * np.sin(2.0 * t)

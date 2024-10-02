@@ -131,7 +131,7 @@ if __name__ == "__main__":
             model, data, "r_target", "r_iiwa/attachment_site", "site"
         )
 
-        rate = RateLimiter(frequency=60.0)
+        rate = RateLimiter(frequency=60.0, warn=False)
         t = 0.0
         while viewer.is_running():
             mu = (1 + np.cos(t)) / 2

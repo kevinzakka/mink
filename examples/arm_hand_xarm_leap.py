@@ -115,7 +115,7 @@ if __name__ == "__main__":
             "attachment_site", "site"
         )
 
-        rate = RateLimiter(frequency=200.0)
+        rate = RateLimiter(frequency=200.0, warn=False)
         while viewer.is_running():
             # Update kuka end-effector task.
             T_wt = mink.SE3.from_mocap_name(model, data, "target")
