@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lie &mdash; mink  documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=5929fcd5"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Tasks" href="tasks.html" />
+    <link rel="prev" title="Configuration" href="configuration.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            mink
+          </a>
+              <div class="version">
+                v0.0.5
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Lie</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#matrixliegroup">MatrixLieGroup</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#mink.lie.base.MatrixLieGroup"><code class="docutils literal notranslate"><span class="pre">MatrixLieGroup</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#mink.lie.base.MatrixLieGroup.matrix_dim"><code class="docutils literal notranslate"><span class="pre">MatrixLieGroup.matrix_dim</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mink.lie.base.MatrixLieGroup.parameters_dim"><code class="docutils literal notranslate"><span class="pre">MatrixLieGroup.parameters_dim</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mink.lie.base.MatrixLieGroup.tangent_dim"><code class="docutils literal notranslate"><span class="pre">MatrixLieGroup.tangent_dim</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mink.lie.base.MatrixLieGroup.space_dim"><code class="docutils literal notranslate"><span class="pre">MatrixLieGroup.space_dim</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mink.lie.base.MatrixLieGroup.identity"><code class="docutils literal notranslate"><span class="pre">MatrixLieGroup.identity()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mink.lie.base.MatrixLieGroup.from_matrix"><code class="docutils literal notranslate"><span class="pre">MatrixLieGroup.from_matrix()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mink.lie.base.MatrixLieGroup.sample_uniform"><code class="docutils literal notranslate"><span class="pre">MatrixLieGroup.sample_uniform()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mink.lie.base.MatrixLieGroup.as_matrix"><code class="docutils literal notranslate"><span class="pre">MatrixLieGroup.as_matrix()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mink.lie.base.MatrixLieGroup.parameters"><code class="docutils literal notranslate"><span class="pre">MatrixLieGroup.parameters()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mink.lie.base.MatrixLieGroup.apply"><code class="docutils literal notranslate"><span class="pre">MatrixLieGroup.apply()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mink.lie.base.MatrixLieGroup.multiply"><code class="docutils literal notranslate"><span class="pre">MatrixLieGroup.multiply()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mink.lie.base.MatrixLieGroup.exp"><code class="docutils literal notranslate"><span class="pre">MatrixLieGroup.exp()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mink.lie.base.MatrixLieGroup.log"><code class="docutils literal notranslate"><span class="pre">MatrixLieGroup.log()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mink.lie.base.MatrixLieGroup.adjoint"><code class="docutils literal notranslate"><span class="pre">MatrixLieGroup.adjoint()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mink.lie.base.MatrixLieGroup.inverse"><code class="docutils literal notranslate"><span class="pre">MatrixLieGroup.inverse()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mink.lie.base.MatrixLieGroup.normalize"><code class="docutils literal notranslate"><span class="pre">MatrixLieGroup.normalize()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mink.lie.base.MatrixLieGroup.plus"><code class="docutils literal notranslate"><span class="pre">MatrixLieGroup.plus()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mink.lie.base.MatrixLieGroup.minus"><code class="docutils literal notranslate"><span class="pre">MatrixLieGroup.minus()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#so3">SO3</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#mink.lie.so3.SO3"><code class="docutils literal notranslate"><span class="pre">SO3</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#mink.lie.so3.SO3.parameters"><code class="docutils literal notranslate"><span class="pre">SO3.parameters()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mink.lie.so3.SO3.from_matrix"><code class="docutils literal notranslate"><span class="pre">SO3.from_matrix()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mink.lie.so3.SO3.identity"><code class="docutils literal notranslate"><span class="pre">SO3.identity()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mink.lie.so3.SO3.sample_uniform"><code class="docutils literal notranslate"><span class="pre">SO3.sample_uniform()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mink.lie.so3.SO3.as_matrix"><code class="docutils literal notranslate"><span class="pre">SO3.as_matrix()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mink.lie.so3.SO3.inverse"><code class="docutils literal notranslate"><span class="pre">SO3.inverse()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mink.lie.so3.SO3.normalize"><code class="docutils literal notranslate"><span class="pre">SO3.normalize()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mink.lie.so3.SO3.apply"><code class="docutils literal notranslate"><span class="pre">SO3.apply()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mink.lie.so3.SO3.multiply"><code class="docutils literal notranslate"><span class="pre">SO3.multiply()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mink.lie.so3.SO3.exp"><code class="docutils literal notranslate"><span class="pre">SO3.exp()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mink.lie.so3.SO3.log"><code class="docutils literal notranslate"><span class="pre">SO3.log()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mink.lie.so3.SO3.adjoint"><code class="docutils literal notranslate"><span class="pre">SO3.adjoint()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#se3">SE3</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#mink.lie.se3.SE3"><code class="docutils literal notranslate"><span class="pre">SE3</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#mink.lie.se3.SE3.parameters"><code class="docutils literal notranslate"><span class="pre">SE3.parameters()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mink.lie.se3.SE3.identity"><code class="docutils literal notranslate"><span class="pre">SE3.identity()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mink.lie.se3.SE3.from_matrix"><code class="docutils literal notranslate"><span class="pre">SE3.from_matrix()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mink.lie.se3.SE3.sample_uniform"><code class="docutils literal notranslate"><span class="pre">SE3.sample_uniform()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mink.lie.se3.SE3.as_matrix"><code class="docutils literal notranslate"><span class="pre">SE3.as_matrix()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mink.lie.se3.SE3.exp"><code class="docutils literal notranslate"><span class="pre">SE3.exp()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mink.lie.se3.SE3.inverse"><code class="docutils literal notranslate"><span class="pre">SE3.inverse()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mink.lie.se3.SE3.normalize"><code class="docutils literal notranslate"><span class="pre">SE3.normalize()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mink.lie.se3.SE3.apply"><code class="docutils literal notranslate"><span class="pre">SE3.apply()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mink.lie.se3.SE3.multiply"><code class="docutils literal notranslate"><span class="pre">SE3.multiply()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mink.lie.se3.SE3.log"><code class="docutils literal notranslate"><span class="pre">SE3.log()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mink.lie.se3.SE3.adjoint"><code class="docutils literal notranslate"><span class="pre">SE3.adjoint()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="tasks.html">Tasks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="limits.html">Limits</a></li>
+<li class="toctree-l1"><a class="reference internal" href="inverse_kinematics.html">Inverse kinematics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="utilities.html">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="derivations.html">Derivations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="references.html">References</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">mink</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Lie</li>
+      <li class="wy-breadcrumbs-aside">
+              <!-- User defined GitHub URL -->
+              <a href="https://github.com/kevinzakka/mink/tree/main/doc/lie.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="lie">
+<h1>Lie<a class="headerlink" href="#lie" title="Link to this heading"></a></h1>
+<p>MuJoCo does not currently offer a native Lie group interface for rigid body transforms, though it
+does have a collection of functions for manipulating quaternions and rotation matrices. The goal
+of this library is to provide this unified interface. Whenever possible, the underlying
+lie operation leverages the corresponding MuJoCo function. For example,
+<code class="xref py py-meth docutils literal notranslate"><span class="pre">from_matrix()</span></code> uses <cite>mujoco.mju_mat2Quat</cite> under the hood.</p>
+<p>This library is heavily ported from <a class="reference external" href="https://github.com/brentyi/jaxlie">jaxlie</a>,
+swapping out JAX for Numpy and adding a few additional features.</p>
+<section id="matrixliegroup">
+<h2>MatrixLieGroup<a class="headerlink" href="#matrixliegroup" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="mink.lie.base.MatrixLieGroup">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mink.lie.base.</span></span><span class="sig-name descname"><span class="pre">MatrixLieGroup</span></span><a class="headerlink" href="#mink.lie.base.MatrixLieGroup" title="Link to this definition"></a></dt>
+<dd><p>Interface definition for matrix Lie groups.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="mink.lie.base.MatrixLieGroup.matrix_dim">
+<span class="sig-name descname"><span class="pre">matrix_dim</span></span><a class="headerlink" href="#mink.lie.base.MatrixLieGroup.matrix_dim" title="Link to this definition"></a></dt>
+<dd><p>Dimension of square matrix output.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="mink.lie.base.MatrixLieGroup.parameters_dim">
+<span class="sig-name descname"><span class="pre">parameters_dim</span></span><a class="headerlink" href="#mink.lie.base.MatrixLieGroup.parameters_dim" title="Link to this definition"></a></dt>
+<dd><p>Dimension of underlying parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="mink.lie.base.MatrixLieGroup.tangent_dim">
+<span class="sig-name descname"><span class="pre">tangent_dim</span></span><a class="headerlink" href="#mink.lie.base.MatrixLieGroup.tangent_dim" title="Link to this definition"></a></dt>
+<dd><p>Dimension of tangent space.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="mink.lie.base.MatrixLieGroup.space_dim">
+<span class="sig-name descname"><span class="pre">space_dim</span></span><a class="headerlink" href="#mink.lie.base.MatrixLieGroup.space_dim" title="Link to this definition"></a></dt>
+<dd><p>Dimension of coordinates that can be transformed.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mink.lie.base.MatrixLieGroup.identity">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">identity</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Self</span></span></span><a class="headerlink" href="#mink.lie.base.MatrixLieGroup.identity" title="Link to this definition"></a></dt>
+<dd><p>Returns identity element.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>Self</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mink.lie.base.MatrixLieGroup.from_matrix">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_matrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">matrix</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Self</span></span></span><a class="headerlink" href="#mink.lie.base.MatrixLieGroup.from_matrix" title="Link to this definition"></a></dt>
+<dd><p>Get group member from matrix representation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>matrix</strong> (<em>ndarray</em>) – </p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>Self</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mink.lie.base.MatrixLieGroup.sample_uniform">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">sample_uniform</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Self</span></span></span><a class="headerlink" href="#mink.lie.base.MatrixLieGroup.sample_uniform" title="Link to this definition"></a></dt>
+<dd><p>Draw a uniform sample from the group.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>Self</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mink.lie.base.MatrixLieGroup.as_matrix">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">as_matrix</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#mink.lie.base.MatrixLieGroup.as_matrix" title="Link to this definition"></a></dt>
+<dd><p>Get transformation as a matrix.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>ndarray</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mink.lie.base.MatrixLieGroup.parameters">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">parameters</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#mink.lie.base.MatrixLieGroup.parameters" title="Link to this definition"></a></dt>
+<dd><p>Get underlying representation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>ndarray</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mink.lie.base.MatrixLieGroup.apply">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">apply</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#mink.lie.base.MatrixLieGroup.apply" title="Link to this definition"></a></dt>
+<dd><p>Applies group action to a point.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>target</strong> (<em>ndarray</em>) – </p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>ndarray</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mink.lie.base.MatrixLieGroup.multiply">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">multiply</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Self</span></span></span><a class="headerlink" href="#mink.lie.base.MatrixLieGroup.multiply" title="Link to this definition"></a></dt>
+<dd><p>Composes this transformation with another.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>other</strong> (<em>Self</em>) – </p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>Self</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mink.lie.base.MatrixLieGroup.exp">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">exp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tangent</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Self</span></span></span><a class="headerlink" href="#mink.lie.base.MatrixLieGroup.exp" title="Link to this definition"></a></dt>
+<dd><p>Computes <cite>expm(wedge(tangent))</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>tangent</strong> (<em>ndarray</em>) – </p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>Self</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mink.lie.base.MatrixLieGroup.log">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">log</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#mink.lie.base.MatrixLieGroup.log" title="Link to this definition"></a></dt>
+<dd><p>Computes <cite>vee(logm(transformation matrix))</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>ndarray</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mink.lie.base.MatrixLieGroup.adjoint">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">adjoint</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#mink.lie.base.MatrixLieGroup.adjoint" title="Link to this definition"></a></dt>
+<dd><p>Computes the adjoint.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>ndarray</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mink.lie.base.MatrixLieGroup.inverse">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">inverse</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Self</span></span></span><a class="headerlink" href="#mink.lie.base.MatrixLieGroup.inverse" title="Link to this definition"></a></dt>
+<dd><p>Computes the inverse of the transform.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>Self</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mink.lie.base.MatrixLieGroup.normalize">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">normalize</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Self</span></span></span><a class="headerlink" href="#mink.lie.base.MatrixLieGroup.normalize" title="Link to this definition"></a></dt>
+<dd><p>Normalize/projects values and returns.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>Self</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mink.lie.base.MatrixLieGroup.plus">
+<span class="sig-name descname"><span class="pre">plus</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Self</span></span></span><a class="headerlink" href="#mink.lie.base.MatrixLieGroup.plus" title="Link to this definition"></a></dt>
+<dd><p>Alias for rplus.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>other</strong> (<em>ndarray</em>) – </p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>Self</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mink.lie.base.MatrixLieGroup.minus">
+<span class="sig-name descname"><span class="pre">minus</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#mink.lie.base.MatrixLieGroup.minus" title="Link to this definition"></a></dt>
+<dd><p>Alias for rminus.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>other</strong> (<em>Self</em>) – </p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>ndarray</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="so3">
+<h2>SO3<a class="headerlink" href="#so3" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="mink.lie.so3.SO3">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mink.lie.so3.</span></span><span class="sig-name descname"><span class="pre">SO3</span></span><a class="headerlink" href="#mink.lie.so3.SO3" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#mink.lie.base.MatrixLieGroup" title="mink.lie.base.MatrixLieGroup"><code class="xref py py-class docutils literal notranslate"><span class="pre">MatrixLieGroup</span></code></a></p>
+<p>Special orthogonal group for 3D rotations.</p>
+<p>Internal parameterization is (qw, qx, qy, qz). Tangent parameterization is
+(omega_x, omega_y, omega_z).</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="mink.lie.so3.SO3.parameters">
+<span class="sig-name descname"><span class="pre">parameters</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#mink.lie.so3.SO3.parameters" title="Link to this definition"></a></dt>
+<dd><p>Get underlying representation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>ndarray</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mink.lie.so3.SO3.from_matrix">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_matrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">matrix</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#mink.lie.so3.SO3" title="mink.lie.so3.SO3"><span class="pre">SO3</span></a></span></span><a class="headerlink" href="#mink.lie.so3.SO3.from_matrix" title="Link to this definition"></a></dt>
+<dd><p>Get group member from matrix representation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>matrix</strong> (<em>ndarray</em>) – </p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#mink.lie.so3.SO3" title="mink.lie.so3.SO3"><em>SO3</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mink.lie.so3.SO3.identity">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">identity</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#mink.lie.so3.SO3" title="mink.lie.so3.SO3"><span class="pre">SO3</span></a></span></span><a class="headerlink" href="#mink.lie.so3.SO3.identity" title="Link to this definition"></a></dt>
+<dd><p>Returns identity element.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#mink.lie.so3.SO3" title="mink.lie.so3.SO3"><em>SO3</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mink.lie.so3.SO3.sample_uniform">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">sample_uniform</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#mink.lie.so3.SO3" title="mink.lie.so3.SO3"><span class="pre">SO3</span></a></span></span><a class="headerlink" href="#mink.lie.so3.SO3.sample_uniform" title="Link to this definition"></a></dt>
+<dd><p>Draw a uniform sample from the group.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#mink.lie.so3.SO3" title="mink.lie.so3.SO3"><em>SO3</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mink.lie.so3.SO3.as_matrix">
+<span class="sig-name descname"><span class="pre">as_matrix</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#mink.lie.so3.SO3.as_matrix" title="Link to this definition"></a></dt>
+<dd><p>Get transformation as a matrix.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>ndarray</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mink.lie.so3.SO3.inverse">
+<span class="sig-name descname"><span class="pre">inverse</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#mink.lie.so3.SO3" title="mink.lie.so3.SO3"><span class="pre">SO3</span></a></span></span><a class="headerlink" href="#mink.lie.so3.SO3.inverse" title="Link to this definition"></a></dt>
+<dd><p>Computes the inverse of the transform.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#mink.lie.so3.SO3" title="mink.lie.so3.SO3"><em>SO3</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mink.lie.so3.SO3.normalize">
+<span class="sig-name descname"><span class="pre">normalize</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#mink.lie.so3.SO3" title="mink.lie.so3.SO3"><span class="pre">SO3</span></a></span></span><a class="headerlink" href="#mink.lie.so3.SO3.normalize" title="Link to this definition"></a></dt>
+<dd><p>Normalize/projects values and returns.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#mink.lie.so3.SO3" title="mink.lie.so3.SO3"><em>SO3</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mink.lie.so3.SO3.apply">
+<span class="sig-name descname"><span class="pre">apply</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#mink.lie.so3.SO3.apply" title="Link to this definition"></a></dt>
+<dd><p>Applies group action to a point.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>target</strong> (<em>ndarray</em>) – </p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>ndarray</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mink.lie.so3.SO3.multiply">
+<span class="sig-name descname"><span class="pre">multiply</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#mink.lie.so3.SO3" title="mink.lie.so3.SO3"><span class="pre">SO3</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#mink.lie.so3.SO3" title="mink.lie.so3.SO3"><span class="pre">SO3</span></a></span></span><a class="headerlink" href="#mink.lie.so3.SO3.multiply" title="Link to this definition"></a></dt>
+<dd><p>Composes this transformation with another.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>other</strong> (<a class="reference internal" href="#mink.lie.so3.SO3" title="mink.lie.so3.SO3"><em>SO3</em></a>) – </p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#mink.lie.so3.SO3" title="mink.lie.so3.SO3"><em>SO3</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mink.lie.so3.SO3.exp">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">exp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tangent</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#mink.lie.so3.SO3" title="mink.lie.so3.SO3"><span class="pre">SO3</span></a></span></span><a class="headerlink" href="#mink.lie.so3.SO3.exp" title="Link to this definition"></a></dt>
+<dd><p>Computes <cite>expm(wedge(tangent))</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>tangent</strong> (<em>ndarray</em>) – </p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#mink.lie.so3.SO3" title="mink.lie.so3.SO3"><em>SO3</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mink.lie.so3.SO3.log">
+<span class="sig-name descname"><span class="pre">log</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#mink.lie.so3.SO3.log" title="Link to this definition"></a></dt>
+<dd><p>Computes <cite>vee(logm(transformation matrix))</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>ndarray</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mink.lie.so3.SO3.adjoint">
+<span class="sig-name descname"><span class="pre">adjoint</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#mink.lie.so3.SO3.adjoint" title="Link to this definition"></a></dt>
+<dd><p>Computes the adjoint.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>ndarray</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="se3">
+<h2>SE3<a class="headerlink" href="#se3" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="mink.lie.se3.SE3">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mink.lie.se3.</span></span><span class="sig-name descname"><span class="pre">SE3</span></span><a class="headerlink" href="#mink.lie.se3.SE3" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#mink.lie.base.MatrixLieGroup" title="mink.lie.base.MatrixLieGroup"><code class="xref py py-class docutils literal notranslate"><span class="pre">MatrixLieGroup</span></code></a></p>
+<p>Special Euclidean group for proper rigid transforms in 3D.</p>
+<p>Internal parameterization is (qw, qx, qy, qz, x, y, z). Tangent parameterization is
+(vx, vy, vz, omega_x, omega_y, omega_z).</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="mink.lie.se3.SE3.parameters">
+<span class="sig-name descname"><span class="pre">parameters</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#mink.lie.se3.SE3.parameters" title="Link to this definition"></a></dt>
+<dd><p>Get underlying representation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>ndarray</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mink.lie.se3.SE3.identity">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">identity</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#mink.lie.se3.SE3" title="mink.lie.se3.SE3"><span class="pre">SE3</span></a></span></span><a class="headerlink" href="#mink.lie.se3.SE3.identity" title="Link to this definition"></a></dt>
+<dd><p>Returns identity element.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#mink.lie.se3.SE3" title="mink.lie.se3.SE3"><em>SE3</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mink.lie.se3.SE3.from_matrix">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_matrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">matrix</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#mink.lie.se3.SE3" title="mink.lie.se3.SE3"><span class="pre">SE3</span></a></span></span><a class="headerlink" href="#mink.lie.se3.SE3.from_matrix" title="Link to this definition"></a></dt>
+<dd><p>Get group member from matrix representation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>matrix</strong> (<em>ndarray</em>) – </p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#mink.lie.se3.SE3" title="mink.lie.se3.SE3"><em>SE3</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mink.lie.se3.SE3.sample_uniform">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">sample_uniform</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#mink.lie.se3.SE3" title="mink.lie.se3.SE3"><span class="pre">SE3</span></a></span></span><a class="headerlink" href="#mink.lie.se3.SE3.sample_uniform" title="Link to this definition"></a></dt>
+<dd><p>Draw a uniform sample from the group.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#mink.lie.se3.SE3" title="mink.lie.se3.SE3"><em>SE3</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mink.lie.se3.SE3.as_matrix">
+<span class="sig-name descname"><span class="pre">as_matrix</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#mink.lie.se3.SE3.as_matrix" title="Link to this definition"></a></dt>
+<dd><p>Get transformation as a matrix.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>ndarray</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mink.lie.se3.SE3.exp">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">exp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tangent</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#mink.lie.se3.SE3" title="mink.lie.se3.SE3"><span class="pre">SE3</span></a></span></span><a class="headerlink" href="#mink.lie.se3.SE3.exp" title="Link to this definition"></a></dt>
+<dd><p>Computes <cite>expm(wedge(tangent))</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>tangent</strong> (<em>ndarray</em>) – </p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#mink.lie.se3.SE3" title="mink.lie.se3.SE3"><em>SE3</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mink.lie.se3.SE3.inverse">
+<span class="sig-name descname"><span class="pre">inverse</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#mink.lie.se3.SE3" title="mink.lie.se3.SE3"><span class="pre">SE3</span></a></span></span><a class="headerlink" href="#mink.lie.se3.SE3.inverse" title="Link to this definition"></a></dt>
+<dd><p>Computes the inverse of the transform.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#mink.lie.se3.SE3" title="mink.lie.se3.SE3"><em>SE3</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mink.lie.se3.SE3.normalize">
+<span class="sig-name descname"><span class="pre">normalize</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#mink.lie.se3.SE3" title="mink.lie.se3.SE3"><span class="pre">SE3</span></a></span></span><a class="headerlink" href="#mink.lie.se3.SE3.normalize" title="Link to this definition"></a></dt>
+<dd><p>Normalize/projects values and returns.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#mink.lie.se3.SE3" title="mink.lie.se3.SE3"><em>SE3</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mink.lie.se3.SE3.apply">
+<span class="sig-name descname"><span class="pre">apply</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#mink.lie.se3.SE3.apply" title="Link to this definition"></a></dt>
+<dd><p>Applies group action to a point.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>target</strong> (<em>ndarray</em>) – </p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>ndarray</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mink.lie.se3.SE3.multiply">
+<span class="sig-name descname"><span class="pre">multiply</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#mink.lie.se3.SE3" title="mink.lie.se3.SE3"><span class="pre">SE3</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#mink.lie.se3.SE3" title="mink.lie.se3.SE3"><span class="pre">SE3</span></a></span></span><a class="headerlink" href="#mink.lie.se3.SE3.multiply" title="Link to this definition"></a></dt>
+<dd><p>Composes this transformation with another.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>other</strong> (<a class="reference internal" href="#mink.lie.se3.SE3" title="mink.lie.se3.SE3"><em>SE3</em></a>) – </p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#mink.lie.se3.SE3" title="mink.lie.se3.SE3"><em>SE3</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mink.lie.se3.SE3.log">
+<span class="sig-name descname"><span class="pre">log</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#mink.lie.se3.SE3.log" title="Link to this definition"></a></dt>
+<dd><p>Computes <cite>vee(logm(transformation matrix))</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>ndarray</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mink.lie.se3.SE3.adjoint">
+<span class="sig-name descname"><span class="pre">adjoint</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#mink.lie.se3.SE3.adjoint" title="Link to this definition"></a></dt>
+<dd><p>Computes the adjoint.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>ndarray</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="configuration.html" class="btn btn-neutral float-left" title="Configuration" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="tasks.html" class="btn btn-neutral float-right" title="Tasks" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Kevin Zakka.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Limits &mdash; mink  documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=5929fcd5"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script async="async" src="_static/mathjax/tex-chtml.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Inverse kinematics" href="inverse_kinematics.html" />
+    <link rel="prev" title="Tasks" href="tasks.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            mink
+          </a>
+              <div class="version">
+                v0.0.5
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="lie.html">Lie</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tasks.html">Tasks</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Limits</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#module-mink.limits.limit">Definition</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#mink.limits.limit.Constraint"><code class="docutils literal notranslate"><span class="pre">Constraint</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#mink.limits.limit.Constraint.G"><code class="docutils literal notranslate"><span class="pre">Constraint.G</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mink.limits.limit.Constraint.h"><code class="docutils literal notranslate"><span class="pre">Constraint.h</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mink.limits.limit.Constraint.inactive"><code class="docutils literal notranslate"><span class="pre">Constraint.inactive</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#mink.limits.limit.Limit"><code class="docutils literal notranslate"><span class="pre">Limit</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#mink.limits.limit.Limit.compute_qp_inequalities"><code class="docutils literal notranslate"><span class="pre">Limit.compute_qp_inequalities()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-mink.limits.configuration_limit">Configuration limits</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#mink.limits.configuration_limit.ConfigurationLimit"><code class="docutils literal notranslate"><span class="pre">ConfigurationLimit</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#mink.limits.configuration_limit.ConfigurationLimit.compute_qp_inequalities"><code class="docutils literal notranslate"><span class="pre">ConfigurationLimit.compute_qp_inequalities()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-mink.limits.velocity_limit">Velocity limits</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#mink.limits.velocity_limit.VelocityLimit"><code class="docutils literal notranslate"><span class="pre">VelocityLimit</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#mink.limits.velocity_limit.VelocityLimit.indices"><code class="docutils literal notranslate"><span class="pre">VelocityLimit.indices</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mink.limits.velocity_limit.VelocityLimit.limit"><code class="docutils literal notranslate"><span class="pre">VelocityLimit.limit</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mink.limits.velocity_limit.VelocityLimit.projection_matrix"><code class="docutils literal notranslate"><span class="pre">VelocityLimit.projection_matrix</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mink.limits.velocity_limit.VelocityLimit.compute_qp_inequalities"><code class="docutils literal notranslate"><span class="pre">VelocityLimit.compute_qp_inequalities()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-mink.limits.collision_avoidance_limit">Collision avoidance limits</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#mink.limits.collision_avoidance_limit.Contact"><code class="docutils literal notranslate"><span class="pre">Contact</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#mink.limits.collision_avoidance_limit.Contact.dist"><code class="docutils literal notranslate"><span class="pre">Contact.dist</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mink.limits.collision_avoidance_limit.Contact.fromto"><code class="docutils literal notranslate"><span class="pre">Contact.fromto</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mink.limits.collision_avoidance_limit.Contact.geom1"><code class="docutils literal notranslate"><span class="pre">Contact.geom1</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mink.limits.collision_avoidance_limit.Contact.geom2"><code class="docutils literal notranslate"><span class="pre">Contact.geom2</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mink.limits.collision_avoidance_limit.Contact.distmax"><code class="docutils literal notranslate"><span class="pre">Contact.distmax</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mink.limits.collision_avoidance_limit.Contact.normal"><code class="docutils literal notranslate"><span class="pre">Contact.normal</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mink.limits.collision_avoidance_limit.Contact.inactive"><code class="docutils literal notranslate"><span class="pre">Contact.inactive</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#mink.limits.collision_avoidance_limit.CollisionAvoidanceLimit"><code class="docutils literal notranslate"><span class="pre">CollisionAvoidanceLimit</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#mink.limits.collision_avoidance_limit.CollisionAvoidanceLimit.model"><code class="docutils literal notranslate"><span class="pre">CollisionAvoidanceLimit.model</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mink.limits.collision_avoidance_limit.CollisionAvoidanceLimit.geom_pairs"><code class="docutils literal notranslate"><span class="pre">CollisionAvoidanceLimit.geom_pairs</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mink.limits.collision_avoidance_limit.CollisionAvoidanceLimit.gain"><code class="docutils literal notranslate"><span class="pre">CollisionAvoidanceLimit.gain</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mink.limits.collision_avoidance_limit.CollisionAvoidanceLimit.minimum_distance_from_collisions"><code class="docutils literal notranslate"><span class="pre">CollisionAvoidanceLimit.minimum_distance_from_collisions</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mink.limits.collision_avoidance_limit.CollisionAvoidanceLimit.collision_detection_distance"><code class="docutils literal notranslate"><span class="pre">CollisionAvoidanceLimit.collision_detection_distance</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mink.limits.collision_avoidance_limit.CollisionAvoidanceLimit.bound_relaxation"><code class="docutils literal notranslate"><span class="pre">CollisionAvoidanceLimit.bound_relaxation</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mink.limits.collision_avoidance_limit.CollisionAvoidanceLimit.compute_qp_inequalities"><code class="docutils literal notranslate"><span class="pre">CollisionAvoidanceLimit.compute_qp_inequalities()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="inverse_kinematics.html">Inverse kinematics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="utilities.html">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="derivations.html">Derivations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="references.html">References</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">mink</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Limits</li>
+      <li class="wy-breadcrumbs-aside">
+              <!-- User defined GitHub URL -->
+              <a href="https://github.com/kevinzakka/mink/tree/main/doc/limits.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="limits">
+<span id="id1"></span><h1>Limits<a class="headerlink" href="#limits" title="Link to this heading"></a></h1>
+<section id="module-mink.limits.limit">
+<span id="definition"></span><h2>Definition<a class="headerlink" href="#module-mink.limits.limit" title="Link to this heading"></a></h2>
+<p>All kinematic limits derive from the <a class="reference internal" href="#mink.limits.limit.Limit" title="mink.limits.limit.Limit"><code class="xref py py-class docutils literal notranslate"><span class="pre">Limit</span></code></a> base class.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="mink.limits.limit.Constraint">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mink.limits.limit.</span></span><span class="sig-name descname"><span class="pre">Constraint</span></span><a class="headerlink" href="#mink.limits.limit.Constraint" title="Link to this definition"></a></dt>
+<dd><p>Linear inequality constraint of the form <span class="math notranslate nohighlight">\(G(q) \Delta q \leq h(q)\)</span>.</p>
+<p>Inactive if G and h are None.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="mink.limits.limit.Constraint.G">
+<span class="sig-name descname"><span class="pre">G</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#mink.limits.limit.Constraint.G" title="Link to this definition"></a></dt>
+<dd><p>Alias for field number 0</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="mink.limits.limit.Constraint.h">
+<span class="sig-name descname"><span class="pre">h</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#mink.limits.limit.Constraint.h" title="Link to this definition"></a></dt>
+<dd><p>Alias for field number 1</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="mink.limits.limit.Constraint.inactive">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">inactive</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#mink.limits.limit.Constraint.inactive" title="Link to this definition"></a></dt>
+<dd><p>Returns True if the constraint is inactive.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="mink.limits.limit.Limit">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mink.limits.limit.</span></span><span class="sig-name descname"><span class="pre">Limit</span></span><a class="headerlink" href="#mink.limits.limit.Limit" title="Link to this definition"></a></dt>
+<dd><p>Abstract base class for kinematic limits.</p>
+<p>Subclasses must implement the <a class="reference internal" href="#mink.limits.limit.Limit.compute_qp_inequalities" title="mink.limits.limit.Limit.compute_qp_inequalities"><code class="xref py py-meth docutils literal notranslate"><span class="pre">compute_qp_inequalities()</span></code></a> method
+which takes in the current robot configuration and integration time step and
+returns an instance of <a class="reference internal" href="#mink.limits.limit.Constraint" title="mink.limits.limit.Constraint"><code class="xref py py-class docutils literal notranslate"><span class="pre">Constraint</span></code></a>.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="mink.limits.limit.Limit.compute_qp_inequalities">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">compute_qp_inequalities</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">configuration</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="configuration.html#mink.configuration.Configuration" title="mink.configuration.Configuration"><span class="pre">Configuration</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#mink.limits.limit.Constraint" title="mink.limits.limit.Constraint"><span class="pre">Constraint</span></a></span></span><a class="headerlink" href="#mink.limits.limit.Limit.compute_qp_inequalities" title="Link to this definition"></a></dt>
+<dd><p>Compute limit as linearized QP inequalities of the form:</p>
+<div class="math notranslate nohighlight">
+\[G(q) \Delta q \leq h(q)\]</div>
+<p>where <span class="math notranslate nohighlight">\(q \in {\cal C}\)</span> is the robot’s configuration and
+<span class="math notranslate nohighlight">\(\Delta q \in T_q({\cal C})\)</span> is the displacement in the tangent
+space at <span class="math notranslate nohighlight">\(q\)</span>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>configuration</strong> (<a class="reference internal" href="configuration.html#mink.configuration.Configuration" title="mink.configuration.Configuration"><em>Configuration</em></a>) – Robot configuration <span class="math notranslate nohighlight">\(q\)</span>.</p></li>
+<li><p><strong>dt</strong> (<em>float</em>) – Integration time step in [s].</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Pair <span class="math notranslate nohighlight">\((G, h)\)</span>.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#mink.limits.limit.Constraint" title="mink.limits.limit.Constraint"><em>Constraint</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-mink.limits.configuration_limit">
+<span id="configuration-limits"></span><h2>Configuration limits<a class="headerlink" href="#module-mink.limits.configuration_limit" title="Link to this heading"></a></h2>
+<p>Joint position limit.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="mink.limits.configuration_limit.ConfigurationLimit">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mink.limits.configuration_limit.</span></span><span class="sig-name descname"><span class="pre">ConfigurationLimit</span></span><a class="headerlink" href="#mink.limits.configuration_limit.ConfigurationLimit" title="Link to this definition"></a></dt>
+<dd><p>Inequality constraint on joint positions in a robot model.</p>
+<p>Floating base joints are ignored.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="mink.limits.configuration_limit.ConfigurationLimit.compute_qp_inequalities">
+<span class="sig-name descname"><span class="pre">compute_qp_inequalities</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">configuration</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="configuration.html#mink.configuration.Configuration" title="mink.configuration.Configuration"><span class="pre">Configuration</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#mink.limits.limit.Constraint" title="mink.limits.limit.Constraint"><span class="pre">Constraint</span></a></span></span><a class="headerlink" href="#mink.limits.configuration_limit.ConfigurationLimit.compute_qp_inequalities" title="Link to this definition"></a></dt>
+<dd><p>Compute the configuration-dependent joint position limits.</p>
+<p>The limits are defined as:</p>
+<div class="math notranslate nohighlight">
+\[{q \ominus q_{min}} \leq \Delta q \leq {q_{max} \ominus q}\]</div>
+<p>where <span class="math notranslate nohighlight">\(q \in {\cal C}\)</span> is the robot’s configuration and
+<span class="math notranslate nohighlight">\(\Delta q \in T_q({\cal C})\)</span> is the displacement in the tangent
+space at <span class="math notranslate nohighlight">\(q\)</span>. See the <a class="reference internal" href="derivations.html#derivations"><span class="std std-ref">Derivations</span></a> section for more information.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>configuration</strong> (<a class="reference internal" href="configuration.html#mink.configuration.Configuration" title="mink.configuration.Configuration"><em>Configuration</em></a>) – Robot configuration <span class="math notranslate nohighlight">\(q\)</span>.</p></li>
+<li><p><strong>dt</strong> (<em>float</em>) – Integration timestep in [s].</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Pair <span class="math notranslate nohighlight">\((G, h)\)</span> representing the inequality constraint as
+<span class="math notranslate nohighlight">\(G \Delta q \leq h\)</span>, or <code class="docutils literal notranslate"><span class="pre">None</span></code> if there is no limit.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#mink.limits.limit.Constraint" title="mink.limits.limit.Constraint"><em>Constraint</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-mink.limits.velocity_limit">
+<span id="velocity-limits"></span><h2>Velocity limits<a class="headerlink" href="#module-mink.limits.velocity_limit" title="Link to this heading"></a></h2>
+<p>Joint velocity limit.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="mink.limits.velocity_limit.VelocityLimit">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mink.limits.velocity_limit.</span></span><span class="sig-name descname"><span class="pre">VelocityLimit</span></span><a class="headerlink" href="#mink.limits.velocity_limit.VelocityLimit" title="Link to this definition"></a></dt>
+<dd><p>Inequality constraint on joint velocities in a robot model.</p>
+<p>Floating base joints are ignored.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="mink.limits.velocity_limit.VelocityLimit.indices">
+<span class="sig-name descname"><span class="pre">indices</span></span><a class="headerlink" href="#mink.limits.velocity_limit.VelocityLimit.indices" title="Link to this definition"></a></dt>
+<dd><p>Tangent indices corresponding to velocity-limited joints. Shape (nb,).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>numpy.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="mink.limits.velocity_limit.VelocityLimit.limit">
+<span class="sig-name descname"><span class="pre">limit</span></span><a class="headerlink" href="#mink.limits.velocity_limit.VelocityLimit.limit" title="Link to this definition"></a></dt>
+<dd><p>Maximum allowed velocity magnitude for velocity-limited joints, in
+[m]/[s] for slide joints and [rad]/[s] for hinge joints. Shape (nb,).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>numpy.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="mink.limits.velocity_limit.VelocityLimit.projection_matrix">
+<span class="sig-name descname"><span class="pre">projection_matrix</span></span><a class="headerlink" href="#mink.limits.velocity_limit.VelocityLimit.projection_matrix" title="Link to this definition"></a></dt>
+<dd><p>Projection from tangent space to subspace with
+velocity-limited joints. Shape (nb, nv) where nb is the dimension of the
+velocity-limited subspace and nv is the dimension of the tangent space.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>numpy.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mink.limits.velocity_limit.VelocityLimit.compute_qp_inequalities">
+<span class="sig-name descname"><span class="pre">compute_qp_inequalities</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">configuration</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="configuration.html#mink.configuration.Configuration" title="mink.configuration.Configuration"><span class="pre">Configuration</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#mink.limits.limit.Constraint" title="mink.limits.limit.Constraint"><span class="pre">Constraint</span></a></span></span><a class="headerlink" href="#mink.limits.velocity_limit.VelocityLimit.compute_qp_inequalities" title="Link to this definition"></a></dt>
+<dd><p>Compute the configuration-dependent joint velocity limits.</p>
+<p>The limits are defined as:</p>
+<div class="math notranslate nohighlight">
+\[-v_{\text{max}} \cdot dt \leq \Delta q \leq v_{\text{max}} \cdot dt\]</div>
+<p>where <span class="math notranslate nohighlight">\(v_{max} \in {\cal T}\)</span> is the robot’s velocity limit
+vector and <span class="math notranslate nohighlight">\(\Delta q \in T_q({\cal C})\)</span> is the displacement in the
+tangent space at <span class="math notranslate nohighlight">\(q\)</span>. See the <a class="reference internal" href="derivations.html#derivations"><span class="std std-ref">Derivations</span></a> section for
+more information.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>configuration</strong> (<a class="reference internal" href="configuration.html#mink.configuration.Configuration" title="mink.configuration.Configuration"><em>Configuration</em></a>) – Robot configuration <span class="math notranslate nohighlight">\(q\)</span>.</p></li>
+<li><p><strong>dt</strong> (<em>float</em>) – Integration timestep in [s].</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Pair <span class="math notranslate nohighlight">\((G, h)\)</span> representing the inequality constraint as
+<span class="math notranslate nohighlight">\(G \Delta q \leq h\)</span>, or <code class="docutils literal notranslate"><span class="pre">None</span></code> if there is no limit. G has
+shape (2nb, nv) and h has shape (2nb,).</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#mink.limits.limit.Constraint" title="mink.limits.limit.Constraint"><em>Constraint</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-mink.limits.collision_avoidance_limit">
+<span id="collision-avoidance-limits"></span><h2>Collision avoidance limits<a class="headerlink" href="#module-mink.limits.collision_avoidance_limit" title="Link to this heading"></a></h2>
+<p>Collision avoidance limit.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="mink.limits.collision_avoidance_limit.Contact">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mink.limits.collision_avoidance_limit.</span></span><span class="sig-name descname"><span class="pre">Contact</span></span><a class="headerlink" href="#mink.limits.collision_avoidance_limit.Contact" title="Link to this definition"></a></dt>
+<dd><p>Struct to store contact information between two geoms.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="mink.limits.collision_avoidance_limit.Contact.dist">
+<span class="sig-name descname"><span class="pre">dist</span></span><a class="headerlink" href="#mink.limits.collision_avoidance_limit.Contact.dist" title="Link to this definition"></a></dt>
+<dd><p>Smallest signed distance between geom1 and geom2. If no collision of
+distance smaller than distmax is found, this value is equal to distmax [1].</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="mink.limits.collision_avoidance_limit.Contact.fromto">
+<span class="sig-name descname"><span class="pre">fromto</span></span><a class="headerlink" href="#mink.limits.collision_avoidance_limit.Contact.fromto" title="Link to this definition"></a></dt>
+<dd><p>Segment connecting the closest points on geom1 and geom2. The first
+three elements are the coordinates of the closest point on geom1, and the
+last three elements are the coordinates of the closest point on geom2.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>numpy.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="mink.limits.collision_avoidance_limit.Contact.geom1">
+<span class="sig-name descname"><span class="pre">geom1</span></span><a class="headerlink" href="#mink.limits.collision_avoidance_limit.Contact.geom1" title="Link to this definition"></a></dt>
+<dd><p>ID of geom1.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="mink.limits.collision_avoidance_limit.Contact.geom2">
+<span class="sig-name descname"><span class="pre">geom2</span></span><a class="headerlink" href="#mink.limits.collision_avoidance_limit.Contact.geom2" title="Link to this definition"></a></dt>
+<dd><p>ID of geom2.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="mink.limits.collision_avoidance_limit.Contact.distmax">
+<span class="sig-name descname"><span class="pre">distmax</span></span><a class="headerlink" href="#mink.limits.collision_avoidance_limit.Contact.distmax" title="Link to this definition"></a></dt>
+<dd><p>Maximum distance between geom1 and geom2.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<p class="rubric">References</p>
+<dl class="simple">
+<dt>[1] MuJoCo API documentation. <cite>mj_geomDistance</cite> function.</dt><dd><p><a class="reference external" href="https://mujoco.readthedocs.io/en/latest/APIreference/APIfunctions.html">https://mujoco.readthedocs.io/en/latest/APIreference/APIfunctions.html</a></p>
+</dd>
+</dl>
+<dl class="py property">
+<dt class="sig sig-object py" id="mink.limits.collision_avoidance_limit.Contact.normal">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">normal</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span></em><a class="headerlink" href="#mink.limits.collision_avoidance_limit.Contact.normal" title="Link to this definition"></a></dt>
+<dd><p>Contact normal pointing from geom1 to geom2.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="mink.limits.collision_avoidance_limit.Contact.inactive">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">inactive</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#mink.limits.collision_avoidance_limit.Contact.inactive" title="Link to this definition"></a></dt>
+<dd><p>Returns True if no distance smaller than distmax is detected between geom1
+and geom2.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="mink.limits.collision_avoidance_limit.CollisionAvoidanceLimit">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mink.limits.collision_avoidance_limit.</span></span><span class="sig-name descname"><span class="pre">CollisionAvoidanceLimit</span></span><a class="headerlink" href="#mink.limits.collision_avoidance_limit.CollisionAvoidanceLimit" title="Link to this definition"></a></dt>
+<dd><p>Normal velocity limit between geom pairs.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="mink.limits.collision_avoidance_limit.CollisionAvoidanceLimit.model">
+<span class="sig-name descname"><span class="pre">model</span></span><a class="headerlink" href="#mink.limits.collision_avoidance_limit.CollisionAvoidanceLimit.model" title="Link to this definition"></a></dt>
+<dd><p>MuJoCo model.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="mink.limits.collision_avoidance_limit.CollisionAvoidanceLimit.geom_pairs">
+<span class="sig-name descname"><span class="pre">geom_pairs</span></span><a class="headerlink" href="#mink.limits.collision_avoidance_limit.CollisionAvoidanceLimit.geom_pairs" title="Link to this definition"></a></dt>
+<dd><p>Set of collision pairs in which to perform active collision
+avoidance. A collision pair is defined as a pair of geom groups. A geom
+group is a set of geom names. For each geom pair, the solver will
+attempt to compute joint velocities that avoid collisions between every
+geom in the first geom group with every geom in the second geom group.
+Self collision is achieved by adding a collision pair with the same
+geom group in both pair fields.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="mink.limits.collision_avoidance_limit.CollisionAvoidanceLimit.gain">
+<span class="sig-name descname"><span class="pre">gain</span></span><a class="headerlink" href="#mink.limits.collision_avoidance_limit.CollisionAvoidanceLimit.gain" title="Link to this definition"></a></dt>
+<dd><p>Gain factor in (0, 1] that determines how fast the geoms are
+allowed to move towards each other at each iteration. Smaller values
+are safer but may make the geoms move slower towards each other.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="mink.limits.collision_avoidance_limit.CollisionAvoidanceLimit.minimum_distance_from_collisions">
+<span class="sig-name descname"><span class="pre">minimum_distance_from_collisions</span></span><a class="headerlink" href="#mink.limits.collision_avoidance_limit.CollisionAvoidanceLimit.minimum_distance_from_collisions" title="Link to this definition"></a></dt>
+<dd><p>The minimum distance to leave between
+any two geoms. A negative distance allows the geoms to penetrate by
+the specified amount.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="mink.limits.collision_avoidance_limit.CollisionAvoidanceLimit.collision_detection_distance">
+<span class="sig-name descname"><span class="pre">collision_detection_distance</span></span><a class="headerlink" href="#mink.limits.collision_avoidance_limit.CollisionAvoidanceLimit.collision_detection_distance" title="Link to this definition"></a></dt>
+<dd><p>The distance between two geoms at which the
+active collision avoidance limit will be active. A large value will
+cause collisions to be detected early, but may incur high computational
+cost. A negative value will cause the geoms to be detected only after
+they penetrate by the specified amount.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="mink.limits.collision_avoidance_limit.CollisionAvoidanceLimit.bound_relaxation">
+<span class="sig-name descname"><span class="pre">bound_relaxation</span></span><a class="headerlink" href="#mink.limits.collision_avoidance_limit.CollisionAvoidanceLimit.bound_relaxation" title="Link to this definition"></a></dt>
+<dd><p>An offset on the upper bound of each collision avoidance
+constraint.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mink.limits.collision_avoidance_limit.CollisionAvoidanceLimit.compute_qp_inequalities">
+<span class="sig-name descname"><span class="pre">compute_qp_inequalities</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">configuration</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="configuration.html#mink.configuration.Configuration" title="mink.configuration.Configuration"><span class="pre">Configuration</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#mink.limits.limit.Constraint" title="mink.limits.limit.Constraint"><span class="pre">Constraint</span></a></span></span><a class="headerlink" href="#mink.limits.collision_avoidance_limit.CollisionAvoidanceLimit.compute_qp_inequalities" title="Link to this definition"></a></dt>
+<dd><p>Compute limit as linearized QP inequalities of the form:</p>
+<div class="math notranslate nohighlight">
+\[G(q) \Delta q \leq h(q)\]</div>
+<p>where <span class="math notranslate nohighlight">\(q \in {\cal C}\)</span> is the robot’s configuration and
+<span class="math notranslate nohighlight">\(\Delta q \in T_q({\cal C})\)</span> is the displacement in the tangent
+space at <span class="math notranslate nohighlight">\(q\)</span>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>configuration</strong> (<a class="reference internal" href="configuration.html#mink.configuration.Configuration" title="mink.configuration.Configuration"><em>Configuration</em></a>) – Robot configuration <span class="math notranslate nohighlight">\(q\)</span>.</p></li>
+<li><p><strong>dt</strong> (<em>float</em>) – Integration time step in [s].</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Pair <span class="math notranslate nohighlight">\((G, h)\)</span>.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#mink.limits.limit.Constraint" title="mink.limits.limit.Constraint"><em>Constraint</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="tasks.html" class="btn btn-neutral float-left" title="Tasks" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="inverse_kinematics.html" class="btn btn-neutral float-right" title="Inverse kinematics" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Kevin Zakka.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
