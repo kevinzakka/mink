@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+- Added a new humanoid example using the Apollo robot.
 - Added `utils.get_subtree_body_ids` to get all bodies belonging to the subtree starting at a given body.
   - Example usage of this function can be found in the [ALOHA example script](examples/arm_aloha.py) where it is used to selectively apply gravity compensation torques to the left and right arm bodies.
 

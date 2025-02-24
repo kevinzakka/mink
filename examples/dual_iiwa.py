@@ -139,7 +139,7 @@ if __name__ == "__main__":
                 A + (B - A + 0.2 * np.array([0, 0, np.sin(mu * np.pi) ** 2])) * mu
             )
             r_y_des[:] = (
-                B + (A - B + 0.2 * np.array([0, 0, -np.sin(mu * np.pi) ** 2])) * mu
+                B + (A - B + 0.2 * np.array([0, 0, -(np.sin(mu * np.pi) ** 2)])) * mu
             )
             data.mocap_pos[left_mid] = l_y_des
             data.mocap_pos[right_mid] = r_y_des

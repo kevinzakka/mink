@@ -90,7 +90,7 @@ def custom_configuration_vector(
         value = np.atleast_1d(value)
         if value.shape != (jnt_dim,):
             raise ValueError(
-                f"Joint {name} should have a qpos value of {jnt_dim,} but "
+                f"Joint {name} should have a qpos value of {(jnt_dim,)} but "
                 f"got {value.shape}"
             )
         q[qid : qid + jnt_dim] = value
