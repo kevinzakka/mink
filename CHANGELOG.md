@@ -13,6 +13,7 @@ All notable changes to this project will be documented in this file.
 ### Changed
 
 - Improved ALOHA example script.
+- Fixed a small bug in the exit criterion of the ALOHA example script.
 
 ## [0.0.5] - 2024-09-27
 
