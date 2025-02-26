@@ -60,9 +60,11 @@ class Configuration:
             self.data.qpos = q
         # The minimal function call required to get updated frame transforms is
         # mj_kinematics. An extra call to mj_comPos is required for updated Jacobians.
+        # mj_fwdPosition is required for constraints.
         mujoco.mj_kinematics(self.model, self.data)
+        mujoco.mj_fwdPosition(self.model, self.data)
         mujoco.mj_comPos(self.model, self.data)
-
+        
     def update_from_keyframe(self, key_name: str) -> None:
         """Update the configuration from a keyframe.
 
