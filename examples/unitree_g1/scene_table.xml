@@ -12,13 +12,15 @@
     <texture name="grid" type="2d" builtin="checker" rgb1=".2 .3 .4" rgb2=".1 0.15 0.2" width="512" height="512"
       mark="cross" markrgb=".8 .8 .8"/>
     <material name="grid" texture="grid" texrepeat="1 1" texuniform="true"/>
+    <texture type="2d" name="wood" file="assets/wood.png"/>
+    <material name="wood" texture="wood"/>
   </asset>
 
   <worldbody>
     <light pos="0 0 3" directional="true"/>
-    <geom name="floor" size="1 1 0.01" type="plane" material="grid"/>
+    <geom name="table" type="box" size=".6 .5 .3" mass="1" material="wood" pos="0.8 0 .3"/>
     <body name="com_target" pos="0.5 0 .5" mocap="true">
-      <geom type="sphere" size=".08" contype="0" conaffinity="0" rgba=".6 .3 .3 .2"/>
+      <geom type="sphere" size=".06" contype="0" conaffinity="0" rgba=".6 .3 .3 .2"/>
       <site type="sphere" size="0.01" rgba="0 0 1 1" group="1"/>
     </body>
     <body name="left_palm_target" pos="0.5 0 .5" quat="0 1 0 0" mocap="true">
@@ -40,26 +42,13 @@
   </worldbody>
 
   <keyframe>
-    <key name="stand"
-      qpos="
-      0 0 0.79
-      1 0 0 0
-      -0.312 0 0 0.669 -0.363 0
-      -0.312 0 0 0.669 -0.363 0
-      0 0 0.073
-      0.2 0.2 0 1.28 0 0 0
-      0 1.05 0 0 0 0 0
-      0.2 -0.2 0 1.28 0 0 0
-      0 -1.05 0 0 0 0 0
-      "
-      ctrl="
-      -0.312 0 0 0.669 -0.363 0
-      -0.312 0 0 0.669 -0.363 0
-      0 0 0.073
-      0.2 0.2 0 1.28 0 0 0
-      0 1.05 0 0 0 0 0
-      0.2 -0.2 0 1.28 0 0 0
-      0 -1.05 0 0 0 0 0
-      "/>
+    <key name='teleop' qpos='-0.0951511 -0.0220293 0.732971 1 0 2.78873e-20 0 -0.312 0 0 0.669 -0.363 0 -0.312 0 0 0.669 -0.363 0 0 0 0.468 -0.09432 0.5048 -0.36652 0.602025 0 0 0 0 1.05 0 0 0 0 0 -1.41889 -0.3512 0.02618 1.28 0 0 0 0 -1.05 0 0 0 0 0'/>
   </keyframe>
+
+  <sensor>
+    <fromto geom1="left_hand_collision" geom2="table" cutoff="1"/>
+    <fromto geom1="right_hand_collision" geom2="table" cutoff="1"/>
+    <fromto geom1="left_hand_collision" geom2="left_thigh" cutoff="1"/>
+    <fromto geom1="right_hand_collision" geom2="right_thigh" cutoff="1"/>
+  </sensor>
 </mujoco>
