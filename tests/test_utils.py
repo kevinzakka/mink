@@ -6,7 +6,7 @@ from absl.testing import absltest
 from robot_descriptions.loaders.mujoco import load_robot_description
 
 from mink import utils
-from mink.exceptions import InvalidKeyframe, InvalidMocapBody
+from mink.exceptions import InvalidKeyframe, InvalidMocapBody, InvalidJointName
 
 
 class TestUtils(absltest.TestCase):
@@ -107,6 +107,33 @@ class TestUtils(absltest.TestCase):
             np.asarray(v_ids),
             np.asarray(list(range(0, 6))),
         )
+
+    def test_get_dof_ids_throws_error_if_joint_name_invalid(self):
+        with self.assertRaises(InvalidJointName):
+            utils.get_dof_ids(self.model, ["invalid_joint_name"])
+
+    def test_get_dof_ids(self):
+        xml_str = """
+        <mujoco>
+          <worldbody>
+            <body>
+              <joint type="ball" name="ball"/>
+              <geom type="sphere" size=".1" mass=".1"/>
+              <body>
+                <joint type="hinge" name="hinge1" range="0 1.57"/>
+                <geom type="sphere" size=".1" mass=".1"/>
+                <body>
+                    <joint type="hinge" name="hinge2" range="0 1.57"/>
+                    <geom type="sphere" size=".1" mass=".1"/>
+                </body>
+              </body>
+            </body>
+          </worldbody>
+        </mujoco>
+        """
+        model = mujoco.MjModel.from_xml_string(xml_str)
+        dof_ids = utils.get_dof_ids(model, ["ball", "hinge2"])
+        np.testing.assert_allclose(dof_ids, [0, 1, 2, 4])
 
     def test_get_subtree_geom_ids(self):
         xml_str = """

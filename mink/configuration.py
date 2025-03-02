@@ -16,6 +16,7 @@ import numpy as np
 from . import constants as consts
 from . import exceptions
 from .lie import SE3, SO3
+from .utils import get_dof_ids
 
 
 class Configuration:
@@ -47,25 +48,16 @@ class Configuration:
             q: Configuration to initialize from. If None, the configuration is
                 initialized to the default configuration `qpos0`.
             joint_names: List of joints to be controlled. If None (default), all
-                joints are used
+                joints are used.
         """
         self.model = model
         self.data = mujoco.MjData(model)
         self.update(q=q)
 
         if joint_names is None:
-            dof_ids = np.arange(model.nv)
+            self.dof_ids = np.arange(model.nv)
         else:
-            dof_ids = []
-            for joint_name in joint_names:
-                joint_id = mujoco.mj_name2id(
-                    model, mujoco.mjtObj.mjOBJ_JOINT, joint_name
-                )
-                if joint_id == -1:
-                    raise exceptions.InvalidJointName(joint_name, model)
-                dof_ids.append(model.jnt_dofadr[joint_id])
-            dof_ids = np.array(dof_ids)
-        self.dof_ids = dof_ids
+            self.dof_ids = np.asarray(get_dof_ids(model, joint_names))
 
     def update(self, q: Optional[np.ndarray] = None) -> None:
         """Run forward kinematics.

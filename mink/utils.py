@@ -1,10 +1,10 @@
-from typing import Optional
+from typing import Optional, Sequence
 
 import mujoco
 import numpy as np
 
 from . import constants as consts
-from .exceptions import InvalidKeyframe, InvalidMocapBody
+from .exceptions import InvalidKeyframe, InvalidMocapBody, InvalidJointName
 
 
 def move_mocap_to_frame(
@@ -54,6 +54,30 @@ def get_freejoint_dims(model: mujoco.MjModel) -> tuple[list[int], list[int]]:
             q_ids.extend(range(qadr, qadr + 7))
             v_ids.extend(range(vadr, vadr + 6))
     return q_ids, v_ids
+
+
+def get_dof_ids(model: mujoco.MjModel, joint_names: Sequence[str]) -> list[int]:
+    """Get DOF indices for a list of joint names.
+
+    Args:
+        model: Mujoco model.
+        joint_names: List of joint names.
+
+    Returns:
+        List of DOF indices.
+
+    Raises:
+        InvalidJointName: If any joint name is invalid.
+    """
+    dof_ids: list[int] = []
+    for joint_name in joint_names:
+        jid = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_JOINT, joint_name)
+        if jid == -1:
+            raise InvalidJointName(joint_name, model)
+        vadr = model.jnt_dofadr[jid]
+        vdim = consts.dof_width(model.jnt_type[jid])
+        dof_ids.extend(range(vadr, vadr + vdim))
+    return dof_ids
 
 
 def custom_configuration_vector(

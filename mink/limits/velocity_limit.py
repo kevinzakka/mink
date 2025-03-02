@@ -1,6 +1,6 @@
 """Joint velocity limit."""
 
-from typing import Mapping
+from typing import Mapping, Optional
 
 import mujoco
 import numpy as np
@@ -28,7 +28,7 @@ class VelocityLimit(Limit):
 
     indices: np.ndarray
     limit: np.ndarray
-    projection_matrix: np.ndarray
+    projection_matrix: Optional[np.ndarray]
 
     def __init__(
         self,
@@ -58,7 +58,7 @@ class VelocityLimit(Limit):
                     f"Got: {max_vel.shape}"
                 )
             index_list.extend(range(vadr, vadr + vdim))
-            limit_list.extend(max_vel.tolist())
+            limit_list.extend(float(val) for val in max_vel)
 
         self.indices = np.array(index_list)
         self.indices.setflags(write=False)
