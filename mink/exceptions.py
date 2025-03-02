@@ -96,3 +96,15 @@ class NotWithinConfigurationLimits(MinkError):
             f"{lower} <= {value} <= {upper}"
         )
         super().__init__(message)
+
+
+class InvalidJointName(MinkError):
+    """Exception raised when a joint name is not found in the robot model."""
+
+    def __init__(self, joint_name: str, model: mujoco.MjModel):
+        joint_names = [model.joint(i).name for i in range(model.njnt)]
+        message = (
+            f"Joint '{joint_name}' does not exist in the model. Available "
+            f"joint names: {joint_names}"
+        )
+        super().__init__(message)

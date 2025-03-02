@@ -8,7 +8,7 @@ system that can be attached to various parts of the robot, such as a body, geom,
 """
 
 import logging
-from typing import Optional
+from typing import Optional, Sequence
 
 import mujoco
 import numpy as np
@@ -38,6 +38,7 @@ class Configuration:
         self,
         model: mujoco.MjModel,
         q: Optional[np.ndarray] = None,
+        joint_names: Optional[Sequence[str]] = None,
     ):
         """Constructor.
 
@@ -45,10 +46,26 @@ class Configuration:
             model: Mujoco model.
             q: Configuration to initialize from. If None, the configuration is
                 initialized to the default configuration `qpos0`.
+            joint_names: List of joints to be controlled. If None (default), all
+                joints are used
         """
         self.model = model
         self.data = mujoco.MjData(model)
         self.update(q=q)
+
+        if joint_names is None:
+            dof_ids = np.arange(model.nv)
+        else:
+            dof_ids = []
+            for joint_name in joint_names:
+                joint_id = mujoco.mj_name2id(
+                    model, mujoco.mjtObj.mjOBJ_JOINT, joint_name
+                )
+                if joint_id == -1:
+                    raise exceptions.InvalidJointName(joint_name, model)
+                dof_ids.append(model.jnt_dofadr[joint_id])
+            dof_ids = np.array(dof_ids)
+        self.dof_ids = dof_ids
 
     def update(self, q: Optional[np.ndarray] = None) -> None:
         """Run forward kinematics.
@@ -85,9 +102,11 @@ class Configuration:
         """
         for jnt in range(self.model.njnt):
             jnt_type = self.model.jnt_type[jnt]
+            jnt_id = self.model.jnt_dofadr[jnt]
             if (
                 jnt_type == mujoco.mjtJoint.mjJNT_FREE
                 or not self.model.jnt_limited[jnt]
+                or jnt_id not in self.dof_ids
             ):
                 continue
             padr = self.model.jnt_qposadr[jnt]
@@ -222,7 +241,9 @@ class Configuration:
             The new configuration after integration.
         """
         q = self.data.qpos.copy()
-        mujoco.mj_integratePos(self.model, q, velocity, dt)
+        qvel = np.zeros((self.nv,))
+        qvel[self.dof_ids] = velocity[self.dof_ids]
+        mujoco.mj_integratePos(self.model, q, qvel, dt)
         return q
 
     def integrate_inplace(self, velocity: np.ndarray, dt: float) -> None:
@@ -232,7 +253,9 @@ class Configuration:
             velocity: The velocity in tangent space.
             dt: Integration duration in [s].
         """
-        mujoco.mj_integratePos(self.model, self.data.qpos, velocity, dt)
+        qvel = np.zeros((self.nv,))
+        qvel[self.dof_ids] = velocity[self.dof_ids]
+        mujoco.mj_integratePos(self.model, self.data.qpos, qvel, dt)
         self.update()
 
     # Aliases.

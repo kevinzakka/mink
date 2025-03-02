@@ -117,6 +117,34 @@ class TestConfiguration(absltest.TestCase):
         configuration.update(q=q)
         configuration.check_limits(safety_break=True)  # Should not raise.
 
+    def test_raises_error_if_joint_name_is_invalid(self):
+        joint_names = ["invalid_joint_name"]
+        with self.assertRaises(mink.InvalidJointName):
+            mink.Configuration(self.model, joint_names=joint_names)
+
+    def test_dof_subset(self):
+        joint_names = ["elbow_joint", "shoulder_pan_joint"]
+        configuration = mink.Configuration(self.model, joint_names=joint_names)
+
+        # Check that the DOF IDs are set correctly.
+        expected_dof_ids = np.array(
+            [self.model.joint(name).dofadr[0] for name in joint_names]
+        )
+        np.testing.assert_equal(configuration.dof_ids, expected_dof_ids)
+
+        # Integrate a velocity and check that only the specified joints move.
+        configuration.update(self.q_ref)
+        qvel = np.random.randn(self.model.nv) * 0.1
+        dt = 1e-1
+        configuration.integrate_inplace(qvel, dt)
+        qpos = configuration.q.copy()
+
+        expected_qpos = qpos.copy()
+        expected_qpos[expected_dof_ids] = (
+            self.q_ref[expected_dof_ids] + qvel[expected_dof_ids] * dt
+        )
+        np.testing.assert_almost_equal(qpos, expected_qpos)
+
 
 if __name__ == "__main__":
     absltest.main()
