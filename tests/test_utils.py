@@ -108,10 +108,6 @@ class TestUtils(absltest.TestCase):
             np.asarray(list(range(0, 6))),
         )
 
-    def test_get_dof_ids_throws_error_if_joint_name_invalid(self):
-        with self.assertRaises(InvalidJointName):
-            utils.get_dof_ids(self.model, ["invalid_joint_name"])
-
     def test_get_dof_ids(self):
         xml_str = """
         <mujoco>
@@ -123,8 +119,8 @@ class TestUtils(absltest.TestCase):
                 <joint type="hinge" name="hinge1" range="0 1.57"/>
                 <geom type="sphere" size=".1" mass=".1"/>
                 <body>
-                    <joint type="hinge" name="hinge2" range="0 1.57"/>
-                    <geom type="sphere" size=".1" mass=".1"/>
+                  <joint type="hinge" name="hinge2" range="0 1.57"/>
+                  <geom type="sphere" size=".1" mass=".1"/>
                 </body>
               </body>
             </body>
@@ -134,6 +130,8 @@ class TestUtils(absltest.TestCase):
         model = mujoco.MjModel.from_xml_string(xml_str)
         dof_ids = utils.get_dof_ids(model, ["ball", "hinge2"])
         np.testing.assert_allclose(dof_ids, [0, 1, 2, 4])
+        with self.assertRaises(InvalidJointName):
+            utils.get_dof_ids(model, ["invalid_joint_name"])
 
     def test_get_subtree_geom_ids(self):
         xml_str = """
