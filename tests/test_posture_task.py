@@ -18,7 +18,7 @@ class TestPostureTask(absltest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.model = load_robot_description("stretch_mj_description")
+        cls.model = load_robot_description("talos_mj_description")
 
     def setUp(self):
         self.configuration = Configuration(self.model)
