@@ -50,12 +50,6 @@ class Configuration:
         self.data = mujoco.MjData(model)
         self.update(q=q)
 
-        if joint_names is None:
-            self.dof_ids = np.arange(model.nv)
-        else:
-            self.dof_ids = np.asarray(get_dof_ids(model, joint_names))
-            print(self.dof_ids)
-
     def update(self, q: Optional[np.ndarray] = None) -> None:
         """Run forward kinematics.
 
