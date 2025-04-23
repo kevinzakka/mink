@@ -50,6 +50,9 @@ class Configuration:
         self.data = mujoco.MjData(model)
         self.update(q=q)
 
+        self._eye = np.eye(self.model.nv)
+        self._eye.setflags(write=False)
+
     def update(self, q: Optional[np.ndarray] = None) -> None:
         """Run forward kinematics.
 
@@ -253,3 +256,8 @@ class Configuration:
     def nq(self) -> int:
         """The dimension of the configuration space."""
         return self.model.nq
+
+    @property
+    def eye(self) -> np.ndarray:
+        """The identity matrix of shape (nv, nv)."""
+        return self._eye

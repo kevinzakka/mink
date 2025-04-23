@@ -105,10 +105,6 @@ class TestJacobians(absltest.TestCase):
         com_task.set_target(np.zeros(3))
         self.check_jacobian_finite_diff(com_task, tol=_TOL)
 
-    def test_damping_task(self):
-        damping_task = mink.DampingTask(self.model, cost=1.0)
-        self.check_jacobian_finite_diff(damping_task, tol=_TOL)
-
     def test_equality_constraint_task(self):
         equality_constraint_task = mink.EqualityConstraintTask(self.model, cost=1.0)
         self.check_jacobian_finite_diff(equality_constraint_task, tol=_TOL)

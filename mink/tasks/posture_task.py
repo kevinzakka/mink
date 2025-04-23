@@ -17,11 +17,28 @@ from .task import Task
 class PostureTask(Task):
     """Regulate the joint angles of the robot towards a desired posture.
 
-    A posture is a vector of actuated joint angles. Floating-base coordinates are not
-    affected by this task.
+    Using this task with a low cost value is useful as a regularizer, biasing the
+    solution towards the desired posture when the problem is under-constrained.
 
     Attributes:
-        target_q: Target configuration.
+        target_q: Target configuration :math:`q^*`, of shape :math:`(n_q,)`. Units are
+            radians for revolute joints and meters for prismatic joints. Note that
+            floating-base coordinates are not affected by this task but should be
+            included in the target configuration.
+
+    Example:
+
+    .. code-block:: python
+
+        posture_task = PostureTask(model, cost=1e-3)
+
+        # Update the target posture directly.
+        q_desired = ...
+        posture_task.set_target(q_desired)
+
+        # Or from a keyframe defined in the model.
+        configuration.update_from_keyframe("home")
+        posture_task.set_target_from_configuration(configuration)
     """
 
     target_q: Optional[np.ndarray]
@@ -33,22 +50,23 @@ class PostureTask(Task):
         gain: float = 1.0,
         lm_damping: float = 0.0,
     ):
+        self.target_q = None
+
+        v_ids = np.arange(model.nv)
+        _, v_ids_or_none = get_freejoint_dims(model)
+        if v_ids_or_none is not None:
+            v_ids = np.setdiff1d(v_ids, v_ids_or_none)
+
+        self._v_ids = v_ids
+        self.nv = model.nv
+        self.k = len(v_ids)
+        self.nq = model.nq
+
         super().__init__(
-            cost=np.zeros((model.nv,)),
+            cost=np.zeros((self.k,)),
             gain=gain,
             lm_damping=lm_damping,
         )
-        self.target_q = None
-
-        self._v_ids: np.ndarray | None
-        _, v_ids_or_none = get_freejoint_dims(model)
-        if v_ids_or_none:
-            self._v_ids = np.asarray(v_ids_or_none)
-        else:
-            self._v_ids = None
-
-        self.k = model.nv
-        self.nq = model.nq
         self.set_cost(cost)
 
     def set_cost(self, cost: npt.ArrayLike) -> None:
@@ -60,7 +78,8 @@ class PostureTask(Task):
             )
         if not np.all(cost >= 0.0):
             raise TaskDefinitionError(f"{self.__class__.__name__} cost should be >= 0")
-        self.cost[: self.k] = cost
+        c = cost[0] if cost.shape[0] == 1 else cost
+        self.cost[:] = c
 
     def set_target(self, target_q: npt.ArrayLike) -> None:
         """Set the target posture.
@@ -108,14 +127,11 @@ class PostureTask(Task):
             m=configuration.model,
             qvel=qvel,
             dt=1.0,
-            qpos1=configuration.q,
-            qpos2=self.target_q,
+            qpos1=self.target_q,
+            qpos2=configuration.q,
         )
 
-        if self._v_ids is not None:
-            qvel[self._v_ids] = 0.0
-
-        return qvel
+        return qvel[self._v_ids]
 
     def compute_jacobian(self, configuration: Configuration) -> np.ndarray:
         r"""Compute the posture task Jacobian.
@@ -132,11 +148,4 @@ class PostureTask(Task):
         Returns:
             Posture task jacobian :math:`J(q)`.
         """
-        if self.target_q is None:
-            raise TargetNotSet(self.__class__.__name__)
-
-        jac = -np.eye(configuration.nv)
-        if self._v_ids is not None:
-            jac[:, self._v_ids] = 0.0
-
-        return jac
+        return configuration.eye[self._v_ids]

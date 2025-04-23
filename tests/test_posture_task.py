@@ -22,6 +22,7 @@ class TestPostureTask(absltest.TestCase):
 
     def setUp(self):
         self.configuration = Configuration(self.model)
+        self.nf = self.model.nv - 6
 
     def test_task_raises_error_if_cost_negative(self):
         with self.assertRaises(TaskDefinitionError) as cm:
@@ -30,10 +31,10 @@ class TestPostureTask(absltest.TestCase):
 
     def test_cost_correctly_broadcast(self):
         task = PostureTask(model=self.model, cost=5.0)
-        np.testing.assert_array_equal(task.cost, np.ones((self.model.nv,)) * 5.0)
+        np.testing.assert_array_equal(task.cost, np.ones((self.nf,)) * 5.0)
         task = PostureTask(model=self.model, cost=[5.0])
-        np.testing.assert_array_equal(task.cost, np.ones((self.model.nv,)) * 5.0)
-        cost = np.random.random(size=(self.model.nv,))
+        np.testing.assert_array_equal(task.cost, np.ones((self.nf,)) * 5.0)
+        cost = np.random.random(size=(self.nf,))
         task = PostureTask(model=self.model, cost=cost)
         np.testing.assert_array_equal(task.cost, cost)
 
@@ -42,7 +43,7 @@ class TestPostureTask(absltest.TestCase):
             PostureTask(model=self.model, cost=(0.5, 2.0))
         expected_error_message = (
             "PostureTask cost must be a vector of shape (1,) (aka identical cost for "
-            f"all dofs) or ({self.model.nv},). Got (2,)"
+            f"all dofs) or ({self.nf},). Got (2,)"
         )
         self.assertEqual(str(cm.exception), expected_error_message)
 
@@ -61,11 +62,6 @@ class TestPostureTask(absltest.TestCase):
             task.compute_error(self.configuration)
         self.assertEqual(str(cm.exception), "No target set for PostureTask")
 
-    def test_jacobian_without_target(self):
-        task = PostureTask(model=self.model, cost=1.0)
-        with self.assertRaises(TargetNotSet):
-            task.compute_jacobian(self.configuration)
-
     def test_set_target_from_configuration(self):
         task = PostureTask(model=self.model, cost=1.0)
         task.set_target_from_configuration(self.configuration)
@@ -82,7 +78,7 @@ class TestPostureTask(absltest.TestCase):
         task = PostureTask(model=self.model, cost=1.0)
         task.set_target_from_configuration(self.configuration)
         error = task.compute_error(self.configuration)
-        np.testing.assert_allclose(error, np.zeros(self.model.nv))
+        np.testing.assert_allclose(error, np.zeros(self.nf))
 
     def test_unit_cost_qp_objective(self):
         """Unit cost means the QP objective is exactly (J^T J, -e^T J)."""
