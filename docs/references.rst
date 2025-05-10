@@ -1,4 +1,4 @@
-:github_url: https://github.com/kevinzakka/mink/tree/main/doc/references.rst
+:github_url: https://github.com/kevinzakka/mink/tree/main/docs/references.rst
 
 **********
 References

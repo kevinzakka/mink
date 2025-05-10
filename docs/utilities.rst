@@ -1,4 +1,4 @@
-:github_url: https://github.com/kevinzakka/mink/tree/main/doc/utilities.rst
+:github_url: https://github.com/kevinzakka/mink/tree/main/docs/utilities.rst
 
 *********
 Utilities

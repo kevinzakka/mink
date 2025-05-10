@@ -1,4 +1,4 @@
-:github_url: https://github.com/kevinzakka/mink/tree/main/doc/lie.rst
+:github_url: https://github.com/kevinzakka/mink/tree/main/docs/lie.rst
 
 ***
 Lie

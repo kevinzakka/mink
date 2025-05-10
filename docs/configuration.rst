@@ -1,4 +1,4 @@
-:github_url: https://github.com/kevinzakka/mink/tree/main/doc/configuration.rst
+:github_url: https://github.com/kevinzakka/mink/tree/main/docs/configuration.rst
 
 .. _Configuration:
 

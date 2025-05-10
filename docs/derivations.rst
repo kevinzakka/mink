@@ -1,4 +1,4 @@
-:github_url: https://github.com/kevinzakka/mink/tree/main/doc/derivation.rst
+:github_url: https://github.com/kevinzakka/mink/tree/main/docs/derivation.rst
 
 .. _derivations:
 

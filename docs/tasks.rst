@@ -1,4 +1,4 @@
-:github_url: https://github.com/kevinzakka/mink/tree/main/doc/tasks.rst
+:github_url: https://github.com/kevinzakka/mink/tree/main/docs/tasks.rst
 
 .. _Tasks:
 

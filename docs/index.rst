@@ -1,4 +1,4 @@
-:github_url: https://github.com/kevinzakka/mink/tree/main/doc/index.rst
+:github_url: https://github.com/kevinzakka/mink/tree/main/docs/index.rst
 
 .. title:: Table of Contents
 
