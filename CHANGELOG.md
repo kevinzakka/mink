@@ -14,6 +14,7 @@ All notable changes to this project will be documented in this file.
 
 - Merged task and limit exceptions to base exceptions file.
 - Improved the documentation for certain tasks.
+- Update the task.py and solve_ik.py to support the reduced-configration.
 
 ## [0.0.10] - 2025-04-22
 

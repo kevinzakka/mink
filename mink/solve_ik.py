@@ -13,8 +13,8 @@ from .tasks import Objective, Task
 def _compute_qp_objective(
     configuration: Configuration, tasks: Sequence[Task], damping: float
 ) -> Objective:
-    H = np.eye(configuration.model.nv) * damping
-    c = np.zeros(configuration.model.nv)
+    H = np.eye(configuration.nv) * damping
+    c = np.zeros(configuration.nv)
     for task in tasks:
         H_task, c_task = task.compute_qp_objective(configuration)
         H += H_task
