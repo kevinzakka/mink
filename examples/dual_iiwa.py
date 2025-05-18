@@ -5,7 +5,6 @@ from pathlib import Path
 import mujoco
 import mujoco.viewer
 import numpy as np
-from dm_control import mjcf
 from loop_rate_limiters import RateLimiter
 
 import mink
@@ -14,58 +13,56 @@ _HERE = Path(__file__).parent
 _XML = _HERE / "kuka_iiwa_14" / "iiwa14.xml"
 
 
-def construct_model():
-    root = mjcf.RootElement()
-    root.statistic.meansize = 0.08
-    root.statistic.extent = 1.0
-    root.statistic.center = (0, 0, 0.5)
-    getattr(root.visual, "global").azimuth = -180
-    getattr(root.visual, "global").elevation = -20
+def construct_model() -> mujoco.MjModel:
+    root = mujoco.MjSpec()
+    root.stat.meansize = 0.08
+    root.stat.extent = 1.0
+    root.stat.center = (0, 0, 0.5)
+    root.visual.global_.azimuth = -180
+    root.visual.global_.elevation = -20
 
-    root.worldbody.add("light", pos="0 0 1.5", directional="true")
+    root.worldbody.add_light(pos=(0, 0, 1.5), directional=True)
 
-    left_site = root.worldbody.add(
-        "site", name="l_attachment_site", pos=[0, 0.2, 0], group=5
+    left_site = root.worldbody.add_site(
+        name="l_attachment_site", pos=[0, 0.2, 0], group=5
     )
-    right_site = root.worldbody.add(
-        "site", name="r_attachment_site", pos=[0, -0.2, 0], group=5
-    )
-
-    left_iiwa = mjcf.from_path(_XML.as_posix())
-    left_iiwa.model = "l_iiwa"
-    left_iiwa.find("key", "home").remove()
-    left_site.attach(left_iiwa)
-    for i, g in enumerate(left_iiwa.worldbody.find_all("geom")):
-        g.name = f"geom_{i}"
-
-    right_iiwa = mjcf.from_path(_XML.as_posix())
-    right_iiwa.model = "r_iiwa"
-    right_iiwa.find("key", "home").remove()
-    right_site.attach(right_iiwa)
-    for i, g in enumerate(right_iiwa.worldbody.find_all("geom")):
-        g.name = f"geom_{i}"
-
-    body = root.worldbody.add("body", name="l_target", mocap=True)
-    body.add(
-        "geom",
-        type="box",
-        size=".05 .05 .05",
-        contype="0",
-        conaffinity="0",
-        rgba=".3 .6 .3 .5",
+    right_site = root.worldbody.add_site(
+        name="r_attachment_site", pos=[0, -0.2, 0], group=5
     )
 
-    body = root.worldbody.add("body", name="r_target", mocap=True)
-    body.add(
-        "geom",
-        type="box",
-        size=".05 .05 .05",
-        contype="0",
-        conaffinity="0",
-        rgba=".3 .3 .6 .5",
+    left_iiwa = mujoco.MjSpec.from_file(_XML.as_posix())
+    left_iiwa.modelname = "l_iiwa"
+    left_iiwa.key("home").delete()
+    for i in range(len(left_iiwa.geoms)):
+        left_iiwa.geoms[i].name = f"geom_{i}"
+    root.attach(left_iiwa, site=left_site, prefix="l_iiwa/")
+
+    right_iiwa = mujoco.MjSpec.from_file(_XML.as_posix())
+    right_iiwa.modelname = "r_iiwa"
+    right_iiwa.key("home").delete()
+    for i in range(len(right_iiwa.geoms)):
+        right_iiwa.geoms[i].name = f"geom_{i}"
+    root.attach(right_iiwa, site=right_site, prefix="r_iiwa/")
+
+    body = root.worldbody.add_body(name="l_target", mocap=True)
+    body.add_geom(
+        type=mujoco.mjtGeom.mjGEOM_BOX,
+        size=(0.05, 0.05, 0.05),
+        contype=0,
+        conaffinity=0,
+        rgba=(0.3, 0.6, 0.3, 0.5),
     )
 
-    return mujoco.MjModel.from_xml_string(root.to_xml_string(), root.get_assets())
+    body = root.worldbody.add_body(name="r_target", mocap=True)
+    body.add_geom(
+        type=mujoco.mjtGeom.mjGEOM_BOX,
+        size=(0.05, 0.05, 0.05),
+        contype=0,
+        conaffinity=0,
+        rgba=(0.3, 0.3, 0.6, 0.5),
+    )
+
+    return root.compile()
 
 
 if __name__ == "__main__":

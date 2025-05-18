@@ -4,7 +4,7 @@ from pathlib import Path
 import mujoco
 import mujoco.viewer
 import numpy as np
-from dm_control.viewer import user_input
+from mink.contrib.keyboard_teleop import keycodes
 from loop_rate_limiters import RateLimiter
 
 import mink
@@ -19,9 +19,9 @@ class KeyCallback:
     pause: bool = False
 
     def __call__(self, key: int) -> None:
-        if key == user_input.KEY_ENTER:
+        if key == keycodes.KEY_ENTER:
             self.fix_base = not self.fix_base
-        elif key == user_input.KEY_SPACE:
+        elif key == keycodes.KEY_SPACE:
             self.pause = not self.pause
 
 

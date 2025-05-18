@@ -16,7 +16,10 @@ POS_THRESHOLD = 1e-4
 ORI_THRESHOLD = 1e-4
 MAX_ITERS = 20
 
-def converge_ik(configuration, tasks, dt, solver, pos_threshold, ori_threshold, max_iters):
+
+def converge_ik(
+    configuration, tasks, dt, solver, pos_threshold, ori_threshold, max_iters
+):
     """
     Runs up to 'max_iters' of IK steps. Returns True if position and orientation
     are below thresholds, otherwise False.
@@ -25,7 +28,7 @@ def converge_ik(configuration, tasks, dt, solver, pos_threshold, ori_threshold, 
         vel = mink.solve_ik(configuration, tasks, dt, solver, 1e-3)
         configuration.integrate_inplace(vel, dt)
 
-        # Only checking the first FrameTask here (end_effector_task). 
+        # Only checking the first FrameTask here (end_effector_task).
         # If you want to check multiple tasks, sum or combine their errors.
         err = tasks[0].compute_error(configuration)
         pos_achieved = np.linalg.norm(err[:3]) <= pos_threshold
@@ -34,6 +37,7 @@ def converge_ik(configuration, tasks, dt, solver, pos_threshold, ori_threshold, 
         if pos_achieved and ori_achieved:
             return True
     return False
+
 
 def main():
     # Load model & data
@@ -55,7 +59,9 @@ def main():
     tasks = [end_effector_task, posture_task]
 
     # Initialize viewer in passive mode
-    with mujoco.viewer.launch_passive(model=model, data=data, show_left_ui=False, show_right_ui=False) as viewer:
+    with mujoco.viewer.launch_passive(
+        model=model, data=data, show_left_ui=False, show_right_ui=False
+    ) as viewer:
         mujoco.mjv_defaultFreeCamera(model, viewer.cam)
 
         # Reset simulation data to the 'home' keyframe
@@ -82,11 +88,13 @@ def main():
             local_time += dt
 
             # Circular offset
-            offset = np.array([
-                amp * np.cos(2 * np.pi * freq * local_time),
-                amp * np.sin(2 * np.pi * freq * local_time),
-                0.0
-            ])
+            offset = np.array(
+                [
+                    amp * np.cos(2 * np.pi * freq * local_time),
+                    amp * np.sin(2 * np.pi * freq * local_time),
+                    0.0,
+                ]
+            )
             data.mocap_pos[0] = initial_target_position + offset
 
             # Update the end effector task target from the mocap body
@@ -94,8 +102,15 @@ def main():
             end_effector_task.set_target(T_wt)
 
             # Attempt to converge IK
-            converged = converge_ik(configuration, tasks, dt, SOLVER,
-                                     POS_THRESHOLD, ORI_THRESHOLD, MAX_ITERS)
+            converged = converge_ik(
+                configuration,
+                tasks,
+                dt,
+                SOLVER,
+                POS_THRESHOLD,
+                ORI_THRESHOLD,
+                MAX_ITERS,
+            )
 
             # Set robot controls (first 8 dofs in your configuration)
             data.ctrl = configuration.q[:8]
@@ -106,6 +121,7 @@ def main():
             # Visualize at fixed FPS
             viewer.sync()
             rate.sleep()
+
 
 if __name__ == "__main__":
     main()

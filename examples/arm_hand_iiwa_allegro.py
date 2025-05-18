@@ -2,7 +2,6 @@ from pathlib import Path
 
 import mujoco
 import mujoco.viewer
-from dm_control import mjcf
 from loop_rate_limiters import RateLimiter
 
 import mink
@@ -26,33 +25,30 @@ HOME_QPOS = [
 # fmt: on
 
 
-def construct_model():
-    arm_mjcf = mjcf.from_path(_ARM_XML.as_posix())
-    arm_mjcf.find("key", "home").remove()
+def construct_model() -> mujoco.MjModel:
+    arm = mujoco.MjSpec.from_file(_ARM_XML.as_posix())
+    hand = mujoco.MjSpec.from_file(_HAND_XML.as_posix())
 
-    hand_mjcf = mjcf.from_path(_HAND_XML.as_posix())
-    palm = hand_mjcf.worldbody.find("body", "palm")
+    palm = hand.body("palm")
     palm.quat = (1, 0, 0, 0)
     palm.pos = (0, 0, 0.095)
-    attach_site = arm_mjcf.worldbody.find("site", "attachment_site")
-    attach_site.attach(hand_mjcf)
+    site = arm.site("attachment_site")
+    arm.attach(hand, prefix="allegro_left/", site=site)
 
-    arm_mjcf.keyframe.add("key", name="home", qpos=HOME_QPOS)
+    arm.key("home").delete()
+    arm.add_key(name="home", qpos=HOME_QPOS)
 
     for finger in fingers:
-        body = arm_mjcf.worldbody.add("body", name=f"{finger}_target", mocap=True)
-        body.add(
-            "geom",
-            type="sphere",
-            size=".02",
-            contype="0",
-            conaffinity="0",
-            rgba=".6 .3 .3 .5",
+        body = arm.worldbody.add_body(name=f"{finger}_target", mocap=True)
+        body.add_geom(
+            type=mujoco.mjtGeom.mjGEOM_SPHERE,
+            size=(0.02,) * 3,
+            contype=0,
+            conaffinity=0,
+            rgba=(0.6, 0.3, 0.3, 0.5),
         )
 
-    return mujoco.MjModel.from_xml_string(
-        arm_mjcf.to_xml_string(), arm_mjcf.get_assets()
-    )
+    return arm.compile()
 
 
 if __name__ == "__main__":

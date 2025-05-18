@@ -35,7 +35,6 @@ keywords = ["inverse", "kinematics", "mujoco"]
 
 [project.optional-dependencies]
 examples = [
-    "dm_control >= 1.0.20",
     "loop-rate-limiters >= 0.1.0",
     "qpsolvers[daqp] >= 4.3.1",
     "osqp >=0.6.2,<1",

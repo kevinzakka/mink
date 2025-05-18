@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+- Switch to `MjSpec` for model construction in examples and eliminate `dm_control` dependency.
 - Added single and dual Franka Emika Panda robot examples featuring motion planning, and bi-manual coordination. Contribution from @Debojit-D.
 
 ![bimanual panda](https://github.com/kevinzakka/mink/blob/assets/dual_panda.gif?raw=true)

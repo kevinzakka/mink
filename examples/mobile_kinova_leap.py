@@ -4,8 +4,7 @@ from pathlib import Path
 import mujoco
 import mujoco.viewer
 import numpy as np
-from dm_control import mjcf
-from dm_control.viewer import user_input
+from mink.contrib.keyboard_teleop import keycodes
 from loop_rate_limiters import RateLimiter
 
 import mink
@@ -31,34 +30,32 @@ HOME_QPOS = [
 # fmt: on
 
 
-def construct_model():
-    arm_mjcf = mjcf.from_path(_ARM_XML.as_posix())
-    arm_mjcf.find("key", "home").remove()
-    arm_mjcf.find("key", "retract").remove()
+def construct_model() -> mujoco.MjModel:
+    arm = mujoco.MjSpec.from_file(_ARM_XML.as_posix())
+    hand = mujoco.MjSpec.from_file(_HAND_XML.as_posix())
 
-    hand_mjcf = mjcf.from_path(_HAND_XML.as_posix())
-    palm = hand_mjcf.worldbody.find("body", "palm_lower")
-    palm.quat = (0, 0.707, 0.707, 0)
+    palm = hand.body("palm_lower")
     palm.pos = (0.03, 0.06, -0.0925)
-    attach_site = arm_mjcf.worldbody.find("site", "pinch_site")
-    attach_site.attach(hand_mjcf)
+    palm.quat = (0, 0.707, 0.707, 0)
+    site = arm.site("pinch_site")
+    arm.attach(hand, prefix="leap_right/", site=site)
 
-    arm_mjcf.keyframe.add("key", name="home", qpos=HOME_QPOS)
+    for key in arm.keys:
+        if key.name in ["home", "retract"]:
+            key.delete()
+    arm.add_key(name="home", qpos=HOME_QPOS)
 
     for finger in fingers:
-        body = arm_mjcf.worldbody.add("body", name=f"{finger}_target", mocap=True)
-        body.add(
-            "geom",
-            type="sphere",
-            size=".02",
-            contype="0",
-            conaffinity="0",
-            rgba=".6 .3 .3 .5",
+        body = arm.worldbody.add_body(name=f"{finger}_target", mocap=True)
+        body.add_geom(
+            type=mujoco.mjtGeom.mjGEOM_SPHERE,
+            size=(0.02,) * 3,
+            contype=0,
+            conaffinity=0,
+            rgba=(0.6, 0.3, 0.3, 0.5),
         )
 
-    return mujoco.MjModel.from_xml_string(
-        arm_mjcf.to_xml_string(), arm_mjcf.get_assets()
-    )
+    return arm.compile()
 
 
 @dataclass
@@ -67,9 +64,9 @@ class KeyCallback:
     pause: bool = False
 
     def __call__(self, key: int) -> None:
-        if key == user_input.KEY_ENTER:
+        if key == keycodes.KEY_ENTER:
             self.fix_base = not self.fix_base
-        elif key == user_input.KEY_SPACE:
+        elif key == keycodes.KEY_SPACE:
             self.pause = not self.pause
 
 
