@@ -8,6 +8,7 @@ from robot_descriptions.loaders.mujoco import load_robot_description
 from mink import Configuration
 from mink.exceptions import InvalidConstraint, TaskDefinitionError
 from mink.tasks import EqualityConstraintTask
+from mink.tasks.equality_constraint_task import _sparse2dense_fallback
 
 
 class TestEqualityConstraintTask(absltest.TestCase):
@@ -121,6 +122,31 @@ class TestEqualityConstraintTask(absltest.TestCase):
         configuration.update_from_keyframe("home")
         jacobian = task.compute_jacobian(configuration)
         self.assertEqual(jacobian.shape, (12, configuration.nv))
+
+    @absltest.skipIf(mujoco.__version__ < "3.2.5", "MuJoCo version is less than 3.2.5")
+    def test_sparse_jacobian_fallback(self):
+        model = load_robot_description("cassie_mj_description")
+        model.opt.jacobian = mujoco.mjtJacobian.mjJAC_SPARSE
+        data = mujoco.MjData(model)
+        mujoco.mj_resetDataKeyframe(model, data, model.key("home").id)
+        mujoco.mj_forward(model, data)
+        jac_fallback = np.zeros((data.nefc, model.nv))
+        _sparse2dense_fallback(
+            res=jac_fallback,
+            mat=data.efc_J,
+            rownnz=data.efc_J_rownnz,
+            rowadr=data.efc_J_rowadr,
+            colind=data.efc_J_colind,
+        )
+        jac_native = np.empty((data.nefc, model.nv))
+        mujoco.mju_sparse2dense(
+            jac_native,
+            data.efc_J,
+            data.efc_J_rownnz,
+            data.efc_J_rowadr,
+            data.efc_J_colind,
+        )
+        np.testing.assert_array_equal(jac_fallback, jac_native)
 
 
 if __name__ == "__main__":

@@ -24,20 +24,54 @@ def _get_constraint_dim(constraint: int) -> int:
     }[constraint]
 
 
+def _sparse2dense_fallback(
+    res: np.ndarray,
+    mat: np.ndarray,
+    rownnz: np.ndarray,
+    rowadr: np.ndarray,
+    colind: np.ndarray,
+) -> np.ndarray:
+    """Fallback implementation of mujoco.mju_sparse2dense for Python 3.8.
+
+    This is a fallback implementation of mujoco.mju_sparse2dense for Python 3.8.
+    It is used when the version of MuJoCo is less than 3.2.5. This is because
+    mujoco.mju_sparse2dense was added Oct 23, 2024 which corresponds to 3.2.5+ and
+    Python 3.8 was dropped in 3.2.4.
+    """
+    # Ref: https://github.com/google-deepmind/mujoco/blob/178fb49c2b2ff48f59653515ab09b9cafca31b7a/src/engine/engine_util_sparse.c#L135
+    for r in range(res.shape[0]):
+        for i in range(rownnz[r]):
+            res[r, colind[rowadr[r] + i]] = mat[rowadr[r] + i]
+
+
 def _get_dense_constraint_jacobian(
     model: mujoco.MjModel, data: mujoco.MjData
 ) -> np.ndarray:
     """Return the dense constraint Jacobian for a model."""
-    if mujoco.mj_isSparse(model):
-        efc_J = np.empty((data.nefc, model.nv))
-        mujoco.mju_sparse2dense(
-            efc_J,
-            data.efc_J,
-            data.efc_J_rownnz,
-            data.efc_J_rowadr,
-            data.efc_J_colind,
-        )
+
+    def _sparse2dense(data: mujoco.MjData) -> np.ndarray:
+        if mujoco.__version__ < "3.2.5":
+            efc_J = np.zeros((data.nefc, model.nv))  # Important to zero out here.
+            _sparse2dense_fallback(
+                efc_J,
+                data.efc_J,
+                data.efc_J_rownnz,
+                data.efc_J_rowadr,
+                data.efc_J_colind,
+            )
+        else:
+            efc_J = np.empty((data.nefc, model.nv))
+            mujoco.mju_sparse2dense(
+                efc_J,
+                data.efc_J,
+                data.efc_J_rownnz,
+                data.efc_J_rowadr,
+                data.efc_J_colind,
+            )
         return efc_J
+
+    if mujoco.mj_isSparse(model):
+        return _sparse2dense(data)
     return data.efc_J.reshape((data.nefc, model.nv)).copy()
 
 
