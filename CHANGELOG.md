@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+- Add 3.8 and 3.13 to CI test matrix.
 - Switch to `MjSpec` for model construction in examples and eliminate `dm_control` dependency.
 - Added single and dual Franka Emika Panda robot examples featuring motion planning, and bi-manual coordination. Contribution from @Debojit-D.
 
