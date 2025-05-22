@@ -12,11 +12,13 @@ import mink
 _HERE = Path(__file__).parent
 _XML = _HERE / "universal_robots_ur5e" / "scene_plain.xml"
 _MAX_TRACE_POINTS = 250
+_RGBA = np.array([0, 1, 0.5, 0.8])
+_RADIUS = 0.003
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="Arm IIWA example with configurable regularization weight."
+        description="UR5e example with configurable regularization weight."
     )
     parser.add_argument(
         "--energy_reg",
@@ -44,8 +46,7 @@ if __name__ == "__main__":
     model = configuration.model
     data = configuration.data
 
-    # Initialize trace storage
-    times = deque(maxlen=_MAX_TRACE_POINTS)
+    # For storing and visualizing the end-effector path.
     positions = deque(maxlen=_MAX_TRACE_POINTS)
 
     def add_visual_capsule(scene, point1, point2, radius, rgba):
@@ -74,9 +75,7 @@ if __name__ == "__main__":
         for i in range(len(positions) - 1):
             if np.allclose(positions[i], positions[i + 1]):
                 continue
-            rgba = np.array([0, 1, 0.5, 0.8])
-            radius = 0.003
-            add_visual_capsule(scn, positions[i], positions[i + 1], radius, rgba)
+            add_visual_capsule(scn, positions[i], positions[i + 1], _RADIUS, _RGBA)
 
     with mujoco.viewer.launch_passive(
         model=model, data=data, show_left_ui=False, show_right_ui=False
@@ -102,13 +101,10 @@ if __name__ == "__main__":
             vel = mink.solve_ik(configuration, tasks, rate.dt, solver)
             configuration.integrate_inplace(vel, rate.dt)
             mujoco.mj_camlight(model, data)
-
-            site_pos = data.site_xpos[data.site("attachment_site").id].copy()
-            positions.append(site_pos)
-            times.append(t)
-            modify_scene(viewer.user_scn)
+            positions.append(data.site_xpos[data.site("attachment_site").id].copy())
 
             # Visualize at fixed FPS.
+            modify_scene(viewer.user_scn)
             viewer.sync()
             rate.sleep()
             t += rate.dt
