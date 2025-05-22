@@ -30,6 +30,15 @@ Center of mass task
 .. automodule:: mink.tasks.com_task
     :members:
 
+Equality constraint task
+------------------------
+
+.. automodule:: mink.tasks.equality_constraint_task
+    :members:
+
+Regularizers
+============
+
 Posture task
 ------------
 
@@ -41,15 +50,6 @@ Damping task
 
 .. automodule:: mink.tasks.damping_task
     :members:
-
-Equality constraint task
-------------------------
-
-.. automodule:: mink.tasks.equality_constraint_task
-    :members:
-
-Regularizers
-============
 
 L2 regularization task
 ----------------------
