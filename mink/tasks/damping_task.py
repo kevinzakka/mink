@@ -1,7 +1,5 @@
 """Damping task implementation."""
 
-from __future__ import annotations
-
 import mujoco
 import numpy as np
 import numpy.typing as npt

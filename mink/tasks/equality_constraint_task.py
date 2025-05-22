@@ -30,7 +30,7 @@ def _sparse2dense_fallback(
     rownnz: np.ndarray,
     rowadr: np.ndarray,
     colind: np.ndarray,
-) -> np.ndarray:
+) -> None:
     """Fallback implementation of mujoco.mju_sparse2dense for Python 3.8.
 
     This is a fallback implementation of mujoco.mju_sparse2dense for Python 3.8.

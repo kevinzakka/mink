@@ -7,11 +7,14 @@ import qpsolvers
 
 from .configuration import Configuration
 from .limits import ConfigurationLimit, Limit
-from .tasks import Objective, Task
+from .tasks import Objective
+from .tasks.task import _BaseTask
+
+TaskLike = _BaseTask
 
 
 def _compute_qp_objective(
-    configuration: Configuration, tasks: Sequence[Task], damping: float
+    configuration: Configuration, tasks: Sequence[TaskLike], damping: float
 ) -> Objective:
     H = np.eye(configuration.model.nv) * damping
     c = np.zeros(configuration.model.nv)
@@ -42,7 +45,7 @@ def _compute_qp_inequalities(
 
 def build_ik(
     configuration: Configuration,
-    tasks: Sequence[Task],
+    tasks: Sequence[TaskLike],
     dt: float,
     damping: float = 1e-12,
     limits: Optional[Sequence[Limit]] = None,
@@ -69,7 +72,7 @@ def build_ik(
 
 def solve_ik(
     configuration: Configuration,
-    tasks: Sequence[Task],
+    tasks: Sequence[TaskLike],
     dt: float,
     solver: str,
     damping: float = 1e-12,

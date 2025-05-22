@@ -1,9 +1,11 @@
+from pathlib import Path
+
 import mujoco
 import mujoco.viewer
-import mink
 import numpy as np
 from loop_rate_limiters import RateLimiter
-from pathlib import Path
+
+import mink
 
 _HERE = Path(__file__).parent
 _MODEL_PATH = _HERE / "franka_emika_panda" / "dual_panda_scene.xml"

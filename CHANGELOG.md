@@ -6,6 +6,12 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+- Introduce `RegularizationTask`, a new user-facing base class for defining regularization terms in the inverse kinematics QP. Regularization tasks contribute directly to the objective (`H`, `c`) without relying on an error/Jacobian formulation like standard `Task`s.
+- Internally, unify both `Task` and `RegularizationTask` under a shared (private) base class to simplify solver logic and type handling.
+- Add `L2RegularizationTask` and `KineticEnergyRegularizationTask` as examples of regularization tasks.
+  - `L2RegularizationTask` is equivalent to the global `damping` parameter in `solve_ik`.
+  - `KineticEnergyRegularizationTask` penalizes the system's kinetic energy, so higher-inertia links will move less.
+- Add [examples/regularization.py] to illustrate how regularization affects IK behavior.
 - Add 3.8 and 3.13 to CI test matrix.
 - Switch to `MjSpec` for model construction in examples and eliminate `dm_control` dependency.
 - Added single and dual Franka Emika Panda robot examples featuring motion planning, and bi-manual coordination. Contribution from @Debojit-D.

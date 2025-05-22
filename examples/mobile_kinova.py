@@ -4,10 +4,10 @@ from pathlib import Path
 import mujoco
 import mujoco.viewer
 import numpy as np
-from mink.contrib.keyboard_teleop import keycodes
 from loop_rate_limiters import RateLimiter
 
 import mink
+from mink.contrib.keyboard_teleop import keycodes
 
 _HERE = Path(__file__).parent
 _XML = _HERE / "stanford_tidybot" / "scene_mobile_kinova.xml"
