@@ -6,10 +6,8 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
-- Add `L2RegularizationTask` and `KineticEnergyRegularizationTask` as examples of regularization tasks.
-  - `L2RegularizationTask` is equivalent to the global `damping` parameter in `solve_ik`.
-  - `KineticEnergyRegularizationTask` penalizes the system's kinetic energy, so higher-inertia links will move less.
-- Add [examples/regularization.py](examples/regularization.py) to illustrate how regularization affects IK behavior.
+- Added KineticEnergyRegularizationTask, which regularizes joint displacements based on kinetic energy (inertia-weighted damping).
+  - New example: [examples/kinetic_energy_reg.py](examples/kinetic_energy_reg.py).
 - Add 3.8 and 3.13 to CI test matrix.
 - Switch to `MjSpec` for model construction in examples and eliminate `dm_control` dependency.
 - Added single and dual Franka Emika Panda robot examples featuring motion planning, and bi-manual coordination. Contribution from @Debojit-D.

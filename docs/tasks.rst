@@ -51,12 +51,6 @@ Damping task
 .. automodule:: mink.tasks.damping_task
     :members:
 
-L2 regularization task
-----------------------
-
-.. automodule:: mink.tasks.l2_regularization_task
-    :members:
-
 Kinetic energy regularization task
 ----------------------------------
 
