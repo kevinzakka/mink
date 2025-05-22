@@ -1,7 +1,10 @@
-"""This example demonstrates the use of the kinetic energy regularization task.
+"""UR5e figure-8 path with kinetic energy regularization.
 
-The UR5e is tasked with following a figure-8 path. As the kinetic energy regularization
-is increased, the lighter links move more compared to the heavier links.
+Example usage:
+
+    python examples/kinetic_energy_reg.py --help
+    python examples/kinetic_energy_reg.py --energy_reg 0.0   # No regularization.
+    python examples/kinetic_energy_reg.py --energy_reg 1e-5  # Low regularization.
 """
 
 import argparse
@@ -33,7 +36,7 @@ _RADIUS = 0.003
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="UR5e example with configurable regularization weight."
+        description="UR5e figure-8 path with kinetic energy regularization."
     )
     parser.add_argument(
         "--energy_reg",
