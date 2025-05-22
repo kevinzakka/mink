@@ -6,8 +6,9 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
-- Added KineticEnergyRegularizationTask, which regularizes joint displacements based on kinetic energy (inertia-weighted damping).
+- Added `KineticEnergyRegularizationTask`, which regularizes joint displacements based on kinetic energy (inertia-weighted damping).
   - New example: [examples/kinetic_energy_reg.py](examples/kinetic_energy_reg.py).
+- Add `Configuration.get_inertia_matrix()`: returns the joint-space inertia matrix at the current configuration.
 - Add 3.8 and 3.13 to CI test matrix.
 - Switch to `MjSpec` for model construction in examples and eliminate `dm_control` dependency.
 - Added single and dual Franka Emika Panda robot examples featuring motion planning, and bi-manual coordination. Contribution from @Debojit-D.
