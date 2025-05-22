@@ -1,3 +1,4 @@
+from typing import Deque
 import argparse
 from collections import deque
 from pathlib import Path
@@ -47,7 +48,7 @@ if __name__ == "__main__":
     data = configuration.data
 
     # For storing and visualizing the end-effector path.
-    positions = deque(maxlen=_MAX_TRACE_POINTS)
+    positions: Deque[np.ndarray] = deque(maxlen=_MAX_TRACE_POINTS)
 
     def add_visual_capsule(scene, point1, point2, radius, rgba):
         """Adds one capsule to an mjvScene."""

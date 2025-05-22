@@ -102,10 +102,6 @@ class TaskDefinitionError(MinkError):
     """Exception raised when a task definition is ill-formed."""
 
 
-class RegularizationTaskDefinitionError(MinkError):
-    """Exception raised when a regularization task definition is ill-formed."""
-
-
 class TargetNotSet(MinkError):
     """Exception raised when attempting to use a task with an unset target."""
 
