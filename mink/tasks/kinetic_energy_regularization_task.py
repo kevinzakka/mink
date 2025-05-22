@@ -4,10 +4,11 @@ import mujoco
 import numpy as np
 
 from ..configuration import Configuration
-from .task import Objective, RegularizationTask
+from .task import Objective, BaseTask
+from ..exceptions import TaskDefinitionError
 
 
-class KineticEnergyRegularizationTask(RegularizationTask):
+class KineticEnergyRegularizationTask(BaseTask):
     r"""Kinetic-energy regularization task.
 
     This low-priority task adds a configuration-dependent quadratic term to the
@@ -26,6 +27,15 @@ class KineticEnergyRegularizationTask(RegularizationTask):
         higher-inertia (i.e., heavier) links will move less. This is in contrast to
         :class:`~.L2RegularizationTask`, which uniformly damps all DoFs.
     """
+
+    def __init__(self, cost: float):
+        if not np.isscalar(cost):
+            raise TaskDefinitionError(
+                f"{self.__class__.__name__} cost must be a scalar"
+            )
+        if cost < 0:
+            raise TaskDefinitionError(f"{self.__class__.__name__} cost should be >= 0")
+        self.cost = cost
 
     def compute_qp_objective(self, configuration: Configuration) -> Objective:
         mujoco.mj_crb(configuration.model, configuration.data)

@@ -22,14 +22,14 @@ class Objective(NamedTuple):
         return x.T @ self.H @ x + self.c @ x
 
 
-class _BaseTask(abc.ABC):
+class BaseTask(abc.ABC):
     """Internal base class for all tasks."""
 
     @abc.abstractmethod
     def compute_qp_objective(self, configuration: Configuration) -> Objective: ...
 
 
-class Task(_BaseTask):
+class Task(BaseTask):
     r"""Abstract base class for kinematic tasks.
 
     Subclasses must implement the configuration-dependent task error
@@ -143,30 +143,3 @@ class Task(_BaseTask):
         c = -weighted_error.T @ weighted_jacobian  # (nv,)
 
         return Objective(H, c)
-
-
-class RegularizationTask(_BaseTask):
-    """Abstract base class for regularization tasks.
-
-    Subclasses must implement the :py:meth:`~RegularizationTask.compute_qp_objective`
-    method.
-    """
-
-    def __init__(self, cost: float):
-        """Constructor.
-
-        Args:
-            cost: Scalar cost value.
-        """
-        self.cost = cost
-
-    def compute_qp_objective(self, configuration: Configuration) -> Objective:
-        """Compute the matrix-vector pair (H, c) of the QP objective.
-
-        Args:
-            configuration: Robot configuration :math:`q`.
-
-        Returns:
-            Pair :math:`(H(q), c(q))`.
-        """
-        raise NotImplementedError
