@@ -5,7 +5,7 @@ import numpy as np
 from absl.testing import absltest
 
 from mink import Configuration
-from mink.exceptions import TaskDefinitionError
+from mink.exceptions import TaskDefinitionError, IntegrationTimestepNotSet
 from mink.tasks import KineticEnergyRegularizationTask
 
 
@@ -17,6 +17,14 @@ class TestKineticEnergyRegularizationTask(absltest.TestCase):
             KineticEnergyRegularizationTask(cost=-1.0)
         self.assertEqual(
             str(cm.exception), "KineticEnergyRegularizationTask cost should be >= 0"
+        )
+
+    def test_no_dt_set_throws(self):
+        task = KineticEnergyRegularizationTask(cost=1.0)
+        with self.assertRaises(IntegrationTimestepNotSet) as cm:
+            task.compute_qp_objective(Configuration(mujoco.MjModel.from_xml_string("<mujoco/>")))
+        self.assertEqual(
+            str(cm.exception), "No integration timestep set for KineticEnergyRegularizationTask"
         )
 
     def test_qp_objective_is_correct(self):
