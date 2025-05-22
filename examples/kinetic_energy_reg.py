@@ -1,7 +1,13 @@
-from typing import Deque
+"""This example demonstrates the use of the kinetic energy regularization task.
+
+The UR5e is tasked with following a figure-8 path. As the kinetic energy regularization
+is increased, the lighter links move more compared to the heavier links.
+"""
+
 import argparse
 from collections import deque
 from pathlib import Path
+from typing import Deque
 
 import mujoco
 import mujoco.viewer
@@ -12,7 +18,15 @@ import mink
 
 _HERE = Path(__file__).parent
 _XML = _HERE / "universal_robots_ur5e" / "scene_plain.xml"
-_MAX_TRACE_POINTS = 250
+
+# IK integration timestep, in [s].
+_DT = 0.02
+
+# Maximum number of trace points to plot.
+_DESIRED_TRACE_DURATION = 5.0  # [s]
+_MAX_TRACE_POINTS = int(_DESIRED_TRACE_DURATION / _DT)
+
+# Trace visualization parameters.
 _RGBA = np.array([0, 1, 0.5, 0.8])
 _RADIUS = 0.003
 
@@ -38,20 +52,21 @@ if __name__ == "__main__":
             frame_type="site",
             position_cost=1.0,
             orientation_cost=0.0,
-            lm_damping=0.0,
         ),
-        mink.KineticEnergyRegularizationTask(cost=args.energy_reg),
+        posture_task := mink.PostureTask(model, cost=1e-3),
+        kinetic_energy_task := mink.KineticEnergyRegularizationTask(
+            cost=args.energy_reg
+        ),
     ]
 
-    solver = "daqp"
-    model = configuration.model
-    data = configuration.data
+    # This task requires the integration timestep to be set.
+    kinetic_energy_task.set_dt(_DT)
+    posture_task.set_target(model.key("home").qpos)
 
     # For storing and visualizing the end-effector path.
     positions: Deque[np.ndarray] = deque(maxlen=_MAX_TRACE_POINTS)
 
     def add_visual_capsule(scene, point1, point2, radius, rgba):
-        """Adds one capsule to an mjvScene."""
         if scene.ngeom >= scene.maxgeom:
             return
         scene.ngeom += 1
@@ -78,22 +93,35 @@ if __name__ == "__main__":
                 continue
             add_visual_capsule(scn, positions[i], positions[i + 1], _RADIUS, _RGBA)
 
+    solver = "daqp"
+    model = configuration.model
+    data = configuration.data
+
+    # Do an initial solve to find the initial configuration that achieves the target
+    # position.
+    pos0 = np.array([0.5, 0.0, 0.25])
+    end_effector_task.set_target(mink.SE3.from_translation(pos0))
+    for _ in range(50):
+        vel = mink.solve_ik(
+            configuration, [end_effector_task, posture_task], _DT, solver
+        )
+        configuration.integrate_inplace(vel, _DT)
+    qpos0 = configuration.q.copy()
+
     with mujoco.viewer.launch_passive(
         model=model, data=data, show_left_ui=False, show_right_ui=False
     ) as viewer:
         mujoco.mjv_defaultFreeCamera(model, viewer.cam)
 
-        configuration.update_from_keyframe("home")
-
-        # Initialize the mocap target at the end-effector site.
+        configuration.update(qpos0)
         mink.move_mocap_to_frame(model, data, "target", "attachment_site", "site")
 
-        rate = RateLimiter(frequency=50.0, warn=False)
+        rate = RateLimiter(frequency=(1.0 / _DT), warn=False)
         t = 0.0
         while viewer.is_running():
             # Update task target using a figure-8 pattern.
             x = 0.5 + 0.1 * np.sin(2 * t)
-            y = 0.4 * np.sin(t)
+            y = 0.1 * np.sin(t)
             data.mocap_pos[0] = np.array([x, y, 0.25])
             T_wt = mink.SE3.from_mocap_name(model, data, "target")
             end_effector_task.set_target(T_wt)

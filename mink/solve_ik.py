@@ -7,7 +7,7 @@ import qpsolvers
 
 from .configuration import Configuration
 from .limits import ConfigurationLimit, Limit
-from .tasks import Objective, BaseTask
+from .tasks import BaseTask, Objective
 
 
 def _compute_qp_objective(

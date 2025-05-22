@@ -9,8 +9,8 @@ Tasks
 .. automodule:: mink.tasks.task
     :members:
 
-Core Tasks
-==========
+Kinematic Tasks
+===============
 
 Frame task
 ----------
@@ -36,8 +36,8 @@ Equality constraint task
 .. automodule:: mink.tasks.equality_constraint_task
     :members:
 
-Regularizers
-============
+Regularization Tasks
+====================
 
 Posture task
 ------------

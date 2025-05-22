@@ -5,7 +5,6 @@ from .damping_task import DampingTask
 from .equality_constraint_task import EqualityConstraintTask
 from .frame_task import FrameTask
 from .kinetic_energy_regularization_task import KineticEnergyRegularizationTask
-from .l2_regularization_task import L2RegularizationTask
 from .posture_task import PostureTask
 from .relative_frame_task import RelativeFrameTask
 from .task import BaseTask, Objective, Task
@@ -21,5 +20,4 @@ __all__ = (
     "Task",
     "EqualityConstraintTask",
     "KineticEnergyRegularizationTask",
-    "L2RegularizationTask",
 )

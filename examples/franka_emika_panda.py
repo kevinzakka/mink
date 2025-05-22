@@ -102,7 +102,7 @@ def main():
             end_effector_task.set_target(T_wt)
 
             # Attempt to converge IK
-            converged = converge_ik(
+            converge_ik(
                 configuration,
                 tasks,
                 dt,

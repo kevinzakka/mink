@@ -102,6 +102,14 @@ class TaskDefinitionError(MinkError):
     """Exception raised when a task definition is ill-formed."""
 
 
+class IntegrationTimestepNotSet(MinkError):
+    """Exception raised when the integration timestep is not set."""
+
+    def __init__(self, cls_name: str):
+        message = f"No integration timestep set for {cls_name}"
+        super().__init__(message)
+
+
 class TargetNotSet(MinkError):
     """Exception raised when attempting to use a task with an unset target."""
 

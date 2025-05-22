@@ -9,6 +9,7 @@ from .constants import (
     SUPPORTED_FRAMES,
 )
 from .exceptions import (
+    IntegrationTimestepNotSet,
     InvalidConstraint,
     InvalidDamping,
     InvalidFrame,
@@ -38,7 +39,6 @@ from .tasks import (
     EqualityConstraintTask,
     FrameTask,
     KineticEnergyRegularizationTask,
-    L2RegularizationTask,
     Objective,
     PostureTask,
     RelativeFrameTask,
@@ -64,7 +64,6 @@ __all__ = (
     "PostureTask",
     "Task",
     "KineticEnergyRegularizationTask",
-    "L2RegularizationTask",
     "EqualityConstraintTask",
     "Objective",
     "ConfigurationLimit",
@@ -88,6 +87,7 @@ __all__ = (
     "InvalidTarget",
     "LimitDefinitionError",
     "TaskDefinitionError",
+    "IntegrationTimestepNotSet",
     "SUPPORTED_FRAMES",
     "FRAME_TO_ENUM",
     "FRAME_TO_JAC_FUNC",

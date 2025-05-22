@@ -237,6 +237,21 @@ class Configuration:
         mujoco.mj_integratePos(self.model, self.data.qpos, velocity, dt)
         self.update()
 
+    def get_inertia_matrix(self) -> np.ndarray:
+        r"""Return the joint-space inertia matrix at the current configuration.
+
+        Returns:
+            The joint-space inertia matrix :math:`M(\mathbf{q})`.
+        """
+        # Run the composite rigid body inertia (CRB) algorithm to populate the joint
+        # space inertia matrix data.qM.
+        mujoco.mj_crb(self.model, self.data)
+        # data.qM is stored in a custom sparse format and can be converted to dense
+        # format using mujoco.mj_fullM.
+        M = np.empty((self.nv, self.nv), dtype=np.float64)
+        mujoco.mj_fullM(self.model, M, self.data.qM)
+        return M
+
     # Aliases.
 
     @property

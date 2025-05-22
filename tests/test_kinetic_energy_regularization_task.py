@@ -1,12 +1,12 @@
 """Tests for kinetic_energy_regularization_task.py."""
 
-import numpy as np
 import mujoco
+import numpy as np
 from absl.testing import absltest
 
+from mink import Configuration
 from mink.exceptions import TaskDefinitionError
 from mink.tasks import KineticEnergyRegularizationTask
-from mink import Configuration
 
 
 class TestKineticEnergyRegularizationTask(absltest.TestCase):
@@ -19,28 +19,7 @@ class TestKineticEnergyRegularizationTask(absltest.TestCase):
             str(cm.exception), "KineticEnergyRegularizationTask cost should be >= 0"
         )
 
-    def test_cost_must_be_scalar(self):
-        with self.assertRaises(TaskDefinitionError) as cm:
-            KineticEnergyRegularizationTask(cost=[1.0, 2.0])
-        self.assertEqual(
-            str(cm.exception), "KineticEnergyRegularizationTask cost must be a scalar"
-        )
-
     def test_qp_objective_is_correct(self):
-        xml_str = """
-        <mujoco model="test">
-        </mujoco>
-        """
-
-        model = mujoco.MjModel.from_xml_string(xml_str)
-        configuration = Configuration(model)
-        task = KineticEnergyRegularizationTask(cost=1e-3)
-        objective = task.compute_qp_objective(configuration)
-        # All dofs are regularized equally, including floating-base coordinates.
-        np.testing.assert_array_equal(objective.H, np.eye(configuration.nv) * 1e-3)
-        np.testing.assert_array_equal(objective.c, np.zeros(configuration.nv))
-
-    def test_simple_inertia_structure(self):
         xml_str = r"""
 <mujoco model="test">
   <worldbody>
@@ -61,7 +40,10 @@ class TestKineticEnergyRegularizationTask(absltest.TestCase):
         """
         model = mujoco.MjModel.from_xml_string(xml_str)
         configuration = Configuration(model)
-        task = KineticEnergyRegularizationTask(cost=1e-3)
+        cost = 1e-3
+        dt = 0.02
+        task = KineticEnergyRegularizationTask(cost=cost)
+        task.set_dt(dt)
         objective = task.compute_qp_objective(configuration)
 
         # Theoretical mass matrix for our simple system:
@@ -75,8 +57,7 @@ class TestKineticEnergyRegularizationTask(absltest.TestCase):
             ]
         )
 
-        # H should be the mass matrix scaled by the cost.
-        expected_H = theoretical_mass_matrix * 1e-3
+        expected_H = theoretical_mass_matrix * cost / dt**2
         np.testing.assert_array_equal(objective.H, expected_H)
         np.testing.assert_array_equal(objective.c, np.zeros(3))
 

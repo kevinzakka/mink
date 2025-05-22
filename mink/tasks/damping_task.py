@@ -14,14 +14,16 @@ class DampingTask(PostureTask):
     This low-priority task adds a Tikhonov/Levenberg-Marquardt term to the
     quadratic program, making the Hessian strictly positive-definite and
     selecting the **minimum-norm joint velocity** in any redundant or
-    near-singular situation. Formally it contributes
+    near-singular situation. Formally it contributes:
 
     .. math::
-        \tfrac12 \sum_{i=1}^{n_v} \lambda_i \dot q_i^{\,2},
+        \frac{1}{2}\,\Delta \mathbf{q}^\top \Lambda\,\Delta \mathbf{q},
 
-    where ``cost`` provides the weights :math:`\lambda_i`. Setting a larger
-    weight *reduces* motion in that DoF; with no other active tasks the robot
-    simply remains at rest.
+    where :math:`\Delta \mathbf{q}\in\mathbb{R}^{n_v}` is the vector of joint
+    displacements and :math:`\Lambda = \mathrm{diag}(\lambda_1, \ldots, \lambda_{n_v})`
+    is a diagonal matrix of per-DoF weights provided by ``cost``. A larger
+    :math:`\lambda_i` reduces motion in DoF :math:`i`; with no other active
+    tasks the robot remains at rest.
 
     This task does not favor a particular posture—only small instantaneous
     motion. If you need a posture bias, use an explicit :class:`~.PostureTask`.
