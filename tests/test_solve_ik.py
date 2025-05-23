@@ -151,19 +151,11 @@ class TestSolveIK(absltest.TestCase):
 
     def test_no_solution_found_throws(self):
         """When the QP solver fails to find a solution, an exception is raised."""
-        # Create an impossible scenario: ask the end-effector to be in two different
-        # places at the same time.
-        task1 = mink.FrameTask("attachment_site", "site", 1000, 1000)
-        task2 = mink.FrameTask("attachment_site", "site", 1000, 1000)
-        transform_init = self.configuration.get_transform_frame_to_world(
-            "attachment_site", "site"
-        )
-        transform1 = transform_init @ mink.SE3.from_translation(np.array([0.1, 0, 0]))
-        transform2 = transform_init @ mink.SE3.from_translation(np.array([-0.1, 0, 0]))
-        task1.set_target(transform1)
-        task2.set_target(transform2)
+        # Ask the end-effector to move to a far away target with a very large cost.
+        task = mink.FrameTask("attachment_site", "site", 1e6, 0)
+        task.set_target(mink.SE3.from_translation(np.array([100.0, 0, 0])))
         with self.assertRaises(mink.NoSolutionFound) as cm:
-            mink.solve_ik(self.configuration, [task1, task2], dt=1e-3, solver="daqp")
+            mink.solve_ik(self.configuration, [task], dt=1e-3, solver="daqp")
         self.assertEqual(str(cm.exception), "QP solver daqp failed to find a solution.")
 
 
