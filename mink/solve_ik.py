@@ -6,6 +6,7 @@ import numpy as np
 import qpsolvers
 
 from .configuration import Configuration
+from .exceptions import NoSolutionFound
 from .limits import ConfigurationLimit, Limit
 from .tasks import BaseTask, Objective
 
@@ -47,7 +48,18 @@ def build_ik(
     damping: float = 1e-12,
     limits: Optional[Sequence[Limit]] = None,
 ) -> qpsolvers.Problem:
-    """Build quadratic program from current configuration and tasks.
+    r"""Build quadratic program from current configuration and tasks.
+
+    The quadratic program is defined as:
+
+    .. math::
+
+        \begin{align*}
+            \min_{\Delta q} & \frac{1}{2} \Delta q^T H \Delta q + c^T \Delta q \\
+            \text{s.t.} \quad & G \Delta q \leq h
+        \end{align*}
+
+    where :math:`\Delta q = v / dt` is the vector of joint displacements.
 
     Args:
         configuration: Robot configuration.
@@ -77,7 +89,7 @@ def solve_ik(
     limits: Optional[Sequence[Limit]] = None,
     **kwargs,
 ) -> np.ndarray:
-    """Solve the differential inverse kinematics problem.
+    r"""Solve the differential inverse kinematics problem.
 
     Computes a velocity tangent to the current robot configuration. The computed
     velocity satisfies at (weighted) best the set of provided kinematic tasks.
@@ -97,13 +109,20 @@ def solve_ik(
             defaults to a configuration limit.
         kwargs: Keyword arguments to forward to the backend QP solver.
 
+    Raises:
+        NotWithinConfigurationLimits: If the current configuration is outside
+            the joint limits and `safety_break` is True.
+        NoSolutionFound: If the QP solver fails to find a solution.
+
     Returns:
-        Velocity `v` in tangent space.
+        Velocity :math:`v` in tangent space.
     """
     configuration.check_limits(safety_break=safety_break)
     problem = build_ik(configuration, tasks, dt, damping, limits)
     result = qpsolvers.solve_problem(problem, solver=solver, **kwargs)
-    dq = result.x
-    assert dq is not None
-    v: np.ndarray = dq / dt
+    if not result.found:
+        raise NoSolutionFound(solver)
+    delta_q = result.x
+    assert delta_q is not None
+    v: np.ndarray = delta_q / dt
     return v

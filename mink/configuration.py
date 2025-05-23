@@ -30,6 +30,7 @@ class Configuration:
     * Running forward kinematics to update the state.
     * Checking configuration limits.
     * Computing Jacobians for different frames.
+    * Computing the joint-space inertia matrix.
     * Retrieving frame transforms relative to the world frame.
     * Integrating velocities to update configurations.
     """
@@ -84,6 +85,10 @@ class Configuration:
             safety_break: If True, stop execution and raise an exception if the current
                 configuration is outside limits. If False, print a warning and continue
                 execution.
+
+        Raises:
+            NotWithinConfigurationLimits: If the current configuration is outside
+                the joint limits.
         """
         for jnt in range(self.model.njnt):
             jnt_type = self.model.jnt_type[jnt]

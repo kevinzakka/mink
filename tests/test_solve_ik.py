@@ -30,8 +30,8 @@ class TestSolveIK(absltest.TestCase):
             mink.VelocityLimit(self.model, velocities),
         ]
 
-    def test_checks_configuration_limits(self):
-        """IK checks for configuration limits."""
+    def test_exceeding_limits_with_safety_break_throws(self):
+        """IK checks for configuration limits if safety_break is True."""
         q = self.model.key("home").qpos.copy()
         q[0] = self.model.jnt_range[0, 1] + 0.1
         self.configuration.update(q)
@@ -45,8 +45,8 @@ class TestSolveIK(absltest.TestCase):
                 solver="daqp",
             )
 
-    def test_ignores_configuration_limits(self):
-        """IK ignores configuration limits if flag is set."""
+    def test_exceeding_limits_without_safety_break_does_not_throw(self):
+        """IK ignores configuration limits if safety_break is False."""
         q = self.model.key("home").qpos.copy()
         q[0] = self.model.jnt_range[0, 1] + 0.1
         self.configuration.update(q)
@@ -148,6 +148,23 @@ class TestSolveIK(absltest.TestCase):
             atol=1e-6,
         )
         self.assertLess(nb_steps, 20)
+
+    def test_no_solution_found_throws(self):
+        """When the QP solver fails to find a solution, an exception is raised."""
+        # Create an impossible scenario: ask the end-effector to be in two different
+        # places at the same time.
+        task1 = mink.FrameTask("attachment_site", "site", 1000, 1000)
+        task2 = mink.FrameTask("attachment_site", "site", 1000, 1000)
+        transform_init = self.configuration.get_transform_frame_to_world(
+            "attachment_site", "site"
+        )
+        transform1 = transform_init @ mink.SE3.from_translation(np.array([0.1, 0, 0]))
+        transform2 = transform_init @ mink.SE3.from_translation(np.array([-0.1, 0, 0]))
+        task1.set_target(transform1)
+        task2.set_target(transform2)
+        with self.assertRaises(mink.NoSolutionFound) as cm:
+            mink.solve_ik(self.configuration, [task1, task2], dt=1e-3, solver="daqp")
+        self.assertEqual(str(cm.exception), "QP solver daqp failed to find a solution.")
 
 
 if __name__ == "__main__":

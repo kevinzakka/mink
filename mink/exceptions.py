@@ -9,6 +9,13 @@ class MinkError(Exception):
     """Base class for Mink exceptions."""
 
 
+class NoSolutionFound(MinkError):
+    """Exception raised when the QP solver fails to find a solution."""
+
+    def __init__(self, solver_name: str):
+        super().__init__(f"QP solver {solver_name} failed to find a solution.")
+
+
 class UnsupportedFrame(MinkError):
     """Exception raised when a frame type is unsupported."""
 
