@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## Unreleased
+
+### Changed
+
+- `solve_ik` now raises a new exception, `NoSolutionFound`, when the QP solver fails to find a solution.
+
 ## [0.0.11] - 2025-05-22
 
 ### Added
