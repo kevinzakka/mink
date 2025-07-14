@@ -8,6 +8,10 @@ All notable changes to this project will be documented in this file.
 
 - `solve_ik` now raises a new exception, `NoSolutionFound`, when the QP solver fails to find a solution.
 
+### Bugfix
+
+- Fix `Configuration.get_inertia_matrix` for MuJoCo versions >= 3.3.4.
+
 ## [0.0.11] - 2025-05-22
 
 ### Added
