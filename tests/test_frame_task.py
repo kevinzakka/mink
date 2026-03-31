@@ -186,17 +186,26 @@ class TestFrameTask(absltest.TestCase):
             orientation_cost=1.0,
             lm_damping=1e-3,
         )
-        target = self.configuration.get_transform_frame_to_world("pelvis", "body") @ SE3.from_translation(np.array([0.0, 0.01, 0.0]))
+        target = self.configuration.get_transform_frame_to_world(
+            "pelvis", "body"
+        ) @ SE3.from_translation(np.array([0.0, 0.01, 0.0]))
         task.set_target(target)
         e = task.compute_error(self.configuration)
         mu = task.lm_damping * (e @ e)  # unit cost, gain=1: weighted_error = -e
         H_lm, _ = task.compute_qp_objective(self.configuration)
         task.lm_damping = 0.0
         H_no_lm, _ = task.compute_qp_objective(self.configuration)
-        np.testing.assert_allclose(H_lm, H_no_lm + mu * np.eye(self.model.nv), atol=1e-10)
+        np.testing.assert_allclose(
+            H_lm, H_no_lm + mu * np.eye(self.model.nv), atol=1e-10
+        )
 
     def test_qp_objective_without_target(self):
-        task = FrameTask(frame_name="pelvis", frame_type="body", position_cost=1.0, orientation_cost=1.0)
+        task = FrameTask(
+            frame_name="pelvis",
+            frame_type="body",
+            position_cost=1.0,
+            orientation_cost=1.0,
+        )
         with self.assertRaises(TargetNotSet):
             task.compute_qp_objective(self.configuration)
 
@@ -211,7 +220,12 @@ class TestFrameTaskNativeFallback(absltest.TestCase):
     def setUp(self):
         self.configuration = Configuration(self.model)
         self.configuration.update_from_keyframe("stand")
-        self.task = FrameTask(frame_name="pelvis", frame_type="body", position_cost=1.0, orientation_cost=1.0)
+        self.task = FrameTask(
+            frame_name="pelvis",
+            frame_type="body",
+            position_cost=1.0,
+            orientation_cost=1.0,
+        )
         self.task.set_target(
             self.configuration.get_transform_frame_to_world("pelvis", "body")
             @ SE3.from_translation(np.array([0.0, 0.01, 0.0]))
@@ -220,12 +234,16 @@ class TestFrameTaskNativeFallback(absltest.TestCase):
     def test_compute_error_fallback(self):
         err = self.task.compute_error(self.configuration)
         with unittest.mock.patch("mink.tasks.frame_task._native", None):
-            np.testing.assert_allclose(self.task.compute_error(self.configuration), err, atol=1e-10)
+            np.testing.assert_allclose(
+                self.task.compute_error(self.configuration), err, atol=1e-10
+            )
 
     def test_compute_jacobian_fallback(self):
         jac = self.task.compute_jacobian(self.configuration)
         with unittest.mock.patch("mink.tasks.frame_task._native", None):
-            np.testing.assert_allclose(self.task.compute_jacobian(self.configuration), jac, atol=1e-10)
+            np.testing.assert_allclose(
+                self.task.compute_jacobian(self.configuration), jac, atol=1e-10
+            )
 
     def test_compute_qp_objective_fallback(self):
         H, c = self.task.compute_qp_objective(self.configuration)

@@ -158,13 +158,27 @@ class TestRelativeFrameTask(absltest.TestCase):
         )
 
     def test_qp_objective_without_target(self):
-        task = RelativeFrameTask(frame_name="pelvis", frame_type="body", root_name="torso_link", root_type="body", position_cost=1.0, orientation_cost=1.0)
+        task = RelativeFrameTask(
+            frame_name="pelvis",
+            frame_type="body",
+            root_name="torso_link",
+            root_type="body",
+            position_cost=1.0,
+            orientation_cost=1.0,
+        )
         with self.assertRaises(TargetNotSet):
             task.compute_qp_objective(self.configuration)
 
     def test_compute_qp_objective(self):
         """compute_qp_objective is consistent with separate error/jacobian calls."""
-        task = RelativeFrameTask(frame_name="pelvis", frame_type="body", root_name="torso_link", root_type="body", position_cost=1.0, orientation_cost=1.0)
+        task = RelativeFrameTask(
+            frame_name="pelvis",
+            frame_type="body",
+            root_name="torso_link",
+            root_type="body",
+            position_cost=1.0,
+            orientation_cost=1.0,
+        )
         task.set_target(self.T_wt)
         H, c = task.compute_qp_objective(self.configuration)
         J = task.compute_jacobian(self.configuration)
@@ -180,18 +194,29 @@ class TestRelativeFrameTaskNativeFallback(absltest.TestCase):
 
     def setUp(self):
         self.configuration = Configuration(self.model)
-        self.task = RelativeFrameTask(frame_name="pelvis", frame_type="body", root_name="torso_link", root_type="body", position_cost=1.0, orientation_cost=1.0)
+        self.task = RelativeFrameTask(
+            frame_name="pelvis",
+            frame_type="body",
+            root_name="torso_link",
+            root_type="body",
+            position_cost=1.0,
+            orientation_cost=1.0,
+        )
         self.task.set_target(SE3.sample_uniform())
 
     def test_compute_error_fallback(self):
         err = self.task.compute_error(self.configuration)
         with unittest.mock.patch("mink.tasks.relative_frame_task._native", None):
-            np.testing.assert_allclose(self.task.compute_error(self.configuration), err, atol=1e-10)
+            np.testing.assert_allclose(
+                self.task.compute_error(self.configuration), err, atol=1e-10
+            )
 
     def test_compute_jacobian_fallback(self):
         jac = self.task.compute_jacobian(self.configuration)
         with unittest.mock.patch("mink.tasks.relative_frame_task._native", None):
-            np.testing.assert_allclose(self.task.compute_jacobian(self.configuration), jac, atol=1e-10)
+            np.testing.assert_allclose(
+                self.task.compute_jacobian(self.configuration), jac, atol=1e-10
+            )
 
     def test_compute_qp_objective_fallback(self):
         H, c = self.task.compute_qp_objective(self.configuration)
