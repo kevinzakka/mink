@@ -1,5 +1,7 @@
 """Tests for frame_task.py."""
 
+import unittest.mock
+
 import numpy as np
 from absl.testing import absltest
 from robot_descriptions.loaders.mujoco import load_robot_description
@@ -174,6 +176,63 @@ class TestFrameTask(absltest.TestCase):
         H_2, c_2 = task.compute_qp_objective(self.configuration)
         self.assertTrue(np.allclose(H_1, H_2))
         self.assertTrue(np.allclose(c_1, c_2))
+
+    def test_lm_damping_modifies_hessian_with_nonzero_error(self):
+        """LM damping adds mu*I to H when error is non-zero."""
+        task = FrameTask(
+            frame_name="pelvis",
+            frame_type="body",
+            position_cost=1.0,
+            orientation_cost=1.0,
+            lm_damping=1e-3,
+        )
+        target = self.configuration.get_transform_frame_to_world("pelvis", "body") @ SE3.from_translation(np.array([0.0, 0.01, 0.0]))
+        task.set_target(target)
+        e = task.compute_error(self.configuration)
+        mu = task.lm_damping * (e @ e)  # unit cost, gain=1: weighted_error = -e
+        H_lm, _ = task.compute_qp_objective(self.configuration)
+        task.lm_damping = 0.0
+        H_no_lm, _ = task.compute_qp_objective(self.configuration)
+        np.testing.assert_allclose(H_lm, H_no_lm + mu * np.eye(self.model.nv), atol=1e-10)
+
+    def test_qp_objective_without_target(self):
+        task = FrameTask(frame_name="pelvis", frame_type="body", position_cost=1.0, orientation_cost=1.0)
+        with self.assertRaises(TargetNotSet):
+            task.compute_qp_objective(self.configuration)
+
+
+class TestFrameTaskNativeFallback(absltest.TestCase):
+    """Verify Python fallback paths execute correctly when native extension is absent."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.model = load_robot_description("g1_mj_description")
+
+    def setUp(self):
+        self.configuration = Configuration(self.model)
+        self.configuration.update_from_keyframe("stand")
+        self.task = FrameTask(frame_name="pelvis", frame_type="body", position_cost=1.0, orientation_cost=1.0)
+        self.task.set_target(
+            self.configuration.get_transform_frame_to_world("pelvis", "body")
+            @ SE3.from_translation(np.array([0.0, 0.01, 0.0]))
+        )
+
+    def test_compute_error_fallback(self):
+        err = self.task.compute_error(self.configuration)
+        with unittest.mock.patch("mink.tasks.frame_task._native", None):
+            np.testing.assert_allclose(self.task.compute_error(self.configuration), err, atol=1e-10)
+
+    def test_compute_jacobian_fallback(self):
+        jac = self.task.compute_jacobian(self.configuration)
+        with unittest.mock.patch("mink.tasks.frame_task._native", None):
+            np.testing.assert_allclose(self.task.compute_jacobian(self.configuration), jac, atol=1e-10)
+
+    def test_compute_qp_objective_fallback(self):
+        H, c = self.task.compute_qp_objective(self.configuration)
+        with unittest.mock.patch("mink.tasks.frame_task._native", None):
+            H_fb, c_fb = self.task.compute_qp_objective(self.configuration)
+        np.testing.assert_allclose(H_fb, H, atol=1e-10)
+        np.testing.assert_allclose(c_fb, c, atol=1e-10)
 
 
 if __name__ == "__main__":

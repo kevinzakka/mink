@@ -107,7 +107,10 @@ exclude_also = [
     "@(abc\\.)?abstractmethod",
     "def __repr__",
     "if use_taylor:",
-    "if theta_sq < get_epsilon(theta_sq\\.dtype):",
+    "if t2 < get_epsilon",
+    "if norm < get_epsilon",
+    "MINK_DISABLE_NATIVE",
+    "except ImportError:",
     "def ljac",
     "def rjac",
 ]

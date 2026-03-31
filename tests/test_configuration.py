@@ -1,5 +1,8 @@
 """Tests for configuration.py."""
 
+import unittest.mock
+
+import mujoco
 import numpy as np
 from absl.testing import absltest
 from robot_descriptions.loaders.mujoco import load_robot_description
@@ -168,6 +171,43 @@ class TestConfiguration(absltest.TestCase):
         q[1] = self.model.jnt_range[1, 1]
         configuration.update(q=q)
         configuration.check_limits()  # Should not raise.
+
+    def test_check_limits_no_limited_joints(self):
+        model = mujoco.MjModel.from_xml_string(
+            "<mujoco><worldbody><body><joint type='free'/>"
+            "<geom type='sphere' size='.1'/></body></worldbody></mujoco>"
+        )
+        mink.Configuration(model).check_limits()  # Early return, no raise.
+
+    def test_native_fallback_get_frame_jacobian(self):
+        cfg = mink.Configuration(self.model, self.q_ref)
+        jac = cfg.get_frame_jacobian("attachment_site", "site")
+        with unittest.mock.patch("mink.configuration._native", None):
+            np.testing.assert_allclose(
+                cfg.get_frame_jacobian("attachment_site", "site"), jac, atol=1e-10
+            )
+
+    def test_native_fallback_get_transform_frame_to_world(self):
+        cfg = mink.Configuration(self.model, self.q_ref)
+        T = cfg.get_transform_frame_to_world("attachment_site", "site")
+        with unittest.mock.patch("mink.configuration._native", None):
+            np.testing.assert_allclose(
+                cfg.get_transform_frame_to_world("attachment_site", "site").wxyz_xyz,
+                T.wxyz_xyz,
+                atol=1e-10,
+            )
+
+    def test_native_fallback_get_transform(self):
+        cfg = mink.Configuration(self.model, self.q_ref)
+        T = cfg.get_transform("attachment_site", "site", "wrist_3_link", "body")
+        with unittest.mock.patch("mink.configuration._native", None):
+            np.testing.assert_allclose(
+                cfg.get_transform(
+                    "attachment_site", "site", "wrist_3_link", "body"
+                ).wxyz_xyz,
+                T.wxyz_xyz,
+                atol=1e-10,
+            )
 
 
 if __name__ == "__main__":
