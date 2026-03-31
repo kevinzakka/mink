@@ -45,10 +45,13 @@ dev = [
 ]
 doc = [
     "sphinx>=7.2.6",
+    "sphinx-autobuild",
+    "sphinx-copybutton",
+    "sphinx-design",
     "sphinx-favicon",
     "sphinx-mathjax-offline",
-    "sphinx_rtd_theme>=2.0.0",
     "toml>=0.10.2",
+    "sphinx-book-theme>=1.1.4",
 ]
 
 [project.urls]

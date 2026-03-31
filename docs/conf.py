@@ -11,7 +11,7 @@ from pathlib import Path
 import toml
 
 project = "mink"
-copyright = "2024, Kevin Zakka"
+copyright = "2025, Kevin Zakka"
 author = "Kevin Zakka"
 
 # The short X.Y version
@@ -29,6 +29,8 @@ extensions = [
     "sphinx.ext.coverage",
     "sphinx-mathjax-offline",
     "sphinx.ext.napoleon",
+    "sphinx_copybutton",
+    "sphinx_design",
     "sphinx_favicon",
 ]
 
@@ -46,8 +48,6 @@ exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 
 source_suffix = {".rst": "restructuredtext"}
 
-pygments_style = "sphinx"
-
 autodoc_type_aliases = {
     "npt.ArrayLike": "ArrayLike",
 }
@@ -55,6 +55,20 @@ autodoc_type_aliases = {
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
-html_theme = "sphinx_rtd_theme"
+html_theme = "sphinx_book_theme"
+html_static_path = ["_static"]
+
+html_theme_options = {
+    "logo": {
+        "image_light": "_static/logo.png",
+        "image_dark": "_static/logo.png",
+    },
+}
+
+favicons = [
+    {
+        "href": "favicon.png",
+    }
+]
 
 htmlhelp_basename = "minkdoc"

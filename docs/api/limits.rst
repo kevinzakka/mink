@@ -1,4 +1,4 @@
-:github_url: https://github.com/kevinzakka/mink/tree/main/docs/limits.rst
+:github_url: https://github.com/kevinzakka/mink/tree/main/docs/api/limits.rst
 
 .. _Limits:
 

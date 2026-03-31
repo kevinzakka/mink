@@ -29,7 +29,13 @@ coverage:
 
 .PHONY: doc
 doc:
-	uv run --group doc sphinx-build docs _build -W
+	rm -rf docs/_build
+	uv run --group doc sphinx-build docs docs/_build -W
+
+.PHONY: doc-live
+doc-live:
+	rm -rf docs/_build
+	uv run --group doc sphinx-autobuild docs docs/_build
 
 .PHONY: build
 build:

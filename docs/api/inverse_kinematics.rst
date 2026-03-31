@@ -1,4 +1,4 @@
-:github_url: https://github.com/kevinzakka/mink/tree/main/docs/inverse_kinematics.rst
+:github_url: https://github.com/kevinzakka/mink/tree/main/docs/api/inverse_kinematics.rst
 
 ******************
 Inverse kinematics
