@@ -8,6 +8,10 @@ All notable changes to this project will be documented in this file.
 
 - `get_subtree_joint_ids` utility for retrieving all joints in the subtree rooted at a given body. Contribution from @maxstrobel.
 
+### Fixed
+
+- `compute_look_at_rotation` in `examples/humanoid_apollo.py` no longer divides by zero when the look target coincides with the source, which previously produced NaNs in the IK solver (#135).
+
 ## [1.1.0] - 2026-02-19
 
 No public API changes — this is a drop-in upgrade.
