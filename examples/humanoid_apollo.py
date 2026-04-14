@@ -12,27 +12,27 @@ _XML = _HERE / "apptronik_apollo" / "scene_table.xml"
 
 
 def compute_look_at_rotation(
-    head_pos: np.ndarray, target_pos: np.ndarray, world_up=np.array([0.0, 0.0, 1.0])
-):
-    # Compute look direction.
-    look_direction = target_pos - head_pos
-    x_axis = look_direction / np.linalg.norm(look_direction)
+    source_pos: np.ndarray,
+    target_pos: np.ndarray,
+    world_up: np.ndarray = np.array([0.0, 0.0, 1.0]),
+) -> mink.SE3:
+    """Rotation whose +x axis points from `source_pos` toward `target_pos`, with +z aligned to `world_up`."""
+    eps = 1e-6
+    forward = target_pos - source_pos
+    norm = np.linalg.norm(forward)
+    if norm < eps:
+        return mink.SE3.identity()
+    forward = forward / norm
 
-    # Compute the intermediate y-axis using the world up vector.
-    y_axis = np.cross(world_up, x_axis)
-    norm_y = np.linalg.norm(y_axis)
-    if norm_y < 1e-6:
-        # The look_direction is nearly parallel to world_up; choose an arbitrary vector.
-        y_axis = np.cross(x_axis, np.array([1.0, 0.0, 0.0]))
-        norm_y = np.linalg.norm(y_axis)
-        if norm_y < 1e-6:
-            y_axis = np.cross(x_axis, np.array([0.0, 1.0, 0.0]))
-            norm_y = np.linalg.norm(y_axis)
-    y_axis /= norm_y
+    up_ref = world_up
+    if abs(np.dot(forward, up_ref)) > 1.0 - eps:
+        up_ref = np.array([1.0, 0.0, 0.0])
 
-    z_axis = np.cross(x_axis, y_axis)
+    left = np.cross(up_ref, forward)
+    left /= np.linalg.norm(left)
+    up = np.cross(forward, left)
 
-    rot = mink.SO3.from_matrix(np.column_stack((x_axis, y_axis, z_axis)))
+    rot = mink.SO3.from_matrix(np.column_stack((forward, left, up)))
     return mink.SE3.from_rotation(rot)
 
 
@@ -151,7 +151,7 @@ if __name__ == "__main__":
                 hand_task.set_target(mink.SE3.from_mocap_id(data, hands_mid[i]))
 
             head_target = compute_look_at_rotation(
-                head_pos=data.site_xpos[data.site("head").id],
+                source_pos=data.site_xpos[data.site("head").id],
                 target_pos=data.mocap_pos[head_mid],
             )
             head_task.set_target(head_target)
