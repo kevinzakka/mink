@@ -35,7 +35,7 @@ dependencies = [
 dev = [
     "ipdb>=0.13.13",
     "pyright>=1.1.408",
-    "pytest>=8.4.2",
+    "pytest>=9.0.3",
     "absl-py",
     "coveralls",
     "robot_descriptions>=1.14.0",
