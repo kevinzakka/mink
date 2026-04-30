@@ -163,13 +163,10 @@ def get_subtree_geom_ids(model: mujoco.MjModel, body_id: int) -> list[int]:
     Returns:
         A list containing all subtree geom ids.
     """
-    geom_ids: list[int] = []
-    stack = [body_id]
-    while stack:
-        body_id = stack.pop()
-        geom_ids.extend(get_body_geom_ids(model, body_id))
-        stack += get_body_body_ids(model, body_id)
-    return geom_ids
+    body_ids = set(get_subtree_body_ids(model, body_id))
+    return [
+        geom_id for body_id in body_ids for geom_id in get_body_geom_ids(model, body_id)
+    ]
 
 
 def get_subtree_joint_ids(model: mujoco.MjModel, body_id: int) -> list[int]:
