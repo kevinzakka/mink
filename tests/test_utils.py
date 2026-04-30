@@ -273,6 +273,102 @@ class TestUtils(absltest.TestCase):
         actual = utils.get_subtree_joint_ids(model, world_id)
         self.assertSetEqual(set(actual), set(range(model.njnt)))
 
+    def test_get_joint_actuator_id(self):
+        xml_str = """
+        <mujoco>
+          <worldbody>
+            <body name="root">
+              <joint type="free" name="root/free"/>
+              <geom type="sphere" size=".05" mass=".1"/>
+              <body name="arm">
+                <joint type="hinge" name="arm/hinge"/>
+                <joint type="slide" name="arm/slide"/>
+                <geom type="sphere" size=".05" mass=".1"/>
+              </body>
+            </body>
+          </worldbody>
+          <actuator>
+            <motor name="arm/hinge" joint="arm/hinge"/>
+            <position name="root/free" joint="root/free" kp="10"/>
+          </actuator>
+        </mujoco>
+        """
+        model = mujoco.MjModel.from_xml_string(xml_str)
+
+        hinge_id = model.joint("arm/hinge").id
+        free_id = model.joint("root/free").id
+        slide_id = model.joint("arm/slide").id
+
+        self.assertEqual(
+            utils.get_joint_actuator_id(model, hinge_id), model.actuator("arm/hinge").id
+        )
+        self.assertEqual(
+            utils.get_joint_actuator_id(model, free_id), model.actuator("root/free").id
+        )
+        self.assertIsNone(utils.get_joint_actuator_id(model, slide_id))
+
+    def test_get_subtree_actuator_ids(self):
+        xml_str = """
+        <mujoco>
+          <worldbody>
+            <body name="b1">
+              <joint type="free" name="b1/free"/>
+              <geom type="sphere" size=".05" mass=".1"/>
+              <body name="b2">
+                <joint type="slide" name="b2/sx" axis="1 0 0"/>
+                <joint type="hinge" name="b2/hz" axis="0 0 1"/>
+                <geom type="sphere" size=".05" mass=".1"/>
+                <body name="b2a">
+                  <joint type="hinge" name="b2a/hinge"/>
+                  <geom type="sphere" size=".05" mass=".1"/>
+                </body>
+              </body>
+            </body>
+            <body name="b3">
+              <joint type="free" name="b3/free"/>
+              <geom type="sphere" size=".05" mass=".1"/>
+              <body name="b4">
+                <joint type="hinge" name="b4/hinge"/>
+                <geom type="sphere" size=".05" mass=".1"/>
+              </body>
+            </body>
+            <body name="actuatorless">
+              <joint type="hinge" name="actuatorless/hinge"/>
+              <geom type="sphere" size=".05" mass=".1"/>
+            </body>
+          </worldbody>
+          <actuator>
+            <motor name="b1/free" joint="b1/free"/>
+            <motor name="b2/hz" joint="b2/hz"/>
+            <motor name="b2a/hinge" joint="b2a/hinge"/>
+            <motor name="b3/free" joint="b3/free"/>
+            <motor name="b4/hinge" joint="b4/hinge"/>
+          </actuator>
+        </mujoco>
+        """
+        model = mujoco.MjModel.from_xml_string(xml_str)
+
+        b1_id = model.body("b1").id
+        actual = utils.get_subtree_actuator_ids(model, b1_id)
+        expected = [
+            model.actuator("b1/free").id,
+            model.actuator("b2/hz").id,
+            model.actuator("b2a/hinge").id,
+        ]
+        self.assertSetEqual(set(actual), set(expected))
+
+        b3_id = model.body("b3").id
+        actual = utils.get_subtree_actuator_ids(model, b3_id)
+        expected = [model.actuator("b3/free").id, model.actuator("b4/hinge").id]
+        self.assertSetEqual(set(actual), set(expected))
+
+        actuatorless_id = model.body("actuatorless").id
+        self.assertListEqual(utils.get_subtree_actuator_ids(model, actuatorless_id), [])
+
+        world_id = 0
+        actual = utils.get_subtree_actuator_ids(model, world_id)
+        self.assertSetEqual(set(actual), set(range(model.nu)))
+
 
 if __name__ == "__main__":
     absltest.main()
