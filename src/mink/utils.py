@@ -189,3 +189,43 @@ def get_subtree_joint_ids(model: mujoco.MjModel, body_id: int) -> list[int]:
     return [
         jnt_id for jnt_id in range(model.njnt) if model.jnt_bodyid[jnt_id] in body_ids
     ]
+
+
+def get_joint_actuator_id(model: mujoco.MjModel, joint_id: int) -> int | None:
+    """Get the actuator ID of the actuator controlling a given joint.
+
+    Args:
+        model: Mujoco model.
+        joint_id: ID of the joint.
+
+    Returns:
+        The actuator ID of the actuator controlling the joint, or None if the joint is not controlled by any actuator.
+    """
+    for act_id in range(model.nu):
+        if (
+            model.actuator_trntype[act_id] == mujoco.mjtTrn.mjTRN_JOINT
+            and model.actuator_trnid[act_id][0] == joint_id
+        ):
+            return act_id
+    return None
+
+
+def get_subtree_actuator_ids(model: mujoco.MjModel, body_id: int) -> list[int]:
+    """Get all actuator IDs of actuators controlling joints in a given subtree.
+
+    Here, a subtree is defined as the kinematic tree starting at the body and including
+    all its descendants.
+
+    Args:
+        model: Mujoco model.
+        body_id: ID of body where subtree starts.
+
+    Returns:
+        A list containing all subtree actuator ids.
+    """
+    joint_ids = get_subtree_joint_ids(model, body_id)
+    return [
+        act_id
+        for jnt_id in joint_ids
+        if (act_id := get_joint_actuator_id(model, jnt_id)) is not None
+    ]
