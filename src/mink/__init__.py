@@ -43,6 +43,7 @@ from .tasks import RelativeFrameTask as RelativeFrameTask
 from .tasks import Task as Task
 from .utils import custom_configuration_vector as custom_configuration_vector
 from .utils import get_body_geom_ids as get_body_geom_ids
+from .utils import get_body_joint_ids as get_body_joint_ids
 from .utils import get_freejoint_dims as get_freejoint_dims
 from .utils import get_subtree_body_ids as get_subtree_body_ids
 from .utils import get_subtree_geom_ids as get_subtree_geom_ids

@@ -142,19 +142,19 @@ class TestUtils(absltest.TestCase):
         actual_geom_ids = utils.get_subtree_geom_ids(model, b1_id)
         geom_names = ["b1/g1", "b1/g2", "b2/g1"]
         expected_geom_ids = [model.geom(g).id for g in geom_names]
-        self.assertSetEqual(set(actual_geom_ids), set(expected_geom_ids))
+        self.assertListEqual(actual_geom_ids, expected_geom_ids)
         b3_id = model.body("b3").id
         actual_geom_ids = utils.get_subtree_geom_ids(model, b3_id)
         geom_names = ["b3/g1", "b4/g1"]
         expected_geom_ids = [model.geom(g).id for g in geom_names]
-        self.assertSetEqual(set(actual_geom_ids), set(expected_geom_ids))
+        self.assertListEqual(actual_geom_ids, expected_geom_ids)
         geomless_id = model.body("geomless").id
         actual_geom_ids = utils.get_subtree_geom_ids(model, geomless_id)
         self.assertListEqual(actual_geom_ids, [])
         world_id = 0
         actual_geom_ids = utils.get_subtree_geom_ids(model, world_id)
-        expected_geom_ids = [i for i in range(model.ngeom)]
-        self.assertSetEqual(set(actual_geom_ids), set(expected_geom_ids))
+        expected_geom_ids = set(range(model.ngeom))
+        self.assertSetEqual(set(actual_geom_ids), expected_geom_ids)
 
     def test_get_subtree_body_ids(self):
         xml_str = """
@@ -247,7 +247,7 @@ class TestUtils(absltest.TestCase):
             model.joint(n).id
             for n in ["b1/free", "b2/sx", "b2/sy", "b2/hz", "b2b/hinge"]
         ]
-        self.assertSetEqual(set(actual), set(expected))
+        self.assertListEqual(actual, expected)
         for n in ["b3/free", "b4/hinge"]:
             self.assertNotIn(model.joint(n).id, actual)
 
@@ -255,14 +255,14 @@ class TestUtils(absltest.TestCase):
         b2_id = model.body("b2").id
         actual = utils.get_subtree_joint_ids(model, b2_id)
         expected = [model.joint(n).id for n in ["b2/sx", "b2/sy", "b2/hz", "b2b/hinge"]]
-        self.assertSetEqual(set(actual), set(expected))
+        self.assertListEqual(actual, expected)
         self.assertNotIn(model.joint("b1/free").id, actual)
 
         # Sibling subtree.
         b3_id = model.body("b3").id
         actual = utils.get_subtree_joint_ids(model, b3_id)
         expected = [model.joint(n).id for n in ["b3/free", "b4/hinge"]]
-        self.assertSetEqual(set(actual), set(expected))
+        self.assertListEqual(actual, expected)
 
         # Body with no joint anywhere in its subtree.
         jointless_id = model.body("jointless").id
@@ -272,6 +272,46 @@ class TestUtils(absltest.TestCase):
         world_id = 0
         actual = utils.get_subtree_joint_ids(model, world_id)
         self.assertSetEqual(set(actual), set(range(model.njnt)))
+
+    def test_get_body_joint_ids(self):
+        xml_str = """
+        <mujoco>
+          <worldbody>
+            <body name="b1" pos=".1 -.1 0">
+              <joint type="slide" name="b1/sx" axis="1 0 0"/>
+              <joint type="slide" name="b1/sy" axis="0 1 0"/>
+              <joint type="hinge" name="b1/hz" axis="0 0 1"/>
+              <geom name="b1/g1" type="sphere" size=".1" mass=".1"/>
+              <body name="b2">
+                <joint type="hinge" name="b2/hinge"/>
+                <geom name="b2/g1" type="sphere" size=".1" mass=".1"/>
+              </body>
+            </body>
+            <body name="jointless">
+              <inertial pos="0 0 0" mass=".1" diaginertia="1 1 1"/>
+            </body>
+          </worldbody>
+        </mujoco>
+        """
+        model = mujoco.MjModel.from_xml_string(xml_str)
+
+        # Body with multiple joints.
+        b1_id = model.body("b1").id
+        actual = utils.get_body_joint_ids(model, b1_id)
+        expected = [model.joint(n).id for n in ["b1/sx", "b1/sy", "b1/hz"]]
+        self.assertListEqual(actual, expected)
+
+        # Body with a single joint.
+        b2_id = model.body("b2").id
+        actual = utils.get_body_joint_ids(model, b2_id)
+        self.assertListEqual(actual, [model.joint("b2/hinge").id])
+
+        # Body with no joints.
+        jointless_id = model.body("jointless").id
+        self.assertListEqual(utils.get_body_joint_ids(model, jointless_id), [])
+
+        # World body has no joints.
+        self.assertListEqual(utils.get_body_joint_ids(model, 0), [])
 
 
 if __name__ == "__main__":

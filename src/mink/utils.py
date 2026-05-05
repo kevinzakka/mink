@@ -150,6 +150,26 @@ def get_body_geom_ids(model: mujoco.MjModel, body_id: int) -> list[int]:
     return list(range(geom_start, geom_end))
 
 
+def get_body_joint_ids(model: mujoco.MjModel, body_id: int) -> list[int]:
+    """Get immediate joints belonging to a given body.
+
+    Here, immediate joints are those directly attached to the body and not its
+    descendants.
+
+    Args:
+        model: Mujoco model.
+        body_id: ID of body.
+
+    Returns:
+        A list containing all body joint ids.
+    """
+    jnt_start = model.body_jntadr[body_id]
+    if jnt_start < 0:
+        return []
+    jnt_end = jnt_start + model.body_jntnum[body_id]
+    return list(range(jnt_start, jnt_end))
+
+
 def get_subtree_geom_ids(model: mujoco.MjModel, body_id: int) -> list[int]:
     """Get all geoms belonging to subtree starting at a given body.
 
@@ -163,9 +183,10 @@ def get_subtree_geom_ids(model: mujoco.MjModel, body_id: int) -> list[int]:
     Returns:
         A list containing all subtree geom ids.
     """
-    body_ids = set(get_subtree_body_ids(model, body_id))
     return [
-        geom_id for body_id in body_ids for geom_id in get_body_geom_ids(model, body_id)
+        geom_id
+        for bid in get_subtree_body_ids(model, body_id)
+        for geom_id in get_body_geom_ids(model, bid)
     ]
 
 
@@ -182,7 +203,8 @@ def get_subtree_joint_ids(model: mujoco.MjModel, body_id: int) -> list[int]:
     Returns:
         A list containing all subtree joint ids.
     """
-    body_ids = set(get_subtree_body_ids(model, body_id))
     return [
-        jnt_id for jnt_id in range(model.njnt) if model.jnt_bodyid[jnt_id] in body_ids
+        jnt_id
+        for bid in get_subtree_body_ids(model, body_id)
+        for jnt_id in get_body_joint_ids(model, bid)
     ]
