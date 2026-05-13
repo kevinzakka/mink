@@ -27,7 +27,7 @@ description = "Python inverse kinematics based on MuJoCo"
 requires-python = ">=3.10,<3.14"
 dependencies = [
     "mujoco >= 3.3.6",
-    "qpsolvers[daqp] >= 4.3.1",
+    "qpsolvers[daqp] >= 4.12.0",
     "typing_extensions",
 ]
 
