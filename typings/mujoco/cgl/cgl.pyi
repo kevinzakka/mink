@@ -78,7 +78,7 @@ def _make_checked(func):
     ...
 CGLReleaseContext: ctypes.CDLL.__init__.<locals>._FuncPtr  # value = <_FuncPtr object>
 CGLReleasePixelFormat: ctypes.CDLL.__init__.<locals>._FuncPtr  # value = <_FuncPtr object>
-_CGL: ctypes.CDLL  # value = <CDLL '/System/Library/Frameworks/OpenGL.framework/OpenGL', handle 3ea2cafc8 at 0x100b0dd30>
+_CGL: ctypes.CDLL  # value = <CDLL '/System/Library/Frameworks/OpenGL.framework/OpenGL', handle 3ea2dafc8 at 0x100c2a270>
 _CGLChoosePixelFormat: ctypes.CDLL.__init__.<locals>._FuncPtr  # value = <_FuncPtr object>
 _CGLCreateContext: ctypes.CDLL.__init__.<locals>._FuncPtr  # value = <_FuncPtr object>
 _CGLErrorString: ctypes.CDLL.__init__.<locals>._FuncPtr  # value = <_FuncPtr object>
