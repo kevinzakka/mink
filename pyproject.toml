@@ -26,7 +26,7 @@ classifiers = [
 description = "Python inverse kinematics based on MuJoCo"
 requires-python = ">=3.10,<3.14"
 dependencies = [
-    "mujoco >= 3.3.6",
+    "mujoco >= 3.8.1",
     "qpsolvers[daqp] >= 4.12.0",
     "typing_extensions",
 ]

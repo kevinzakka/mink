@@ -102,6 +102,34 @@ class TestConfiguration(absltest.TestCase):
         configuration.integrate_inplace(qvel, dt)
         np.testing.assert_almost_equal(configuration.q, expected_qpos)
 
+    def test_get_inertia_matrix(self):
+        """Inertia matrix is dense, symmetric, positive definite, and matches MuJoCo."""
+        configuration = mink.Configuration(self.model, self.q_ref)
+
+        # Perturb to a random non-trivial configuration to avoid trivial structure.
+        np.random.seed(0)
+        configuration.update(
+            q=np.random.uniform(*configuration.model.jnt_range.T),
+        )
+
+        M = configuration.get_inertia_matrix()
+
+        # Shape.
+        self.assertEqual(M.shape, (self.model.nv, self.model.nv))
+
+        # Symmetric.
+        np.testing.assert_allclose(M, M.T, atol=1e-12)
+
+        # Positive definite (all eigenvalues > 0).
+        eigvals = np.linalg.eigvalsh(M)
+        self.assertTrue(np.all(eigvals > 0))
+
+        # Cross-check against mj_mulM: M @ v should equal mj_mulM(v) for any v.
+        v = np.random.randn(self.model.nv)
+        Mv_ref = np.empty(self.model.nv, dtype=np.float64)
+        mujoco.mj_mulM(self.model, configuration.data, Mv_ref, v)
+        np.testing.assert_allclose(M @ v, Mv_ref, atol=1e-12)
+
     def test_check_limits(self):
         """Check that an error is raised iff a joint limit is exceeded."""
         configuration = mink.Configuration(self.model, q=self.q_ref)

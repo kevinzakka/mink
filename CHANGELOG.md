@@ -12,6 +12,7 @@ All notable changes to this project will be documented in this file.
 ### Changed
 
 - `get_subtree_geom_ids` and `get_subtree_joint_ids` now reuse `get_subtree_body_ids` instead of duplicating the traversal logic. Contribution from @maxstrobel.
+- Bumped minimum `mujoco` to `3.8.1` and migrated `Configuration.get_inertia_matrix` off the soon-to-break `mj_fullM` to `mju_sym2dense` on the CSR-format `data.M`.
 
 ### Fixed
 
