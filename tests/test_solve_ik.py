@@ -1,5 +1,7 @@
 """Tests for solve_ik.py."""
 
+from typing import cast
+
 import numpy as np
 from absl.testing import absltest
 from numpy.linalg import norm
@@ -70,6 +72,57 @@ class TestSolveIK(absltest.TestCase):
         problem = mink.build_ik(self.configuration, [], dt=1.0)
         self.assertIsNotNone(problem.G)
         self.assertIsNotNone(problem.h)
+
+    def test_fused_objective_matches_per_task_sum(self):
+        """The fused QP objective equals the naive per-task sum, across a frame,
+        posture, and relative-frame task (all fused) plus a task that uses the
+        dense fallback (KineticEnergyRegularizationTask, whose Hessian is
+        inertia-weighted rather than J^T J)."""
+        self.configuration.update_from_keyframe("home")
+        frame_task = mink.FrameTask(
+            "attachment_site",
+            "site",
+            position_cost=1.0,
+            orientation_cost=1.0,
+            lm_damping=1e-2,
+        )
+        frame_task.set_target_from_configuration(self.configuration)
+        posture_task = mink.PostureTask(self.model, cost=1e-1, lm_damping=1e-3)
+        posture_task.set_target_from_configuration(self.configuration)
+        relative_task = mink.RelativeFrameTask(
+            "attachment_site",
+            "site",
+            root_name="upper_arm_link",
+            root_type="body",
+            position_cost=1.0,
+            orientation_cost=1.0,
+            lm_damping=1e-3,
+        )
+        relative_task.set_target_from_configuration(self.configuration)
+        ke_task = mink.KineticEnergyRegularizationTask(cost=1e-4)
+        ke_task.set_dt(0.02)
+        tasks = [frame_task, posture_task, relative_task, ke_task]
+
+        # Perturb so the task errors (and hence the LM terms) are non-zero.
+        q = self.model.key("home").qpos.copy()
+        q[:3] += 0.2
+        self.configuration.update(q)
+
+        damping = 1e-6
+        problem = mink.build_ik(self.configuration, tasks, dt=0.02, damping=damping)
+
+        nv = self.model.nv
+        H = np.eye(nv) * damping
+        c = np.zeros(nv)
+        for task in tasks:
+            obj = task.compute_qp_objective(self.configuration)
+            H += obj.H
+            c += obj.c
+
+        # P is typed ndarray|csc_matrix but is dense here; q is already ndarray.
+        P = cast(np.ndarray, problem.P)
+        np.testing.assert_allclose(P, H, rtol=1e-9, atol=1e-12)
+        np.testing.assert_allclose(problem.q, c, rtol=1e-9, atol=1e-12)
 
     def test_trivial_solution(self):
         """No task returns no velocity."""

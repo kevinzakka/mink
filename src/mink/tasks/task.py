@@ -39,6 +39,23 @@ class BaseTask(abc.ABC):
         """
         raise NotImplementedError
 
+    def compute_qp_residual(
+        self, configuration: Configuration
+    ) -> tuple[np.ndarray, np.ndarray, float] | None:
+        r"""Return this task's weighted least-squares residual, if it has one.
+
+        A task whose Hessian contribution has the low-rank form :math:`J^T J` can
+        return the triple ``(weighted_jacobian, weighted_error, mu)``, letting the
+        solver fuse all tasks into a single :math:`W^T W` instead of summing per-task
+        :math:`n_v \times n_v` Hessians. ``mu`` is the scalar Levenberg-Marquardt
+        term that gets added to the diagonal.
+
+        Returns ``None`` (the default) for tasks whose objective is not of this form
+        (e.g. an inertia-weighted Hessian); those fall back to
+        :meth:`compute_qp_objective`.
+        """
+        return None
+
 
 class Task(BaseTask):
     r"""Abstract base class for kinematic tasks.
@@ -120,6 +137,15 @@ class Task(BaseTask):
         """
         raise NotImplementedError
 
+    def _weighted_residual(
+        self, error: np.ndarray, jacobian: np.ndarray
+    ) -> tuple[np.ndarray, np.ndarray, float]:
+        """Cost-weighted Jacobian, cost-weighted error, and scalar LM term."""
+        weighted_error = self.cost * (-self.gain * error)
+        weighted_jacobian = self.cost[:, None] * jacobian
+        mu = self.lm_damping * float(weighted_error @ weighted_error)
+        return weighted_jacobian, weighted_error, mu
+
     def _assemble_qp(
         self,
         error: np.ndarray,
@@ -127,9 +153,7 @@ class Task(BaseTask):
         eye_nv: np.ndarray,
     ) -> Objective:
         """Assemble QP objective from task error and Jacobian."""
-        weighted_error = self.cost * (-self.gain * error)
-        weighted_jacobian = self.cost[:, None] * jacobian
-        mu = self.lm_damping * (weighted_error @ weighted_error)
+        weighted_jacobian, weighted_error, mu = self._weighted_residual(error, jacobian)
         H = weighted_jacobian.T @ weighted_jacobian
         if mu > 0.0:
             H = H + mu * eye_nv
@@ -160,4 +184,14 @@ class Task(BaseTask):
             self.compute_error(configuration),
             self.compute_jacobian(configuration),
             configuration._eye_nv,
+        )
+
+    def compute_qp_residual(
+        self, configuration: Configuration
+    ) -> tuple[np.ndarray, np.ndarray, float]:
+        """Weighted residual from the generic error/Jacobian path. See
+        :meth:`BaseTask.compute_qp_residual`."""
+        return self._weighted_residual(
+            self.compute_error(configuration),
+            self.compute_jacobian(configuration),
         )

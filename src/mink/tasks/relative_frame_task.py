@@ -152,11 +152,11 @@ class RelativeFrameTask(Task):
                 - frame_se3.inverse().adjoint() @ jacobian_root_in_root
             )
 
-    def compute_qp_objective(self, configuration: Configuration) -> Objective:
-        r"""Compute the matrix-vector pair :math:`(H, c)` of the QP objective.
-
-        Overrides the base implementation to compute shared quantities once.
-        """
+    def _error_and_jacobian(
+        self, configuration: Configuration
+    ) -> tuple[np.ndarray, np.ndarray]:
+        """Compute the task error and Jacobian together, sharing the relative
+        transform and frame Jacobians that both depend on."""
         if self.transform_target_to_root is None:
             raise TargetNotSet(self.__class__.__name__)
 
@@ -188,4 +188,18 @@ class RelativeFrameTask(Task):
                 - frame_se3.inverse().adjoint() @ jacobian_root_in_root
             )
 
+        return error, jacobian
+
+    def compute_qp_objective(self, configuration: Configuration) -> Objective:
+        r"""Compute the matrix-vector pair :math:`(H, c)` of the QP objective.
+
+        Overrides the base implementation to compute shared quantities once.
+        """
+        error, jacobian = self._error_and_jacobian(configuration)
         return self._assemble_qp(error, jacobian, configuration._eye_nv)
+
+    def compute_qp_residual(
+        self, configuration: Configuration
+    ) -> tuple[np.ndarray, np.ndarray, float]:
+        error, jacobian = self._error_and_jacobian(configuration)
+        return self._weighted_residual(error, jacobian)

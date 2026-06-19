@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file.
 ### Changed
 
 - `CollisionAvoidanceLimit`: added a bounding-sphere/plane broadphase that skips geom pairs out of `collision_detection_distance` range before the narrow-phase `mj_geomDistance` query, mirroring MuJoCo's `mj_filterSphere`. The assembled constraint is unchanged. ~2.9x faster collision phase, ~3.3x faster end-to-end IK on the ALOHA dual-arm scene (M1 Max). Disable with `broadphase=False`.
+- `solve_ik` / `build_ik`: fused the QP objective assembly. Tasks now expose a weighted least-squares residual (`Task.compute_qp_residual`) that the solver stacks into a single `WᵀW` matmul instead of summing per-task Hessians, and `Configuration` caches resolved frame ids. ~1.3x faster end-to-end IK on the G1 humanoid (8 tasks), scaling with task count (~1.4x on a 21-task hand, M1 Max). The assembled objective is unchanged up to floating-point summation order.
 
 ## [1.1.1] - 2026-05-15
 

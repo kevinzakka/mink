@@ -14,12 +14,49 @@ from .tasks import BaseTask, Objective, Task
 def _compute_qp_objective(
     configuration: Configuration, tasks: Sequence[BaseTask], damping: float
 ) -> Objective:
-    H = np.eye(configuration.model.nv) * damping
-    c = np.zeros(configuration.model.nv)
+    r"""Assemble the QP objective :math:`(H, c)` from all tasks.
+
+    Tasks whose Hessian has the low-rank form :math:`J^T J` expose a weighted
+    residual :math:`(W_i, e_i, \mu_i)`; stacking the :math:`W_i` lets us compute
+    :math:`\sum_i W_i^T W_i = W^T W` with a single matrix multiply rather than
+    summing per-task Hessians. Per-task Levenberg-Marquardt terms :math:`\mu_i`
+    sum into the diagonal alongside the global ``damping``. Any task that returns
+    no residual (e.g. an inertia-weighted Hessian) is added densely.
+    """
+    nv = configuration.model.nv
+
+    weighted_jacobians: list[np.ndarray] = []
+    weighted_errors: list[np.ndarray] = []
+    mu_total = 0.0
+    H_dense: np.ndarray | None = None
+    c_dense: np.ndarray | None = None
     for task in tasks:
-        H_task, c_task = task.compute_qp_objective(configuration)
-        H += H_task
-        c += c_task
+        residual = task.compute_qp_residual(configuration)
+        if residual is None:
+            H_task, c_task = task.compute_qp_objective(configuration)
+            H_dense = H_task if H_dense is None else H_dense + H_task
+            c_dense = c_task if c_dense is None else c_dense + c_task
+        else:
+            weighted_jacobian, weighted_error, mu = residual
+            weighted_jacobians.append(weighted_jacobian)
+            weighted_errors.append(weighted_error)
+            mu_total += mu
+
+    if weighted_jacobians:
+        W = np.vstack(weighted_jacobians)
+        H = W.T @ W
+        c = -(np.concatenate(weighted_errors) @ W)
+    else:
+        H = np.zeros((nv, nv))
+        c = np.zeros(nv)
+
+    # Global LM damping plus the summed per-task LM terms on the diagonal.
+    H.flat[:: nv + 1] += damping + mu_total
+
+    if H_dense is not None:
+        assert c_dense is not None  # Set together with H_dense.
+        H += H_dense
+        c += c_dense
     return Objective(H, c)
 
 

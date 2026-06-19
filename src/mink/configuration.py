@@ -68,6 +68,9 @@ class Configuration:
         # Cached identity matrix for QP assembly.
         self._eye_nv = np.eye(model.nv)
 
+        # Cache of resolved frame ids; these are static for a given model.
+        self._frame_id_cache: dict[tuple[str, str], int] = {}
+
         self.update(q=q)
 
     def update(self, q: np.ndarray | None = None) -> None:
@@ -175,7 +178,11 @@ class Configuration:
         return jac
 
     def _resolve_frame_id(self, frame_name: str, frame_type: str) -> int:
-        """Validate frame type and resolve name to ID."""
+        """Validate frame type and resolve name to ID (cached; ids are static)."""
+        key = (frame_name, frame_type)
+        cached = self._frame_id_cache.get(key)
+        if cached is not None:
+            return cached
         if frame_type not in consts.SUPPORTED_FRAMES:
             raise exceptions.UnsupportedFrame(frame_type, consts.SUPPORTED_FRAMES)
         frame_id = mujoco.mj_name2id(
@@ -187,6 +194,7 @@ class Configuration:
                 frame_type=frame_type,
                 model=self.model,
             )
+        self._frame_id_cache[key] = frame_id
         return frame_id
 
     def _get_transform_frame_to_world_wxyz_xyz(
