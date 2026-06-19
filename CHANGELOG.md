@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Changed
+
+- `CollisionAvoidanceLimit`: added a bounding-sphere/plane broadphase that skips geom pairs out of `collision_detection_distance` range before the narrow-phase `mj_geomDistance` query, mirroring MuJoCo's `mj_filterSphere`. The assembled constraint is unchanged. ~2.9x faster collision phase, ~3.3x faster end-to-end IK on the ALOHA dual-arm scene (M1 Max). Disable with `broadphase=False`.
+
 ## [1.1.1] - 2026-05-15
 
 ### Added

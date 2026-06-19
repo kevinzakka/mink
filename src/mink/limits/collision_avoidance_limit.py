@@ -15,6 +15,11 @@ GeomSequence = Sequence[Geom]
 CollisionPair = tuple[GeomSequence, GeomSequence]
 CollisionPairs = Sequence[CollisionPair]
 
+# Minimum number of geom pairs for the vectorized broadphase to be worthwhile.
+# Below this, the per-call NumPy overhead of the broadphase exceeds the cost of
+# simply looping over the pairs, so we fall back to the linear scan.
+_BROADPHASE_MIN_PAIRS = 16
+
 
 def compute_contact_normal_jacobian(
     model: mujoco.MjModel,
@@ -104,6 +109,9 @@ class CollisionAvoidanceLimit(Limit):
             they penetrate by the specified amount.
         bound_relaxation: An offset on the upper bound of each collision avoidance
             constraint.
+        broadphase: If True, skip geom pairs that are provably out of collision
+            detection range before the expensive narrow-phase distance query. The
+            assembled constraint is identical to the unfiltered computation.
     """
 
     def __init__(
@@ -114,6 +122,7 @@ class CollisionAvoidanceLimit(Limit):
         minimum_distance_from_collisions: float = 0.005,
         collision_detection_distance: float = 0.01,
         bound_relaxation: float = 0.0,
+        broadphase: bool = True,
     ):
         """Initialize collision avoidance limit.
 
@@ -139,6 +148,12 @@ class CollisionAvoidanceLimit(Limit):
                 they penetrate by the specified amount.
             bound_relaxation: An offset on the upper bound of each collision avoidance
                 constraint.
+            broadphase: If True (default), cheaply skip geom pairs whose bounding
+                spheres (or plane half-spaces) are farther apart than the collision
+                detection distance before invoking the expensive narrow-phase
+                mj_geomDistance. This is a strict pre-filter: it only discards pairs
+                that would not produce a constraint, so the resulting constraint is
+                identical to the unfiltered computation.
         """
         self.model = model
         self.gain = gain
@@ -147,11 +162,90 @@ class CollisionAvoidanceLimit(Limit):
         self.bound_relaxation = bound_relaxation
         self.geom_id_pairs = self._construct_geom_id_pairs(geom_pairs)
         self.max_num_contacts = len(self.geom_id_pairs)
+        self.broadphase = broadphase
+        # Tunable per instance; set to 0 to force the broadphase path on any scene.
+        self.broadphase_min_pairs = _BROADPHASE_MIN_PAIRS
 
         self._fromto = np.empty(6)
         self._normal = np.empty(3)
         self._jac1 = np.empty((3, model.nv))
         self._jac2 = np.empty((3, model.nv))
+
+        self._init_broadphase(model)
+
+    def _init_broadphase(self, model: mujoco.MjModel) -> None:
+        """Precompute the per-pair data used by the vectorized broadphase.
+
+        Pairs are partitioned once into three groups, mirroring MuJoCo's own
+        mj_filterSphere (engine_collision_driver.c):
+
+        Sphere-sphere pairs, where both geoms have a finite bounding sphere
+        (rbound > 0), are culled by a sphere-sphere distance test. Plane-geom
+        pairs, where one geom is a plane and the other is bounded, are culled by
+        the signed distance of the other geom's center to the plane. Everything
+        else (e.g. a non-plane geom with rbound == 0, such as a height field) is
+        never culled, to stay conservative.
+
+        The stored indices point back into geom_id_pairs so survivors map to the
+        correct constraint rows.
+        """
+        pairs = np.array(self.geom_id_pairs, dtype=int).reshape(-1, 2)
+        g1, g2 = pairs[:, 0], pairs[:, 1]
+        rbound = model.geom_rbound
+        is_plane = model.geom_type == mujoco.mjtGeom.mjGEOM_PLANE
+
+        both_bounded = (rbound[g1] > 0.0) & (rbound[g2] > 0.0)
+        # A plane has rbound == 0, so plane pairs never appear in both_bounded.
+        plane1 = is_plane[g1] & (rbound[g2] > 0.0)  # g1 is the plane.
+        plane2 = is_plane[g2] & (rbound[g1] > 0.0)  # g2 is the plane.
+        plane_pair = (plane1 | plane2) & ~both_bounded
+
+        ss = np.where(both_bounded)[0]
+        pg = np.where(plane_pair)[0]
+        keep = np.where(~both_bounded & ~plane_pair)[0]
+
+        # Sphere-sphere group.
+        self._ss_idx = ss
+        self._ss_g1 = g1[ss]
+        self._ss_g2 = g2[ss]
+        self._ss_rsum = rbound[g1[ss]] + rbound[g2[ss]]
+
+        # Plane-geom group: identify the plane geom and the bounded "other" geom.
+        plane_is_g1 = plane1[pg]
+        self._pg_idx = pg
+        self._pg_plane = np.where(plane_is_g1, g1[pg], g2[pg])
+        self._pg_other = np.where(plane_is_g1, g2[pg], g1[pg])
+        self._pg_rother = rbound[self._pg_other]
+
+        # Always-keep group.
+        self._keep_idx = keep
+
+    def _broadphase_survivors(self, data: mujoco.MjData) -> np.ndarray:
+        """Return the indices into geom_id_pairs that survive broadphase.
+
+        A pair is discarded only when it is farther apart than the collision
+        detection distance; mirrors mj_filterSphere with that distance as margin.
+        """
+        margin = self.collision_detection_distance
+        xpos = data.geom_xpos
+        survivors = [self._keep_idx]
+
+        if self._ss_idx.size:
+            diff = xpos[self._ss_g1] - xpos[self._ss_g2]
+            dist_sq = np.einsum("ij,ij->i", diff, diff)
+            bound = self._ss_rsum + margin
+            survivors.append(self._ss_idx[dist_sq <= bound * bound])
+
+        if self._pg_idx.size:
+            # Plane normal is the z-axis of the plane frame: columns 2, 5, 8 of xmat.
+            normal = data.geom_xmat[self._pg_plane][:, [2, 5, 8]]
+            diff = xpos[self._pg_other] - xpos[self._pg_plane]
+            signed_dist = np.einsum("ij,ij->i", normal, diff)
+            survivors.append(self._pg_idx[signed_dist <= margin + self._pg_rother])
+
+        # Row order is irrelevant (each survivor writes an independent row), so no
+        # sort is needed.
+        return np.concatenate(survivors)
 
     def compute_qp_inequalities(
         self,
@@ -170,7 +264,12 @@ class CollisionAvoidanceLimit(Limit):
         min_dist = self.minimum_distance_from_collisions
         gain = self.gain
         relaxation = self.bound_relaxation
-        for idx, (geom1_id, geom2_id) in enumerate(self.geom_id_pairs):
+        if self.broadphase and self.max_num_contacts >= self.broadphase_min_pairs:
+            indices = self._broadphase_survivors(data)
+        else:
+            indices = range(self.max_num_contacts)
+        for idx in indices:
+            geom1_id, geom2_id = self.geom_id_pairs[idx]
             dist = mujoco.mj_geomDistance(
                 model, data, geom1_id, geom2_id, distmax, fromto
             )

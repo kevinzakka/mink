@@ -343,6 +343,104 @@ class TestCollisionAvoidanceLimit(absltest.TestCase):
         # Approaching may or may not satisfy depending on h, but should be measurable.
         self.assertIsNotNone(g_dot_qd_approaching)
 
+    def test_broadphase_matches_unfiltered(self):
+        """Broadphase culling yields the same (G, h) as the unfiltered scan."""
+        xml_str = """
+        <mujoco>
+          <worldbody>
+            <body><joint type="slide" axis="1 0 0"/>
+              <geom name="s0" type="sphere" size=".1" pos="0 0 0"/></body>
+            <body><joint type="slide" axis="1 0 0"/>
+              <geom name="s1" type="sphere" size=".1" pos="0 .3 0"/></body>
+            <body><joint type="slide" axis="1 0 0"/>
+              <geom name="s2" type="sphere" size=".1" pos="0 .6 0"/></body>
+            <body><joint type="slide" axis="1 0 0"/>
+              <geom name="s3" type="sphere" size=".1" pos="0 .9 0"/></body>
+          </worldbody>
+        </mujoco>
+        """
+        model = mujoco.MjModel.from_xml_string(xml_str)
+        configuration = Configuration(model)
+        geoms = ["s0", "s1", "s2", "s3"]
+        limit = CollisionAvoidanceLimit(
+            model=model,
+            geom_pairs=[(geoms, geoms)],
+            collision_detection_distance=0.2,
+        )
+        # Force the broadphase path regardless of the (small) pair count.
+        limit.broadphase_min_pairs = 0
+
+        rng = np.random.RandomState(0)
+        culled_at_least_once = False
+        for _ in range(50):
+            configuration.update(rng.uniform(-1.0, 1.0, size=model.nq))
+
+            limit.broadphase = False
+            ref = limit.compute_qp_inequalities(configuration, dt=1e-2)
+            limit.broadphase = True
+            opt = limit.compute_qp_inequalities(configuration, dt=1e-2)
+
+            # array_equal treats inf == inf as equal, which is what we want for h.
+            np.testing.assert_array_equal(ref.G, opt.G)
+            np.testing.assert_array_equal(ref.h, opt.h)
+
+            survivors = limit._broadphase_survivors(configuration.data)
+            culled_at_least_once |= survivors.size < limit.max_num_contacts
+
+        # Ensure the test actually exercised the culling branch (not vacuously equal).
+        self.assertTrue(culled_at_least_once)
+
+    def test_broadphase_plane_pair_matches_unfiltered(self):
+        """Broadphase plane-geom culling yields the same (G, h) as the scan.
+
+        The sphere is nested two bodies deep so the geom-vs-plane pair survives
+        the parent-child filter (a plane lives in the world body, which would
+        otherwise be the weld parent of a top-level geom).
+        """
+        xml_str = """
+        <mujoco>
+          <worldbody>
+            <geom name="floor" type="plane" size="5 5 .1"/>
+            <body>
+              <joint type="slide" axis="0 0 1"/>
+              <geom name="link" type="sphere" size=".05"/>
+              <body>
+                <joint type="slide" axis="0 0 1"/>
+                <geom name="s" type="sphere" size=".1"/>
+              </body>
+            </body>
+          </worldbody>
+        </mujoco>
+        """
+        model = mujoco.MjModel.from_xml_string(xml_str)
+        configuration = Configuration(model)
+        limit = CollisionAvoidanceLimit(
+            model=model,
+            geom_pairs=[(["s"], ["floor"])],
+            collision_detection_distance=0.2,
+        )
+        limit.broadphase_min_pairs = 0
+        # Sanity check: the surviving pair is in the plane-geom broadphase group.
+        self.assertEqual(limit._pg_idx.size, 1)
+
+        rng = np.random.RandomState(0)
+        culled_at_least_once = False
+        for _ in range(50):
+            configuration.update(rng.uniform(-0.5, 1.0, size=model.nq))
+
+            limit.broadphase = False
+            ref = limit.compute_qp_inequalities(configuration, dt=1e-2)
+            limit.broadphase = True
+            opt = limit.compute_qp_inequalities(configuration, dt=1e-2)
+
+            np.testing.assert_array_equal(ref.G, opt.G)
+            np.testing.assert_array_equal(ref.h, opt.h)
+
+            survivors = limit._broadphase_survivors(configuration.data)
+            culled_at_least_once |= survivors.size < limit.max_num_contacts
+
+        self.assertTrue(culled_at_least_once)
+
 
 if __name__ == "__main__":
     absltest.main()
