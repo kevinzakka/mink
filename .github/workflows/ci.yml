@@ -28,6 +28,7 @@ jobs:
         with:
           enable-cache: true
           version: "0.9.14"
+          cache-suffix: ${{ github.job }}
       - name: Run lint
         run: uvx ruff@0.14.7 check --diff
       - name: Run format
@@ -46,6 +47,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
           enable-cache: true
           version: "0.9.14"
+          cache-suffix: ${{ github.job }}
       - name: Test with python ${{ matrix.python-version }}
         run: uv run pyright
 
@@ -62,6 +64,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
           enable-cache: true
           version: "0.9.14"
+          cache-suffix: ${{ github.job }}
       - name: Test with python ${{ matrix.python-version }}
         run: uv run ty check
 
@@ -78,6 +81,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
           enable-cache: true
           version: "0.9.14"
+          cache-suffix: ${{ github.job }}
       - name: Test with python ${{ matrix.python-version }}
         run: uv run pytest
 
@@ -91,6 +95,7 @@ jobs:
           python-version: "3.13"
           enable-cache: true
           version: "0.9.14"
+          cache-suffix: ${{ github.job }}
       - name: Build wheel and sdist
         run: uv build
 
@@ -104,6 +109,7 @@ jobs:
           python-version: "3.13"
           enable-cache: true
           version: "0.9.14"
+          cache-suffix: ${{ github.job }}
       - name: Run coverage
         run: uv run coverage run --source=src -m pytest .
       - name: Coveralls
