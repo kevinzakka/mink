@@ -1,0 +1,658 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link href="../_static/favicon.png" sizes="32x32" rel="icon" type="image/png">
+    <title>Rotations and Poses &#8212; mink  documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=3c74b3bc" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../_static/documentation_options.js?v=9eb32ce0"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=f281be69"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?v=fab101a9"></script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script async="async" src="../_static/mathjax/tex-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'tutorial/lie_groups';</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Example Gallery" href="example_gallery.html" />
+    <link rel="prev" title="Tasks and Limits" href="tasks_and_limits.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="v1.2.0" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../_static/logo.png" class="logo__image only-light" alt="mink  documentation - Home"/>
+    <img src="../_static/logo.png" class="logo__image only-dark pst-js-only" alt="mink  documentation - Home"/>
+  
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="index.html">Tutorial</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="mujoco_basics.html">MuJoCo Basics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html">Getting Started</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tasks_and_limits.html">Tasks and Limits</a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">Rotations and Poses</a></li>
+<li class="toctree-l2"><a class="reference internal" href="example_gallery.html">Example Gallery</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../api/index.html">API Reference</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../api/configuration.html">Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/tasks.html">Tasks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/limits.html">Limits</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/inverse_kinematics.html">Inverse kinematics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/utilities.html">Utilities</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/lie.html">Lie</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../background/derivations.html">Derivations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../_sources/tutorial/lie_groups.rst" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.rst</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button pst-navbar-icon"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button>
+
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button>
+<button class="sidebar-toggle secondary-toggle btn btn-sm pst-navbar-icon" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</button>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Rotations and Poses</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#conventions">Conventions</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#quaternions">Quaternions</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#composition-and-action-via">Composition and action via <code class="docutils literal notranslate"><span class="pre">@</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#so3-rotations">SO3: Rotations</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#creating-rotations">Creating rotations</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#applying-and-composing">Applying and composing</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#log-exp-tangent-space">Log/Exp (tangent space)</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#se3-rigid-body-transformations">SE3: Rigid Body Transformations</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#creating-transforms">Creating transforms</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#example-building-a-pose-target">Example: building a pose target</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#composition-world-vs-local-updates">Composition: world vs local updates</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#applying-a-transform">Applying a transform</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pose-errors-right-minus">Pose errors (right-minus)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#interpolation">Interpolation</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#further-reading">Further Reading</a></li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="rotations-and-poses">
+<span id="lie-groups"></span><h1>Rotations and Poses<a class="headerlink" href="#rotations-and-poses" title="Link to this heading">#</a></h1>
+<p>mink represents rotations and rigid transforms using Lie groups:</p>
+<ul class="simple">
+<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">SO3</span></code> for 3D rotations</p></li>
+<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">SE3</span></code> for 3D rigid body transforms (rotation + translation)</p></li>
+</ul>
+<p>These classes are used throughout mink to represent frame poses, specify targets,
+and compute pose errors consistently.</p>
+<p>This tutorial covers construction, composition, and error computation for SO(3) and SE(3).</p>
+<section id="conventions">
+<h2>Conventions<a class="headerlink" href="#conventions" title="Link to this heading">#</a></h2>
+<section id="quaternions">
+<h3>Quaternions<a class="headerlink" href="#quaternions" title="Link to this heading">#</a></h3>
+<p>mink uses MuJoCo’s quaternion convention: <strong>scalar-first</strong> quaternions
+<code class="docutils literal notranslate"><span class="pre">(qw,</span> <span class="pre">qx,</span> <span class="pre">qy,</span> <span class="pre">qz)</span></code> (also written <code class="docutils literal notranslate"><span class="pre">wxyz</span></code>).</p>
+</section>
+<section id="composition-and-action-via">
+<h3>Composition and action via <code class="docutils literal notranslate"><span class="pre">&#64;</span></code><a class="headerlink" href="#composition-and-action-via" title="Link to this heading">#</a></h3>
+<p>mink overloads the <code class="docutils literal notranslate"><span class="pre">&#64;</span></code> operator:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">T1</span> <span class="pre">&#64;</span> <span class="pre">T2</span></code> composes two transformations.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">T</span> <span class="pre">&#64;</span> <span class="pre">p</span></code> applies a transformation to a point <code class="docutils literal notranslate"><span class="pre">p</span></code>.</p></li>
+<li><p>Similarly for rotations: <code class="docutils literal notranslate"><span class="pre">R1</span> <span class="pre">&#64;</span> <span class="pre">R2</span></code> and <code class="docutils literal notranslate"><span class="pre">R</span> <span class="pre">&#64;</span> <span class="pre">v</span></code>.</p></li>
+</ul>
+<p>This mirrors common robotics notation.</p>
+<p>Composition follows standard robotics conventions: <code class="docutils literal notranslate"><span class="pre">A</span> <span class="pre">&#64;</span> <span class="pre">B</span></code> means “apply B,
+then A.”</p>
+</section>
+</section>
+<section id="so3-rotations">
+<h2>SO3: Rotations<a class="headerlink" href="#so3-rotations" title="Link to this heading">#</a></h2>
+<section id="creating-rotations">
+<h3>Creating rotations<a class="headerlink" href="#creating-rotations" title="Link to this heading">#</a></h3>
+<p>Use the exponential map for axis-angle rotations:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">mink</span>
+
+<span class="c1"># Rotation from a tangent vector (axis-angle, radians).</span>
+<span class="n">R</span> <span class="o">=</span> <span class="n">mink</span><span class="o">.</span><span class="n">SO3</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">2</span><span class="p">]))</span>
+</pre></div>
+</div>
+<p>Convenience constructors exist for common axes and roll/pitch/yaw:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">Rz</span> <span class="o">=</span> <span class="n">mink</span><span class="o">.</span><span class="n">SO3</span><span class="o">.</span><span class="n">from_z_radians</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+<span class="n">Rrpy</span> <span class="o">=</span> <span class="n">mink</span><span class="o">.</span><span class="n">SO3</span><span class="o">.</span><span class="n">from_rpy_radians</span><span class="p">(</span><span class="n">roll</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">pitch</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">yaw</span><span class="o">=-</span><span class="mf">0.3</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Identity and normalization:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">R</span> <span class="o">=</span> <span class="n">mink</span><span class="o">.</span><span class="n">SO3</span><span class="o">.</span><span class="n">identity</span><span class="p">()</span>
+<span class="n">R</span> <span class="o">=</span> <span class="n">R</span><span class="o">.</span><span class="n">normalize</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+<section id="applying-and-composing">
+<h3>Applying and composing<a class="headerlink" href="#applying-and-composing" title="Link to this heading">#</a></h3>
+<p>Apply a rotation to a vector:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">v</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">])</span>
+<span class="n">v_rot</span> <span class="o">=</span> <span class="n">Rz</span> <span class="o">@</span> <span class="n">v</span>
+</pre></div>
+</div>
+<p>Compose rotations (right-multiplication):</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">R</span> <span class="o">=</span> <span class="n">mink</span><span class="o">.</span><span class="n">SO3</span><span class="o">.</span><span class="n">from_z_radians</span><span class="p">(</span><span class="mf">0.3</span><span class="p">)</span> <span class="o">@</span> <span class="n">mink</span><span class="o">.</span><span class="n">SO3</span><span class="o">.</span><span class="n">from_x_radians</span><span class="p">(</span><span class="o">-</span><span class="mf">0.2</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="log-exp-tangent-space">
+<h3>Log/Exp (tangent space)<a class="headerlink" href="#log-exp-tangent-space" title="Link to this heading">#</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">log()</span></code> maps a rotation to a 3D tangent vector (axis-angle),
+and <code class="docutils literal notranslate"><span class="pre">exp()</span></code> maps a tangent vector back to a rotation:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">omega</span> <span class="o">=</span> <span class="n">R</span><span class="o">.</span><span class="n">log</span><span class="p">()</span>          <span class="c1"># shape (3,)</span>
+<span class="n">R_recovered</span> <span class="o">=</span> <span class="n">mink</span><span class="o">.</span><span class="n">SO3</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">omega</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>These are useful for expressing rotation errors as tangent vectors and for interpolation.</p>
+</section>
+</section>
+<section id="se3-rigid-body-transformations">
+<h2>SE3: Rigid Body Transformations<a class="headerlink" href="#se3-rigid-body-transformations" title="Link to this heading">#</a></h2>
+<section id="creating-transforms">
+<h3>Creating transforms<a class="headerlink" href="#creating-transforms" title="Link to this heading">#</a></h3>
+<p>An <code class="xref py py-class docutils literal notranslate"><span class="pre">SE3</span></code> stores rotation + translation. Use:</p>
+<ul class="simple">
+<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">from_rotation_and_translation()</span></code></p></li>
+<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">from_translation()</span></code></p></li>
+<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">from_rotation()</span></code></p></li>
+</ul>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">mink</span>
+
+<span class="n">R</span> <span class="o">=</span> <span class="n">mink</span><span class="o">.</span><span class="n">SO3</span><span class="o">.</span><span class="n">from_z_radians</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">4</span><span class="p">)</span>
+<span class="n">t</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">])</span>
+
+<span class="n">T</span> <span class="o">=</span> <span class="n">mink</span><span class="o">.</span><span class="n">SE3</span><span class="o">.</span><span class="n">from_rotation_and_translation</span><span class="p">(</span><span class="n">R</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="example-building-a-pose-target">
+<h3>Example: building a pose target<a class="headerlink" href="#example-building-a-pose-target" title="Link to this heading">#</a></h3>
+<p>The following example shows how to construct a nearby pose target in the
+world frame using SE(3) composition.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">T_current</span> <span class="o">=</span> <span class="n">configuration</span><span class="o">.</span><span class="n">get_transform_frame_to_world</span><span class="p">(</span><span class="s2">&quot;ee&quot;</span><span class="p">,</span> <span class="s2">&quot;site&quot;</span><span class="p">)</span>
+<span class="n">T_target</span> <span class="o">=</span> <span class="n">mink</span><span class="o">.</span><span class="n">SE3</span><span class="o">.</span><span class="n">from_translation</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">]))</span> <span class="o">@</span> <span class="n">T_current</span>
+<span class="n">frame_task</span><span class="o">.</span><span class="n">set_target</span><span class="p">(</span><span class="n">T_target</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="composition-world-vs-local-updates">
+<h3>Composition: world vs local updates<a class="headerlink" href="#composition-world-vs-local-updates" title="Link to this heading">#</a></h3>
+<p>An increment can be applied in two different frames depending on
+multiplication order.</p>
+<p>Let <code class="docutils literal notranslate"><span class="pre">T</span></code> be a pose. Consider a small translation transform <code class="docutils literal notranslate"><span class="pre">Δ</span></code>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">Δ</span> <span class="o">=</span> <span class="n">mink</span><span class="o">.</span><span class="n">SE3</span><span class="o">.</span><span class="n">from_translation</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">]))</span>
+</pre></div>
+</div>
+<ul>
+<li><p><strong>Left-multiplying</strong> applies the increment in the <strong>world frame</strong>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">T_world</span> <span class="o">=</span> <span class="n">Δ</span> <span class="o">@</span> <span class="n">T</span>
+</pre></div>
+</div>
+</li>
+<li><p><strong>Right-multiplying</strong> applies the increment in the <strong>local frame</strong>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">T_local</span> <span class="o">=</span> <span class="n">T</span> <span class="o">@</span> <span class="n">Δ</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</section>
+<section id="applying-a-transform">
+<h3>Applying a transform<a class="headerlink" href="#applying-a-transform" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">p</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">])</span>
+<span class="n">p_world</span> <span class="o">=</span> <span class="n">T</span> <span class="o">@</span> <span class="n">p</span>
+</pre></div>
+</div>
+<p>Access rotation and translation:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">R</span> <span class="o">=</span> <span class="n">T</span><span class="o">.</span><span class="n">rotation</span><span class="p">()</span>
+<span class="n">t</span> <span class="o">=</span> <span class="n">T</span><span class="o">.</span><span class="n">translation</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="pose-errors-right-minus">
+<h2>Pose errors (right-minus)<a class="headerlink" href="#pose-errors-right-minus" title="Link to this heading">#</a></h2>
+<p>For <code class="xref py py-class docutils literal notranslate"><span class="pre">SE3</span></code>, the tangent vector is ordered as
+<span class="math notranslate nohighlight">\((v_x, v_y, v_z, \omega_x, \omega_y, \omega_z)\)</span>,
+i.e., translation first, then rotation.</p>
+<p>mink represents pose errors using the <strong>right-minus</strong> operator:</p>
+<div class="math notranslate nohighlight">
+\[T_1 \ominus T_2 = \log(T_2^{-1} T_1)\]</div>
+<p>The result <span class="math notranslate nohighlight">\(\xi\)</span> satisfies <span class="math notranslate nohighlight">\(T_2 \cdot \exp(\xi) = T_1\)</span>: it is the
+body-frame twist at <span class="math notranslate nohighlight">\(T_2\)</span> that reaches <span class="math notranslate nohighlight">\(T_1\)</span>. In code, this
+corresponds to <code class="xref py py-meth docutils literal notranslate"><span class="pre">rminus()</span></code>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Twist from T_current to T_target, expressed in T_current&#39;s body frame.</span>
+<span class="n">e</span> <span class="o">=</span> <span class="n">T_target</span><span class="o">.</span><span class="n">rminus</span><span class="p">(</span><span class="n">T_current</span><span class="p">)</span>  <span class="c1"># log(T_current^{-1} T_target), shape (6,)</span>
+</pre></div>
+</div>
+<p>This is exactly what <code class="xref py py-class docutils literal notranslate"><span class="pre">FrameTask</span></code> computes internally:</p>
+<div class="math notranslate nohighlight">
+\[e = T_{\text{target}} \ominus T_{\text{current}} = \log(T_{\text{current}}^{-1} \, T_{\text{target}})\]</div>
+<p>The error is expressed in the <strong>current body frame</strong>: translations are along
+the frame’s local axes and rotations are about its local axes. This is
+consistent with mink’s body-frame Jacobians, which map joint velocities to
+body-frame twists.</p>
+<p>Internally, <code class="xref py py-class docutils literal notranslate"><span class="pre">FrameTask</span></code> also uses <code class="xref py py-meth docutils literal notranslate"><span class="pre">jlog()</span></code>
+to linearize the log-map error; calling it directly is rarely necessary.</p>
+</section>
+<section id="interpolation">
+<h2>Interpolation<a class="headerlink" href="#interpolation" title="Link to this heading">#</a></h2>
+<p>Geodesic interpolation on the manifold is available via:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">T_mid</span> <span class="o">=</span> <span class="n">T0</span><span class="o">.</span><span class="n">interpolate</span><span class="p">(</span><span class="n">T1</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>  <span class="c1"># alpha in [0, 1]</span>
+</pre></div>
+</div>
+<p>This computes <span class="math notranslate nohighlight">\(T_0 \cdot \exp(\alpha \cdot \log(T_0^{-1} T_1))\)</span>, which
+traces the shortest path between two poses on the group manifold. For SO(3),
+this is equivalent to SLERP. This avoids the truncation artifacts that arise
+from linearly interpolating rotation matrices or Euler angles.</p>
+</section>
+<section id="further-reading">
+<h2>Further Reading<a class="headerlink" href="#further-reading" title="Link to this heading">#</a></h2>
+<p>For Lie group fundamentals and Jacobians (left/right Jacobians, plus/minus),
+see:</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://arxiv.org/abs/1812.01537">A micro Lie theory</a></p></li>
+</ul>
+</section>
+</section>
+
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="tasks_and_limits.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Tasks and Limits</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="example_gallery.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Example Gallery</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item"><div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#conventions">Conventions</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#quaternions">Quaternions</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#composition-and-action-via">Composition and action via <code class="docutils literal notranslate"><span class="pre">@</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#so3-rotations">SO3: Rotations</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#creating-rotations">Creating rotations</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#applying-and-composing">Applying and composing</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#log-exp-tangent-space">Log/Exp (tangent space)</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#se3-rigid-body-transformations">SE3: Rigid Body Transformations</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#creating-transforms">Creating transforms</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#example-building-a-pose-target">Example: building a pose target</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#composition-world-vs-local-updates">Composition: world vs local updates</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#applying-a-transform">Applying a transform</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pose-errors-right-minus">Pose errors (right-minus)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#interpolation">Interpolation</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#further-reading">Further Reading</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Kevin Zakka
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2026, Kevin Zakka.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

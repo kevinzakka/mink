@@ -1,0 +1,799 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link href="../_static/favicon.png" sizes="32x32" rel="icon" type="image/png">
+    <title>Tasks and Limits &#8212; mink  documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=3c74b3bc" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../_static/documentation_options.js?v=9eb32ce0"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=f281be69"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?v=fab101a9"></script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script async="async" src="../_static/mathjax/tex-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'tutorial/tasks_and_limits';</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Rotations and Poses" href="lie_groups.html" />
+    <link rel="prev" title="Getting Started" href="quickstart.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="v1.2.0" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../_static/logo.png" class="logo__image only-light" alt="mink  documentation - Home"/>
+    <img src="../_static/logo.png" class="logo__image only-dark pst-js-only" alt="mink  documentation - Home"/>
+  
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="index.html">Tutorial</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="mujoco_basics.html">MuJoCo Basics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html">Getting Started</a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">Tasks and Limits</a></li>
+<li class="toctree-l2"><a class="reference internal" href="lie_groups.html">Rotations and Poses</a></li>
+<li class="toctree-l2"><a class="reference internal" href="example_gallery.html">Example Gallery</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../api/index.html">API Reference</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../api/configuration.html">Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/tasks.html">Tasks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/limits.html">Limits</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/inverse_kinematics.html">Inverse kinematics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/utilities.html">Utilities</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/lie.html">Lie</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../background/derivations.html">Derivations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../_sources/tutorial/tasks_and_limits.rst" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.rst</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button pst-navbar-icon"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button>
+
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button>
+<button class="sidebar-toggle secondary-toggle btn btn-sm pst-navbar-icon" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</button>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Tasks and Limits</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-goes-wrong-without-regularization">What Goes Wrong Without Regularization</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#singularities">Singularities</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#nullspace-drift">Nullspace Drift</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#adding-regularization">Adding Regularization</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fixing-singularities">Fixing Singularities</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fixing-nullspace-drift">Fixing Nullspace Drift</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#adding-limits">Adding Limits</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#configuration-limits">Configuration Limits</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#velocity-limits">Velocity Limits</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#collision-avoidance">Collision Avoidance</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#practical-guidelines">Practical Guidelines</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#when-to-use-what">When to Use What</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#complete-example">Complete Example</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#next-steps">Next Steps</a></li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="tasks-and-limits">
+<span id="id1"></span><h1>Tasks and Limits<a class="headerlink" href="#tasks-and-limits" title="Link to this heading">#</a></h1>
+<p>The <a class="reference internal" href="quickstart.html"><span class="doc">Getting Started</span></a> drove a robot arm to a target pose under ideal conditions:
+the target was reachable, joint limits were never approached, and the arm had
+enough freedom to satisfy the task. In practice, these assumptions rarely hold.</p>
+<p>This page introduces <strong>tasks</strong> and <strong>limits</strong>, mink’s mechanism for handling
+the trade-offs that arise when they do not. All examples use the same Panda arm
+as the quickstart.</p>
+<div class="sd-container-fluid sd-sphinx-override sd-mb-4 docutils">
+<div class="sd-row sd-row-cols-2 sd-row-cols-xs-2 sd-row-cols-sm-2 sd-row-cols-md-2 sd-row-cols-lg-2 docutils">
+<div class="sd-col sd-d-flex-row docutils">
+<div class="sd-card sd-sphinx-override sd-w-100 sd-shadow-sm docutils">
+<div class="sd-card-body docutils">
+<div class="sd-card-title sd-font-weight-bold docutils">
+<strong>Tasks</strong> (soft objectives)</div>
+<p class="sd-card-text">A <em>task</em> expresses something the robot should try to do. Tasks can be
+violated when necessary; when multiple tasks conflict, mink resolves
+them by minimizing a weighted sum of their errors.</p>
+<ul class="simple">
+<li><p class="sd-card-text">Move an end-effector to a pose (<code class="xref py py-class docutils literal notranslate"><span class="pre">FrameTask</span></code>)</p></li>
+<li><p class="sd-card-text">Keep joints near a nominal configuration (<code class="xref py py-class docutils literal notranslate"><span class="pre">PostureTask</span></code>)</p></li>
+<li><p class="sd-card-text">Regulate the center of mass (<code class="xref py py-class docutils literal notranslate"><span class="pre">ComTask</span></code>)</p></li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sd-col sd-d-flex-row docutils">
+<div class="sd-card sd-sphinx-override sd-w-100 sd-shadow-sm docutils">
+<div class="sd-card-body docutils">
+<div class="sd-card-title sd-font-weight-bold docutils">
+<strong>Limits</strong> (hard constraints)</div>
+<p class="sd-card-text">A <em>limit</em> describes a boundary the robot must not cross. Limits are
+strictly enforced; the solver will never return a solution that
+violates them.</p>
+<ul class="simple">
+<li><p class="sd-card-text">Joint position bounds (<code class="xref py py-class docutils literal notranslate"><span class="pre">ConfigurationLimit</span></code>)</p></li>
+<li><p class="sd-card-text">Velocity bounds (<code class="xref py py-class docutils literal notranslate"><span class="pre">VelocityLimit</span></code>)</p></li>
+<li><p class="sd-card-text">Collision avoidance (<code class="xref py py-class docutils literal notranslate"><span class="pre">CollisionAvoidanceLimit</span></code>)</p></li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+</div>
+<p>Internally, tasks become quadratic objectives in the QP and limits become
+inequality constraints.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><code class="xref py py-class docutils literal notranslate"><span class="pre">ConfigurationLimit</span></code> is applied automatically when no custom
+<code class="docutils literal notranslate"><span class="pre">limits</span></code> list is provided. All other limits must be added explicitly.</p>
+</div>
+<section id="what-goes-wrong-without-regularization">
+<h2>What Goes Wrong Without Regularization<a class="headerlink" href="#what-goes-wrong-without-regularization" title="Link to this heading">#</a></h2>
+<p>A single <code class="xref py py-class docutils literal notranslate"><span class="pre">FrameTask</span></code> is sufficient when the target is well within
+the workspace. At the workspace boundary, however, two failure modes emerge.</p>
+<section id="singularities">
+<h3>Singularities<a class="headerlink" href="#singularities" title="Link to this heading">#</a></h3>
+<p>Consider tracking a target that moves outward, requiring the arm to extend
+toward its reach limit:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Move outward toward near-full extension.</span>
+<span class="n">start_pos</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">])</span>
+<span class="n">end_pos</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.8</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>As the target moves away from the base, the arm must straighten. Near full
+extension, the elbow approaches a <strong>singularity</strong>: the Jacobian becomes
+ill-conditioned, and small task-space errors demand unbounded joint velocities.</p>
+<video width="400" controls>
+  <source src="https://raw.githubusercontent.com/kevinzakka/mink/assets/docs/without_regularization.mp4" type="video/mp4">
+</video><p><em>Without regularization: the arm becomes unstable near full extension.
+Note the self-collision between the hand and upper arm.</em></p>
+</section>
+<section id="nullspace-drift">
+<h3>Nullspace Drift<a class="headerlink" href="#nullspace-drift" title="Link to this heading">#</a></h3>
+<p>The opposite problem occurs when the robot has <em>more</em> degrees of freedom than
+the task requires. With position-only tracking (<code class="docutils literal notranslate"><span class="pre">orientation_cost=0.0</span></code>), a
+7-DOF arm has four extra degrees of freedom. The solver can move the elbow,
+rotate the wrist, or reconfigure the arm arbitrarily without affecting the
+end-effector position.</p>
+<p>This is <strong>nullspace drift</strong>: uncontrolled motion in degrees of freedom that do
+not affect the task. Common symptoms include elbow drift, unnecessary
+inter-frame joint motion, and non-reproducible poses.</p>
+<video width="400" controls>
+  <source src="https://raw.githubusercontent.com/kevinzakka/mink/assets/docs/nullspace_without_posture.mp4" type="video/mp4">
+</video><p><em>Position-only tracking: the elbow drifts unpredictably.</em></p>
+</section>
+</section>
+<section id="adding-regularization">
+<h2>Adding Regularization<a class="headerlink" href="#adding-regularization" title="Link to this heading">#</a></h2>
+<p>Both failure modes stem from an underconstrained QP. <strong>Regularization</strong> adds
+secondary objectives that resolve the ambiguity, trading a small amount of
+tracking accuracy for bounded, predictable motion.</p>
+<p>mink provides two regularization tasks:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<colgroup>
+<col style="width: 20.0%" />
+<col style="width: 40.0%" />
+<col style="width: 40.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Task</p></th>
+<th class="head"><p>Behavior</p></th>
+<th class="head"><p>Best for</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>DampingTask</p></td>
+<td><p>Minimizes per-step motion</p></td>
+<td><p>Numerical stability, when no preferred pose exists</p></td>
+</tr>
+<tr class="row-odd"><td><p>PostureTask</p></td>
+<td><p>Biases toward a reference configuration</p></td>
+<td><p>Redundancy resolution, manipulation with a preferred pose</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Either task addresses both singularities and nullspace drift. The following
+sections demonstrate one natural pairing, but they are interchangeable.</p>
+<p>In addition, <code class="docutils literal notranslate"><span class="pre">solve_ik(...,</span> <span class="pre">damping=...)</span></code> provides a lightweight numerical
+damping term that improves conditioning without adding a task. Per-task
+<code class="docutils literal notranslate"><span class="pre">lm_damping</span></code> adds error-dependent Levenberg-Marquardt damping for more
+conservative behavior near infeasible targets. See the <a class="reference internal" href="../api/inverse_kinematics.html"><span class="doc">Inverse kinematics</span></a>
+reference for details.</p>
+<section id="fixing-singularities">
+<h3>Fixing Singularities<a class="headerlink" href="#fixing-singularities" title="Link to this heading">#</a></h3>
+<p><code class="xref py py-class docutils literal notranslate"><span class="pre">DampingTask</span></code> penalizes large values of Δq:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">mink</span><span class="w"> </span><span class="kn">import</span> <span class="n">DampingTask</span>
+
+<span class="n">task</span> <span class="o">=</span> <span class="n">FrameTask</span><span class="p">(</span>
+    <span class="n">frame_name</span><span class="o">=</span><span class="s2">&quot;attachment_site&quot;</span><span class="p">,</span>
+    <span class="n">frame_type</span><span class="o">=</span><span class="s2">&quot;site&quot;</span><span class="p">,</span>
+    <span class="n">position_cost</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+    <span class="n">orientation_cost</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># Regularization: prefer smaller joint velocities.</span>
+<span class="n">damping_task</span> <span class="o">=</span> <span class="n">DampingTask</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">cost</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+
+<span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">steps</span><span class="p">):</span>
+    <span class="n">vel</span> <span class="o">=</span> <span class="n">solve_ik</span><span class="p">(</span><span class="n">configuration</span><span class="p">,</span> <span class="p">[</span><span class="n">task</span><span class="p">,</span> <span class="n">damping_task</span><span class="p">],</span> <span class="n">dt</span><span class="p">,</span> <span class="s2">&quot;daqp&quot;</span><span class="p">)</span>
+    <span class="n">configuration</span><span class="o">.</span><span class="n">integrate_inplace</span><span class="p">(</span><span class="n">vel</span><span class="p">,</span> <span class="n">dt</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Near a singularity, satisfying the primary task requires large joint velocities.
+The damping task penalizes these, causing the QP to accept some tracking error
+in exchange for bounded motion.</p>
+<video width="400" controls>
+  <source src="https://raw.githubusercontent.com/kevinzakka/mink/assets/docs/with_regularization.mp4" type="video/mp4">
+</video><p><em>With regularization: the arm accepts tracking error to stay stable.</em></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Regularization does not prevent the arm from reaching singular
+configurations; it bounds the commanded velocities near them by accepting
+reduced tracking accuracy.</p>
+</div>
+</section>
+<section id="fixing-nullspace-drift">
+<h3>Fixing Nullspace Drift<a class="headerlink" href="#fixing-nullspace-drift" title="Link to this heading">#</a></h3>
+<p><code class="xref py py-class docutils literal notranslate"><span class="pre">PostureTask</span></code> biases toward a reference configuration:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">mink</span><span class="w"> </span><span class="kn">import</span> <span class="n">PostureTask</span>
+
+<span class="n">posture_task</span> <span class="o">=</span> <span class="n">PostureTask</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">cost</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
+<span class="n">posture_task</span><span class="o">.</span><span class="n">set_target_from_configuration</span><span class="p">(</span><span class="n">configuration</span><span class="p">)</span>  <span class="c1"># Use current as reference.</span>
+</pre></div>
+</div>
+<p>The posture task provides a secondary objective that resolves nullspace
+ambiguity: redundant degrees of freedom are biased toward the reference.</p>
+<video width="400" controls>
+  <source src="https://raw.githubusercontent.com/kevinzakka/mink/assets/docs/nullspace_with_posture.mp4" type="video/mp4">
+</video><p><em>With posture task: the arm stays close to its reference configuration.</em></p>
+</section>
+</section>
+<section id="adding-limits">
+<h2>Adding Limits<a class="headerlink" href="#adding-limits" title="Link to this heading">#</a></h2>
+<p>Regularization keeps the solver well-conditioned but does not enforce physical
+constraints. Without explicit limits, joints can exceed their mechanical range,
+velocities can exceed motor capabilities, and self-collision can occur. Limits
+encode these boundaries as inequality constraints in the QP.</p>
+<section id="configuration-limits">
+<h3>Configuration Limits<a class="headerlink" href="#configuration-limits" title="Link to this heading">#</a></h3>
+<p><code class="xref py py-class docutils literal notranslate"><span class="pre">ConfigurationLimit</span></code> keeps joints within their mechanical range.
+When a custom <code class="docutils literal notranslate"><span class="pre">limits</span></code> list is provided, this limit must be included
+explicitly:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">mink</span><span class="w"> </span><span class="kn">import</span> <span class="n">ConfigurationLimit</span>
+
+<span class="n">limits</span> <span class="o">=</span> <span class="p">[</span><span class="n">ConfigurationLimit</span><span class="p">(</span><span class="n">model</span><span class="p">)]</span>
+
+<span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">steps</span><span class="p">):</span>
+    <span class="n">vel</span> <span class="o">=</span> <span class="n">solve_ik</span><span class="p">(</span><span class="n">configuration</span><span class="p">,</span> <span class="p">[</span><span class="n">task</span><span class="p">],</span> <span class="n">dt</span><span class="p">,</span> <span class="s2">&quot;daqp&quot;</span><span class="p">,</span> <span class="n">limits</span><span class="o">=</span><span class="n">limits</span><span class="p">)</span>
+    <span class="n">configuration</span><span class="o">.</span><span class="n">integrate_inplace</span><span class="p">(</span><span class="n">vel</span><span class="p">,</span> <span class="n">dt</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="velocity-limits">
+<h3>Velocity Limits<a class="headerlink" href="#velocity-limits" title="Link to this heading">#</a></h3>
+<p><code class="xref py py-class docutils literal notranslate"><span class="pre">VelocityLimit</span></code> bounds the per-step displacement
+(<span class="math notranslate nohighlight">\(\|\Delta q\| \leq v_{\max} \cdot dt\)</span>), preventing commands that would
+require excessive motor torques:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">mink</span><span class="w"> </span><span class="kn">import</span> <span class="n">VelocityLimit</span>
+
+<span class="n">velocity_limits</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;joint1&quot;</span><span class="p">:</span> <span class="mf">2.0</span><span class="p">,</span>  <span class="c1"># rad/s</span>
+    <span class="s2">&quot;joint2&quot;</span><span class="p">:</span> <span class="mf">2.0</span><span class="p">,</span>
+    <span class="c1"># ... etc</span>
+<span class="p">}</span>
+<span class="n">velocity_limit</span> <span class="o">=</span> <span class="n">VelocityLimit</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">velocity_limits</span><span class="p">)</span>
+
+<span class="n">limits</span> <span class="o">=</span> <span class="p">[</span><span class="n">ConfigurationLimit</span><span class="p">(</span><span class="n">model</span><span class="p">),</span> <span class="n">velocity_limit</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>If the target moves faster than the velocity limits allow, tracking will lag.
+Set limits based on the hardware’s actual motor capabilities.</p>
+</section>
+<section id="collision-avoidance">
+<h3>Collision Avoidance<a class="headerlink" href="#collision-avoidance" title="Link to this heading">#</a></h3>
+<p><code class="xref py py-class docutils literal notranslate"><span class="pre">CollisionAvoidanceLimit</span></code> prevents specified geometries from
+colliding. Pairs of geom groups that should remain separated are specified as
+follows:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">mink</span><span class="w"> </span><span class="kn">import</span> <span class="n">CollisionAvoidanceLimit</span>
+
+<span class="n">collision_limit</span> <span class="o">=</span> <span class="n">CollisionAvoidanceLimit</span><span class="p">(</span>
+    <span class="n">model</span><span class="p">,</span>
+    <span class="n">geom_pairs</span><span class="o">=</span><span class="p">[([</span><span class="s2">&quot;hand&quot;</span><span class="p">],</span> <span class="p">[</span><span class="s2">&quot;link4&quot;</span><span class="p">,</span> <span class="s2">&quot;link5&quot;</span><span class="p">])],</span>
+    <span class="n">minimum_distance_from_collisions</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">limits</span> <span class="o">=</span> <span class="p">[</span><span class="n">ConfigurationLimit</span><span class="p">(</span><span class="n">model</span><span class="p">),</span> <span class="n">collision_limit</span><span class="p">]</span>
+</pre></div>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Collision avoidance constraints tighten as distances shrink. When geoms are
+close to the minimum distance, this limit can dominate the solution and
+prevent other motion. Start with conservative (larger) minimum distances
+and reduce them as needed.</p>
+</div>
+<p>Recall the self-collision visible in the first video on this page. Without
+collision avoidance, nullspace drift and singularity-induced motion can drive
+geometries into contact. With it, the solver maintains the minimum separation
+between specified geometry pairs:</p>
+<video width="400" controls>
+  <source src="https://raw.githubusercontent.com/kevinzakka/mink/assets/docs/collision_avoidance.mp4" type="video/mp4">
+</video><p><em>Collision avoidance prevents self-contact between the hand and upper arm.</em></p>
+</section>
+</section>
+<section id="practical-guidelines">
+<h2>Practical Guidelines<a class="headerlink" href="#practical-guidelines" title="Link to this heading">#</a></h2>
+<section id="when-to-use-what">
+<h3>When to Use What<a class="headerlink" href="#when-to-use-what" title="Link to this heading">#</a></h3>
+<p><strong>Always include:</strong></p>
+<ul class="simple">
+<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">ConfigurationLimit</span></code>, to enforce joint bounds.</p></li>
+<li><p>Some form of regularization (<code class="xref py py-class docutils literal notranslate"><span class="pre">DampingTask</span></code> or
+<code class="xref py py-class docutils literal notranslate"><span class="pre">PostureTask</span></code>), to prevent singularity and nullspace issues.</p></li>
+</ul>
+<p><strong>Add when needed:</strong></p>
+<ul class="simple">
+<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">VelocityLimit</span></code>, for smooth, rate-limited motion.</p></li>
+<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">CollisionAvoidanceLimit</span></code>, when self-collision or environment
+collision is possible.</p></li>
+</ul>
+</section>
+</section>
+<section id="complete-example">
+<h2>Complete Example<a class="headerlink" href="#complete-example" title="Link to this heading">#</a></h2>
+<p>The following example combines pose tracking with regularization and limits.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">mujoco</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">mink</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">Configuration</span><span class="p">,</span>
+    <span class="n">ConfigurationLimit</span><span class="p">,</span>
+    <span class="n">FrameTask</span><span class="p">,</span>
+    <span class="n">PostureTask</span><span class="p">,</span>
+    <span class="n">VelocityLimit</span><span class="p">,</span>
+    <span class="n">solve_ik</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># Load and configure.</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">mujoco</span><span class="o">.</span><span class="n">MjModel</span><span class="o">.</span><span class="n">from_xml_path</span><span class="p">(</span><span class="s2">&quot;franka_emika_panda/mjx_scene.xml&quot;</span><span class="p">)</span>
+<span class="n">configuration</span> <span class="o">=</span> <span class="n">Configuration</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+<span class="n">configuration</span><span class="o">.</span><span class="n">update_from_keyframe</span><span class="p">(</span><span class="s2">&quot;home&quot;</span><span class="p">)</span>
+
+<span class="c1"># Primary task: pose tracking.</span>
+<span class="n">task</span> <span class="o">=</span> <span class="n">FrameTask</span><span class="p">(</span>
+    <span class="n">frame_name</span><span class="o">=</span><span class="s2">&quot;attachment_site&quot;</span><span class="p">,</span>
+    <span class="n">frame_type</span><span class="o">=</span><span class="s2">&quot;site&quot;</span><span class="p">,</span>
+    <span class="n">position_cost</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+    <span class="n">orientation_cost</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># Regularization: bias toward home configuration.</span>
+<span class="c1"># This handles both singularities (resists extreme velocities near them)</span>
+<span class="c1"># and nullspace drift (fills unused DOFs with a preference).</span>
+<span class="n">posture_task</span> <span class="o">=</span> <span class="n">PostureTask</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">cost</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
+<span class="n">posture_task</span><span class="o">.</span><span class="n">set_target_from_configuration</span><span class="p">(</span><span class="n">configuration</span><span class="p">)</span>
+
+<span class="n">tasks</span> <span class="o">=</span> <span class="p">[</span><span class="n">task</span><span class="p">,</span> <span class="n">posture_task</span><span class="p">]</span>
+
+<span class="c1"># Limits: joint bounds + velocity cap.</span>
+<span class="n">velocity_limits</span> <span class="o">=</span> <span class="p">{</span><span class="sa">f</span><span class="s2">&quot;joint</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">:</span> <span class="mf">2.0</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">8</span><span class="p">)}</span>
+<span class="n">limits</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="n">ConfigurationLimit</span><span class="p">(</span><span class="n">model</span><span class="p">),</span>
+    <span class="n">VelocityLimit</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">velocity_limits</span><span class="p">),</span>
+<span class="p">]</span>
+
+<span class="c1"># IK loop.</span>
+<span class="n">dt</span> <span class="o">=</span> <span class="mf">0.01</span>
+<span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">steps</span><span class="p">):</span>
+    <span class="n">task</span><span class="o">.</span><span class="n">set_target</span><span class="p">(</span><span class="n">get_target</span><span class="p">())</span>  <span class="c1"># Update target each step.</span>
+    <span class="n">vel</span> <span class="o">=</span> <span class="n">solve_ik</span><span class="p">(</span><span class="n">configuration</span><span class="p">,</span> <span class="n">tasks</span><span class="p">,</span> <span class="n">dt</span><span class="p">,</span> <span class="s2">&quot;daqp&quot;</span><span class="p">,</span> <span class="n">limits</span><span class="o">=</span><span class="n">limits</span><span class="p">)</span>
+    <span class="n">configuration</span><span class="o">.</span><span class="n">integrate_inplace</span><span class="p">(</span><span class="n">vel</span><span class="p">,</span> <span class="n">dt</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="next-steps">
+<h2>Next Steps<a class="headerlink" href="#next-steps" title="Link to this heading">#</a></h2>
+<p>For more task types, limits, and real-world examples:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="example_gallery.html"><span class="doc">Example Gallery</span></a>: runnable examples organized by use case.</p></li>
+<li><p><a class="reference internal" href="../api/tasks.html"><span class="doc">Tasks</span></a>: all available task types.</p></li>
+<li><p><a class="reference internal" href="../api/limits.html"><span class="doc">Limits</span></a>: all available limit types.</p></li>
+</ul>
+</section>
+</section>
+
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="quickstart.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Getting Started</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="lie_groups.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Rotations and Poses</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item"><div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-goes-wrong-without-regularization">What Goes Wrong Without Regularization</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#singularities">Singularities</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#nullspace-drift">Nullspace Drift</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#adding-regularization">Adding Regularization</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fixing-singularities">Fixing Singularities</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fixing-nullspace-drift">Fixing Nullspace Drift</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#adding-limits">Adding Limits</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#configuration-limits">Configuration Limits</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#velocity-limits">Velocity Limits</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#collision-avoidance">Collision Avoidance</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#practical-guidelines">Practical Guidelines</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#when-to-use-what">When to Use What</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#complete-example">Complete Example</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#next-steps">Next Steps</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Kevin Zakka
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2026, Kevin Zakka.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

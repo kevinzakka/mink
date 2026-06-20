@@ -1,0 +1,625 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link href="../_static/favicon.png" sizes="32x32" rel="icon" type="image/png">
+    <title>Getting Started &#8212; mink  documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=3c74b3bc" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../_static/documentation_options.js?v=9eb32ce0"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=f281be69"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?v=fab101a9"></script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script async="async" src="../_static/mathjax/tex-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'tutorial/quickstart';</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Tasks and Limits" href="tasks_and_limits.html" />
+    <link rel="prev" title="MuJoCo Basics" href="mujoco_basics.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="v1.2.0" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../_static/logo.png" class="logo__image only-light" alt="mink  documentation - Home"/>
+    <img src="../_static/logo.png" class="logo__image only-dark pst-js-only" alt="mink  documentation - Home"/>
+  
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="index.html">Tutorial</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="mujoco_basics.html">MuJoCo Basics</a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">Getting Started</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tasks_and_limits.html">Tasks and Limits</a></li>
+<li class="toctree-l2"><a class="reference internal" href="lie_groups.html">Rotations and Poses</a></li>
+<li class="toctree-l2"><a class="reference internal" href="example_gallery.html">Example Gallery</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../api/index.html">API Reference</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../api/configuration.html">Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/tasks.html">Tasks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/limits.html">Limits</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/inverse_kinematics.html">Inverse kinematics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/utilities.html">Utilities</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/lie.html">Lie</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../background/derivations.html">Derivations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../_sources/tutorial/quickstart.rst" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.rst</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button pst-navbar-icon"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button>
+
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button>
+<button class="sidebar-toggle secondary-toggle btn btn-sm pst-navbar-icon" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</button>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Getting Started</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#setup">Setup</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#defining-a-target-pose">Defining a Target Pose</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#creating-a-task">Creating a Task</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#controlling-convergence-speed">Controlling Convergence Speed</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-ik-loop">The IK Loop</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#complete-example">Complete Example</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#next-steps">Next Steps</a></li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="getting-started">
+<span id="quickstart"></span><h1>Getting Started<a class="headerlink" href="#getting-started" title="Link to this heading">#</a></h1>
+<p>This page introduces mink’s core concepts through a simple example: driving a
+robot arm’s end-effector to a target pose.</p>
+<video width="400" controls style="display: block; margin: 0 auto;">
+  <source src="https://raw.githubusercontent.com/kevinzakka/mink/assets/docs/quickstart.mp4" type="video/mp4">
+</video><section id="setup">
+<h2>Setup<a class="headerlink" href="#setup" title="Link to this heading">#</a></h2>
+<p>The following example uses the Panda arm from the <code class="docutils literal notranslate"><span class="pre">examples/</span></code> directory in the
+mink repository. First, load the model and create a configuration:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">mujoco</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">mink</span><span class="w"> </span><span class="kn">import</span> <span class="n">Configuration</span>
+
+<span class="n">model</span> <span class="o">=</span> <span class="n">mujoco</span><span class="o">.</span><span class="n">MjModel</span><span class="o">.</span><span class="n">from_xml_path</span><span class="p">(</span><span class="s2">&quot;franka_emika_panda/mjx_scene.xml&quot;</span><span class="p">)</span>
+<span class="n">configuration</span> <span class="o">=</span> <span class="n">Configuration</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+<span class="n">configuration</span><span class="o">.</span><span class="n">update_from_keyframe</span><span class="p">(</span><span class="s2">&quot;home&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><code class="xref py py-class docutils literal notranslate"><span class="pre">Configuration</span></code> wraps a MuJoCo model and provides the kinematic
+quantities needed for IK: frame poses, Jacobians, and integration.
+See <a class="reference internal" href="mujoco_basics.html"><span class="doc">MuJoCo Basics</span></a> for details.</p>
+</section>
+<section id="defining-a-target-pose">
+<h2>Defining a Target Pose<a class="headerlink" href="#defining-a-target-pose" title="Link to this heading">#</a></h2>
+<p>mink represents rigid body transformations using <code class="xref py py-class docutils literal notranslate"><span class="pre">SE3</span></code> (poses) and
+<code class="xref py py-class docutils literal notranslate"><span class="pre">SO3</span></code> (rotations). These classes support composition via <code class="docutils literal notranslate"><span class="pre">&#64;</span></code> and
+provide convenient constructors. See <a class="reference internal" href="lie_groups.html"><span class="doc">Rotations and Poses</span></a> for details.</p>
+<p>A target pose can be defined relative to the current end-effector pose by
+applying a transformation:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">mink</span><span class="w"> </span><span class="kn">import</span> <span class="n">SE3</span><span class="p">,</span> <span class="n">SO3</span>
+
+<span class="c1"># Get current end-effector pose.</span>
+<span class="n">ee_pose</span> <span class="o">=</span> <span class="n">configuration</span><span class="o">.</span><span class="n">get_transform_frame_to_world</span><span class="p">(</span><span class="s2">&quot;attachment_site&quot;</span><span class="p">,</span> <span class="s2">&quot;site&quot;</span><span class="p">)</span>
+
+<span class="c1"># Define target: translate in world frame, then rotate in local frame.</span>
+<span class="n">translation</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.4</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.2</span><span class="p">])</span>
+<span class="n">rotation</span> <span class="o">=</span> <span class="n">SO3</span><span class="o">.</span><span class="n">from_y_radians</span><span class="p">(</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+
+<span class="n">target</span> <span class="o">=</span> <span class="n">SE3</span><span class="o">.</span><span class="n">from_translation</span><span class="p">(</span><span class="n">translation</span><span class="p">)</span> <span class="o">@</span> <span class="n">ee_pose</span>  <span class="c1"># World frame.</span>
+<span class="n">target</span> <span class="o">=</span> <span class="n">target</span> <span class="o">@</span> <span class="n">SE3</span><span class="o">.</span><span class="n">from_rotation</span><span class="p">(</span><span class="n">rotation</span><span class="p">)</span>         <span class="c1"># Local frame.</span>
+</pre></div>
+</div>
+<p>Left-multiplying applies a transformation in the <strong>world frame</strong>. The translation
+moves the pose along world axes. Right-multiplying applies it in the <strong>local
+frame</strong>. The rotation is therefore about the gripper’s own y-axis, not the
+world’s.</p>
+<p>This produces a target that is offset from the current pose and rotated 90°.
+Decoupling translation and rotation makes each component easier to reason about
+independently.</p>
+</section>
+<section id="creating-a-task">
+<h2>Creating a Task<a class="headerlink" href="#creating-a-task" title="Link to this heading">#</a></h2>
+<p>A <code class="xref py py-class docutils literal notranslate"><span class="pre">FrameTask</span></code> drives a frame toward a target pose:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">mink</span><span class="w"> </span><span class="kn">import</span> <span class="n">FrameTask</span>
+
+<span class="n">task</span> <span class="o">=</span> <span class="n">FrameTask</span><span class="p">(</span>
+    <span class="n">frame_name</span><span class="o">=</span><span class="s2">&quot;attachment_site&quot;</span><span class="p">,</span>
+    <span class="n">frame_type</span><span class="o">=</span><span class="s2">&quot;site&quot;</span><span class="p">,</span>
+    <span class="n">position_cost</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+    <span class="n">orientation_cost</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">task</span><span class="o">.</span><span class="n">set_target</span><span class="p">(</span><span class="n">target</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Setting both <code class="docutils literal notranslate"><span class="pre">position_cost</span></code> and <code class="docutils literal notranslate"><span class="pre">orientation_cost</span></code> to non-zero values
+creates a full 6-DOF pose task. Set <code class="docutils literal notranslate"><span class="pre">orientation_cost=0.0</span></code> for a position-only
+task where the end-effector can rotate freely.</p>
+</section>
+<section id="controlling-convergence-speed">
+<h2>Controlling Convergence Speed<a class="headerlink" href="#controlling-convergence-speed" title="Link to this heading">#</a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">gain</span></code> parameter sets the desired rate at which the task error should decay.
+With gain <span class="math notranslate nohighlight">\(g \in [0, 1]\)</span>, the error after <span class="math notranslate nohighlight">\(n\)</span> steps is approximately:</p>
+<div class="math notranslate nohighlight">
+\[e_n = e_0 \cdot (1 - g)^n\]</div>
+<p>To reach 1% of the initial error after <span class="math notranslate nohighlight">\(n\)</span> frames, solve for:</p>
+<div class="math notranslate nohighlight">
+\[g = 1 - 0.01^{1/n}\]</div>
+<p>For example, to reduce error to 1% of initial over 2 seconds at 60 fps (120
+frames):</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">duration</span> <span class="o">=</span> <span class="mf">2.0</span>  <span class="c1"># seconds</span>
+<span class="n">fps</span> <span class="o">=</span> <span class="mi">60</span>
+<span class="n">n_frames</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">duration</span> <span class="o">*</span> <span class="n">fps</span><span class="p">)</span>
+<span class="n">gain</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">-</span> <span class="mf">0.01</span> <span class="o">**</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">/</span> <span class="n">n_frames</span><span class="p">)</span>  <span class="c1"># ≈ 0.038</span>
+
+<span class="n">task</span> <span class="o">=</span> <span class="n">FrameTask</span><span class="p">(</span>
+    <span class="n">frame_name</span><span class="o">=</span><span class="s2">&quot;attachment_site&quot;</span><span class="p">,</span>
+    <span class="n">frame_type</span><span class="o">=</span><span class="s2">&quot;site&quot;</span><span class="p">,</span>
+    <span class="n">position_cost</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+    <span class="n">orientation_cost</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+    <span class="n">gain</span><span class="o">=</span><span class="n">gain</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>Lower gain values yield smoother, more gradual convergence. The default
+<code class="docutils literal notranslate"><span class="pre">gain=1.0</span></code> produces maximum convergence rate.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This formula assumes first-order error dynamics, which holds when the
+Jacobian is well-conditioned and the target is reachable.</p>
+</div>
+</section>
+<section id="the-ik-loop">
+<h2>The IK Loop<a class="headerlink" href="#the-ik-loop" title="Link to this heading">#</a></h2>
+<p>At each step, <code class="xref py py-func docutils literal notranslate"><span class="pre">solve_ik()</span></code> computes a joint velocity intended to reduce
+task error:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">mink</span><span class="w"> </span><span class="kn">import</span> <span class="n">solve_ik</span>
+
+<span class="n">dt</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="n">fps</span>
+<span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_frames</span><span class="p">):</span>
+    <span class="n">vel</span> <span class="o">=</span> <span class="n">solve_ik</span><span class="p">(</span><span class="n">configuration</span><span class="p">,</span> <span class="p">[</span><span class="n">task</span><span class="p">],</span> <span class="n">dt</span><span class="p">)</span>
+    <span class="n">configuration</span><span class="o">.</span><span class="n">integrate_inplace</span><span class="p">(</span><span class="n">vel</span><span class="p">,</span> <span class="n">dt</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">dt</span></code> parameter is the time between successive calls to <code class="docutils literal notranslate"><span class="pre">solve_ik</span></code>.
+Internally, the QP solves for a configuration displacement <span class="math notranslate nohighlight">\(\Delta q\)</span> and
+enforces velocity limits as <span class="math notranslate nohighlight">\(\|\Delta q\| \leq v_{\max} \cdot dt\)</span>. These
+constraints scale correctly with <code class="docutils literal notranslate"><span class="pre">dt</span></code>, so limit enforcement is independent of
+the chosen timestep. The main practical effect of <code class="docutils literal notranslate"><span class="pre">dt</span></code> is on step size: larger
+values produce larger configuration updates, which can degrade accuracy when the
+first-order linearization becomes invalid over that step. Note that <code class="docutils literal notranslate"><span class="pre">dt</span></code> need
+not equal the robot’s servo rate; IK may run at a different frequency, with a
+lower-level controller interpolating between updates.</p>
+<p><code class="xref py py-meth docutils literal notranslate"><span class="pre">integrate_inplace()</span></code> updates joint positions via
+<code class="docutils literal notranslate"><span class="pre">q</span> <span class="pre">←</span> <span class="pre">q</span> <span class="pre">+</span> <span class="pre">vel</span> <span class="pre">*</span> <span class="pre">dt</span></code>, using proper quaternion integration for ball and free
+joints.</p>
+</section>
+<section id="complete-example">
+<h2>Complete Example<a class="headerlink" href="#complete-example" title="Link to this heading">#</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">mujoco</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">mink</span><span class="w"> </span><span class="kn">import</span> <span class="n">Configuration</span><span class="p">,</span> <span class="n">FrameTask</span><span class="p">,</span> <span class="n">SE3</span><span class="p">,</span> <span class="n">SO3</span><span class="p">,</span> <span class="n">solve_ik</span>
+
+<span class="c1"># Load robot.</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">mujoco</span><span class="o">.</span><span class="n">MjModel</span><span class="o">.</span><span class="n">from_xml_path</span><span class="p">(</span><span class="s2">&quot;franka_emika_panda/mjx_scene.xml&quot;</span><span class="p">)</span>
+<span class="n">configuration</span> <span class="o">=</span> <span class="n">Configuration</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+<span class="n">configuration</span><span class="o">.</span><span class="n">update_from_keyframe</span><span class="p">(</span><span class="s2">&quot;home&quot;</span><span class="p">)</span>
+
+<span class="c1"># Define target pose relative to current end-effector.</span>
+<span class="n">ee_pose</span> <span class="o">=</span> <span class="n">configuration</span><span class="o">.</span><span class="n">get_transform_frame_to_world</span><span class="p">(</span><span class="s2">&quot;attachment_site&quot;</span><span class="p">,</span> <span class="s2">&quot;site&quot;</span><span class="p">)</span>
+<span class="n">translation</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.4</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.2</span><span class="p">])</span>
+<span class="n">rotation</span> <span class="o">=</span> <span class="n">SO3</span><span class="o">.</span><span class="n">from_y_radians</span><span class="p">(</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+<span class="n">target</span> <span class="o">=</span> <span class="n">SE3</span><span class="o">.</span><span class="n">from_translation</span><span class="p">(</span><span class="n">translation</span><span class="p">)</span> <span class="o">@</span> <span class="n">ee_pose</span>
+<span class="n">target</span> <span class="o">=</span> <span class="n">target</span> <span class="o">@</span> <span class="n">SE3</span><span class="o">.</span><span class="n">from_rotation</span><span class="p">(</span><span class="n">rotation</span><span class="p">)</span>
+
+<span class="c1"># Create task with gain for smooth 2-second convergence.</span>
+<span class="n">duration</span><span class="p">,</span> <span class="n">fps</span> <span class="o">=</span> <span class="mf">2.0</span><span class="p">,</span> <span class="mi">60</span>
+<span class="n">n_frames</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">duration</span> <span class="o">*</span> <span class="n">fps</span><span class="p">)</span>
+<span class="n">gain</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">-</span> <span class="mf">0.01</span> <span class="o">**</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">/</span> <span class="n">n_frames</span><span class="p">)</span>
+
+<span class="n">task</span> <span class="o">=</span> <span class="n">FrameTask</span><span class="p">(</span>
+    <span class="n">frame_name</span><span class="o">=</span><span class="s2">&quot;attachment_site&quot;</span><span class="p">,</span>
+    <span class="n">frame_type</span><span class="o">=</span><span class="s2">&quot;site&quot;</span><span class="p">,</span>
+    <span class="n">position_cost</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+    <span class="n">orientation_cost</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+    <span class="n">gain</span><span class="o">=</span><span class="n">gain</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">task</span><span class="o">.</span><span class="n">set_target</span><span class="p">(</span><span class="n">target</span><span class="p">)</span>
+
+<span class="c1"># Run IK loop.</span>
+<span class="n">dt</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="n">fps</span>
+<span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_frames</span><span class="p">):</span>
+    <span class="n">vel</span> <span class="o">=</span> <span class="n">solve_ik</span><span class="p">(</span><span class="n">configuration</span><span class="p">,</span> <span class="p">[</span><span class="n">task</span><span class="p">],</span> <span class="n">dt</span><span class="p">)</span>
+    <span class="n">configuration</span><span class="o">.</span><span class="n">integrate_inplace</span><span class="p">(</span><span class="n">vel</span><span class="p">,</span> <span class="n">dt</span><span class="p">)</span>
+
+<span class="c1"># Check result.</span>
+<span class="n">final</span> <span class="o">=</span> <span class="n">configuration</span><span class="o">.</span><span class="n">get_transform_frame_to_world</span><span class="p">(</span><span class="s2">&quot;attachment_site&quot;</span><span class="p">,</span> <span class="s2">&quot;site&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Position error: </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">final</span><span class="o">.</span><span class="n">translation</span><span class="p">()</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">target</span><span class="o">.</span><span class="n">translation</span><span class="p">())</span><span class="si">:</span><span class="s2">.2e</span><span class="si">}</span><span class="s2"> m&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="next-steps">
+<h2>Next Steps<a class="headerlink" href="#next-steps" title="Link to this heading">#</a></h2>
+<p>This example demonstrated a single pose task with controlled convergence. For
+more robust IK formulations incorporating regularization and limits, see
+<a class="reference internal" href="tasks_and_limits.html"><span class="doc">Tasks and Limits</span></a>.</p>
+</section>
+</section>
+
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="mujoco_basics.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">MuJoCo Basics</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="tasks_and_limits.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Tasks and Limits</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item"><div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#setup">Setup</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#defining-a-target-pose">Defining a Target Pose</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#creating-a-task">Creating a Task</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#controlling-convergence-speed">Controlling Convergence Speed</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-ik-loop">The IK Loop</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#complete-example">Complete Example</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#next-steps">Next Steps</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Kevin Zakka
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2026, Kevin Zakka.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

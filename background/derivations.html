@@ -1,0 +1,663 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link href="../_static/favicon.png" sizes="32x32" rel="icon" type="image/png">
+    <title>Derivations &#8212; mink  documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=3c74b3bc" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../_static/documentation_options.js?v=9eb32ce0"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=f281be69"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?v=fab101a9"></script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script async="async" src="../_static/mathjax/tex-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'background/derivations';</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="References" href="../references.html" />
+    <link rel="prev" title="Lie" href="../api/lie.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="v1.2.0" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../_static/logo.png" class="logo__image only-light" alt="mink  documentation - Home"/>
+    <img src="../_static/logo.png" class="logo__image only-dark pst-js-only" alt="mink  documentation - Home"/>
+  
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../tutorial/index.html">Tutorial</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../tutorial/mujoco_basics.html">MuJoCo Basics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorial/quickstart.html">Getting Started</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorial/tasks_and_limits.html">Tasks and Limits</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorial/lie_groups.html">Rotations and Poses</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorial/example_gallery.html">Example Gallery</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../api/index.html">API Reference</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../api/configuration.html">Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/tasks.html">Tasks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/limits.html">Limits</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/inverse_kinematics.html">Inverse kinematics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/utilities.html">Utilities</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/lie.html">Lie</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Derivations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../_sources/background/derivations.rst" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.rst</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button pst-navbar-icon"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button>
+
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button>
+<button class="sidebar-toggle secondary-toggle btn btn-sm pst-navbar-icon" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</button>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Derivations</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#limits">Limits</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#configuration-limit">Configuration limit</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#velocity-limit">Velocity limit</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#tasks">Tasks</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#posture-task">Posture task</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#first-order-task-dynamics">First-order task dynamics</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#quadratic-program-formulation">Quadratic-program formulation</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#velocity-interpretation">Velocity interpretation</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#damping-task">Damping task</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#error-and-jacobian">Error and Jacobian</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#quadratic-cost">Quadratic cost</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#optimality-conditions">Optimality conditions</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#connection-to-levenberg-marquardt-tikhonov">Connection to Levenberg-Marquardt / Tikhonov</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id2">Velocity interpretation</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="derivations">
+<span id="id1"></span><h1>Derivations<a class="headerlink" href="#derivations" title="Link to this heading">#</a></h1>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Variable Name</p></th>
+<th class="head"><p>Symbol</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Configuration</p></td>
+<td><p><span class="math notranslate nohighlight">\(q\)</span></p></td>
+</tr>
+<tr class="row-odd"><td><p>Configuration displacement</p></td>
+<td><p><span class="math notranslate nohighlight">\(\Delta q\)</span></p></td>
+</tr>
+<tr class="row-even"><td><p>Integration timestep</p></td>
+<td><p><span class="math notranslate nohighlight">\(dt\)</span></p></td>
+</tr>
+<tr class="row-odd"><td><p>Velocity in tangent space</p></td>
+<td><p><span class="math notranslate nohighlight">\(v = \frac{\Delta q}{dt}\)</span></p></td>
+</tr>
+<tr class="row-even"><td><p>Configuration limits</p></td>
+<td><p><span class="math notranslate nohighlight">\(q_{\text{min}}, q_{\text{max}}\)</span></p></td>
+</tr>
+<tr class="row-odd"><td><p>Maximum joint velocity magnitude</p></td>
+<td><p><span class="math notranslate nohighlight">\(v_{\text{max}}\)</span></p></td>
+</tr>
+<tr class="row-even"><td><p>Identity matrix</p></td>
+<td><p><span class="math notranslate nohighlight">\(I\)</span></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<section id="limits">
+<h2>Limits<a class="headerlink" href="#limits" title="Link to this heading">#</a></h2>
+<section id="configuration-limit">
+<h3>Configuration limit<a class="headerlink" href="#configuration-limit" title="Link to this heading">#</a></h3>
+<p>Applying a first-order Taylor expansion on the configuration yields:</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\begin{aligned}
+q_{\text{min}} &amp;\leq q \oplus v \cdot dt \leq q_{\text{max}} \\
+q_{\text{min}} &amp;\leq q \oplus \Delta q \leq q_{\text{max}} \\
+q_{\text{min}} &amp;\ominus q \leq \Delta q \leq q_{\text{max}} \ominus q
+\end{aligned}\end{split}\]</div>
+<p>Rewriting as <span class="math notranslate nohighlight">\(G \Delta q \leq h\)</span> and separating the inequalities:</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\begin{aligned}
+&amp;+I \cdot \Delta q \leq q_{\text{max}} \ominus q \\
+&amp;-I \cdot \Delta q \leq q \ominus q_{\text{min}}
+\end{aligned}\end{split}\]</div>
+<p>Stacking these inequalities gives:</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\begin{aligned}
+G &amp;= \begin{bmatrix} +I \\ -I \end{bmatrix}, \\
+h &amp;= \begin{bmatrix} q_{\text{max}} \ominus q \\ q \ominus q_{\text{min}} \end{bmatrix}
+\end{aligned}\end{split}\]</div>
+</section>
+<section id="velocity-limit">
+<h3>Velocity limit<a class="headerlink" href="#velocity-limit" title="Link to this heading">#</a></h3>
+<p>Given the maximum joint velocity magnitudes <span class="math notranslate nohighlight">\(v_{\text{max}}\)</span>, the joint velocity limits can be expressed as:</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\begin{aligned}
+-v_{\text{max}} &amp;\leq v \leq v_{\text{max}} \\
+-v_{\text{max}} &amp;\leq \frac{\Delta q}{dt} \leq v_{\text{max}} \\
+-v_{\text{max}} \cdot dt &amp;\leq \Delta q \leq v_{\text{max}} \cdot dt
+\end{aligned}\end{split}\]</div>
+<p>Rewriting as <span class="math notranslate nohighlight">\(G \Delta q \leq h\)</span> and separating the inequalities:</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\begin{aligned}
+&amp;+I \cdot \Delta q \leq v_{\text{max}} \cdot dt \\
+&amp;-I \cdot \Delta q \leq v_{\text{max}} \cdot dt
+\end{aligned}\end{split}\]</div>
+<p>Stacking these inequalities gives:</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\begin{aligned}
+G \Delta q &amp;\leq h \\
+\begin{bmatrix} +I \\ -I \end{bmatrix} \Delta q &amp;\leq \begin{bmatrix} v_{\text{max}} \cdot dt \\ v_{\text{max}} \cdot dt \end{bmatrix}
+\end{aligned}\end{split}\]</div>
+</section>
+</section>
+<section id="tasks">
+<h2>Tasks<a class="headerlink" href="#tasks" title="Link to this heading">#</a></h2>
+<section id="posture-task">
+<h3>Posture task<a class="headerlink" href="#posture-task" title="Link to this heading">#</a></h3>
+<p>A posture task penalizes the deviation of the current configuration from a
+preferred posture.  Its error and Jacobian are</p>
+<div class="math notranslate nohighlight">
+\[e(q) = q^{\star} \ominus q, \qquad
+J(q) = I_{n_v}\]</div>
+<section id="first-order-task-dynamics">
+<h4>First-order task dynamics<a class="headerlink" href="#first-order-task-dynamics" title="Link to this heading">#</a></h4>
+<p>Using the generic relation <span class="math notranslate nohighlight">\(J(q)\,\Delta q = -\alpha\,e(q)\)</span> gives</p>
+<div class="math notranslate nohighlight">
+\[I_{n_v}\,\Delta q = -\alpha\,e(q)
+\;\;\Longrightarrow\;\;
+\boxed{\; \Delta q = -\alpha\,e(q) \;}\]</div>
+</section>
+<section id="quadratic-program-formulation">
+<h4>Quadratic-program formulation<a class="headerlink" href="#quadratic-program-formulation" title="Link to this heading">#</a></h4>
+<p>The task enters the QP as the weighted least-squares term</p>
+<div class="math notranslate nohighlight">
+\[\min_{\Delta q}\; \tfrac12 \left\lVert
+   J\,\Delta q + \alpha\,e(q) \right\rVert_{W}^{2},\]</div>
+<p>with a diagonal, positive weight matrix <span class="math notranslate nohighlight">\(W = \mathrm{diag}(\lambda_i)\)</span>.
+Substituting <span class="math notranslate nohighlight">\(J = I_{n_v}\)</span> and equating the gradient to zero yields</p>
+<div class="math notranslate nohighlight">
+\[W\bigl(\Delta q + \alpha\,e(q)\bigr) = 0
+\;\;\Longrightarrow\;\;
+\boxed{\; \Delta q = -\alpha\,e(q) \;},\]</div>
+<p>identical to the first-order dynamics and independent of the weights because
+<span class="math notranslate nohighlight">\(W\)</span> is full-rank.</p>
+</section>
+<section id="velocity-interpretation">
+<h4>Velocity interpretation<a class="headerlink" href="#velocity-interpretation" title="Link to this heading">#</a></h4>
+<p>Interpreting the displacement over the solver timestep <span class="math notranslate nohighlight">\(dt\)</span>
+as a velocity command gives</p>
+<div class="math notranslate nohighlight">
+\[\dot q_{\text{des}} = \frac{\Delta q}{dt}
+= \frac{\alpha}{dt}\bigl(q^{\star} - q\bigr)
+= k_p\bigl(q^{\star} - q\bigr),\]</div>
+<p>where <span class="math notranslate nohighlight">\(k_p = \alpha / dt\)</span>.  When the implementation uses
+<span class="math notranslate nohighlight">\(dt = 1\)</span>, the proportional gain reduces to <span class="math notranslate nohighlight">\(k_p = \alpha\)</span>.
+Hence the posture task behaves as a joint-space proportional controller that
+is always full-rank and therefore provides robust regularization whenever
+primary tasks are ill-conditioned.</p>
+</section>
+</section>
+<section id="damping-task">
+<h3>Damping task<a class="headerlink" href="#damping-task" title="Link to this heading">#</a></h3>
+<p>The damping task penalizes joint motion itself, i.e.the displacement
+<code class="docutils literal notranslate"><span class="pre">Δq</span></code>.  It does not target a reference posture: its desired error is
+identically zero.</p>
+<section id="error-and-jacobian">
+<h4>Error and Jacobian<a class="headerlink" href="#error-and-jacobian" title="Link to this heading">#</a></h4>
+<div class="math notranslate nohighlight">
+\[e(q) = 0, \qquad
+J(q) = I_{n_v}\]</div>
+</section>
+<section id="quadratic-cost">
+<h4>Quadratic cost<a class="headerlink" href="#quadratic-cost" title="Link to this heading">#</a></h4>
+<p>Inserted in the generic task objective</p>
+<div class="math notranslate nohighlight">
+\[\min_{\Delta q}\; \tfrac12
+   \bigl\lVert J\,\Delta q + \alpha\,e(q) \bigr\rVert_{W}^{2}\]</div>
+<p>with <span class="math notranslate nohighlight">\(e(q)=0\)</span>, <span class="math notranslate nohighlight">\(J = I_{n_v}\)</span>, and default gain
+<span class="math notranslate nohighlight">\(\alpha = 1\)</span>, the cost reduces to</p>
+<div class="math notranslate nohighlight">
+\[\boxed{\;
+\tfrac12\,\Delta q^{\top} W \,\Delta q \;}
+\;=\;
+\tfrac12 \sum_{i=1}^{n_v} \lambda_i\,\Delta q_i^{2},\]</div>
+<p>where <span class="math notranslate nohighlight">\(W = \operatorname{diag}(\lambda_i)\)</span> comes from the
+user-supplied <code class="docutils literal notranslate"><span class="pre">cost</span></code> vector.</p>
+</section>
+<section id="optimality-conditions">
+<h4>Optimality conditions<a class="headerlink" href="#optimality-conditions" title="Link to this heading">#</a></h4>
+<p>Taking the gradient and setting it to zero gives</p>
+<div class="math notranslate nohighlight">
+\[W \,\Delta q = 0
+\;\;\Longrightarrow\;\;
+\boxed{\; \Delta q = 0 \;}.\]</div>
+<p>Thus, in the absence of other tasks, the damping task enforces <span class="math notranslate nohighlight">\(\Delta q = 0\)</span>.
+When other tasks are present, the QP minimizes joint motion inside their
+solution set, yielding the minimum-norm velocity.</p>
+</section>
+<section id="connection-to-levenberg-marquardt-tikhonov">
+<h4>Connection to Levenberg-Marquardt / Tikhonov<a class="headerlink" href="#connection-to-levenberg-marquardt-tikhonov" title="Link to this heading">#</a></h4>
+<p>If a primary task with Hessian <span class="math notranslate nohighlight">\(J_{h}^{\top}J_{h}\)</span> becomes
+rank-deficient, adding the damping task makes the combined Hessian</p>
+<div class="math notranslate nohighlight">
+\[H = J_{h}^{\top}J_{h} \;+\; W\]</div>
+<p>strictly positive-definite (provided any <span class="math notranslate nohighlight">\(\lambda_i&gt;0\)</span>).  This is
+exactly Tikhonov regularization, preventing large joint speeds near
+singularities and selecting a unique solution.</p>
+</section>
+<section id="id2">
+<h4>Velocity interpretation<a class="headerlink" href="#id2" title="Link to this heading">#</a></h4>
+<p>With the library’s convention <code class="docutils literal notranslate"><span class="pre">v</span> <span class="pre">=</span> <span class="pre">Δq</span> <span class="pre">/</span> <span class="pre">dt</span></code> and
+<span class="math notranslate nohighlight">\(\Delta q = 0\)</span>, the commanded velocity is</p>
+<div class="math notranslate nohighlight">
+\[\dot q_{\text{des}} = 0.\]</div>
+<p>The damping task therefore commands zero velocity; it acts as a
+regularizer that suppresses unnecessary motion when higher-priority tasks
+leave residual degrees of freedom.</p>
+</section>
+</section>
+</section>
+</section>
+
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="../api/lie.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Lie</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="../references.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">References</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item"><div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#limits">Limits</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#configuration-limit">Configuration limit</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#velocity-limit">Velocity limit</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#tasks">Tasks</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#posture-task">Posture task</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#first-order-task-dynamics">First-order task dynamics</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#quadratic-program-formulation">Quadratic-program formulation</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#velocity-interpretation">Velocity interpretation</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#damping-task">Damping task</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#error-and-jacobian">Error and Jacobian</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#quadratic-cost">Quadratic cost</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#optimality-conditions">Optimality conditions</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#connection-to-levenberg-marquardt-tikhonov">Connection to Levenberg-Marquardt / Tikhonov</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id2">Velocity interpretation</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Kevin Zakka
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2026, Kevin Zakka.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>
