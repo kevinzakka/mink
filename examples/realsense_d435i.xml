@@ -1,0 +1,22 @@
+<mujoco model="realsense_d435i_lite">
+  <!-- Lightweight stand-in for the Intel RealSense D435i depth camera, built from
+       primitive geoms so the example stays self-contained (no meshes). The body's
+       -z axis is the optical axis, matching the MuJoCo camera convention, so it can
+       be attached with the same frame as the camera it represents. -->
+  <default>
+    <default class="d435i">
+      <geom contype="0" conaffinity="0" group="2"/>
+    </default>
+  </default>
+
+  <worldbody>
+    <body name="d435i" childclass="d435i">
+      <geom type="box" size="0.045 0.0125 0.0125" rgba="0.06 0.06 0.07 1" mass="0.072"/>
+      <geom type="box" size="0.043 0.0105 0.001" pos="0 0 -0.0125" rgba="0.02 0.02 0.02 1"/>
+      <!-- Left IR, RGB, right IR lenses on the front face. -->
+      <geom type="cylinder" size="0.0065 0.0015" pos="-0.027 0 -0.0135" rgba="0.1 0.12 0.14 1"/>
+      <geom type="cylinder" size="0.005 0.0015" pos="-0.004 0 -0.0135" rgba="0.2 0.04 0.05 1"/>
+      <geom type="cylinder" size="0.0065 0.0015" pos="0.02 0 -0.0135" rgba="0.1 0.12 0.14 1"/>
+    </body>
+  </worldbody>
+</mujoco>

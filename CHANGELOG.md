@@ -4,6 +4,25 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+
+- `LookAtTask`: points a frame's local axis at a target position in the world. It is a two-DOF task that constrains only the line of sight and leaves roll about the gaze axis free, so unlike a `FrameTask` orientation target it does not over-constrain the orientation. Its Jacobian is derived in the local frame from the body Jacobian and includes the translation term, so the solver may translate the frame as well as rotate it to keep the target in view.
+
+  <table>
+  <tr>
+  <td align="center">UR5e wrist camera</td>
+  <td align="center">Apollo whole-body gaze</td>
+  </tr>
+  <tr>
+  <td><video src="https://github.com/kevinzakka/mink/raw/assets/docs/arm_ur5e_wrist_cam_lookat.mp4" controls width="380"></video></td>
+  <td><video src="https://github.com/kevinzakka/mink/raw/assets/docs/humanoid_apollo.mp4" controls width="380"></video></td>
+  </tr>
+  </table>
+
+### Removed
+
+- `examples/humanoid_h1.py` and the `unitree_h1` model assets, whose whole-body tracking is already covered by `examples/humanoid_g1.py`.
+
 ## [1.2.0] - 2026-06-20
 
 ### Changed

@@ -35,6 +35,22 @@ Pose tracking with collision avoidance between the wrist and environment
 
 `View source code <https://github.com/kevinzakka/mink/blob/main/examples/arm_ur5e.py>`__
 
+UR5e wrist camera look-at
+-------------------------
+
+A wrist-mounted RealSense keeps a moving target centered in its field of view
+using :class:`~mink.LookAtTask`, with the onboard camera feed inset in the
+corner. Because the task only constrains *where* the camera points, roll about
+the optical axis stays free.
+
+.. raw:: html
+
+   <video width="400" controls>
+     <source src="https://raw.githubusercontent.com/kevinzakka/mink/assets/docs/arm_ur5e_wrist_cam_lookat.mp4" type="video/mp4">
+   </video>
+
+`View source code <https://github.com/kevinzakka/mink/blob/main/examples/arm_ur5e_wrist_cam_lookat.py>`__
+
 Bimanual manipulation with ALOHA
 --------------------------------
 

@@ -1,0 +1,36 @@
+<mujoco model="ur5e wrist cam scene">
+  <include file="ur5e.xml"/>
+
+  <statistic center="0.3 0 0.4" extent="1.2" meansize="0.08"/>
+
+  <visual>
+    <headlight diffuse="0.6 0.6 0.6" ambient="0.3 0.3 0.3" specular="0 0 0"/>
+    <rgba haze="0.15 0.25 0.35 1"/>
+    <global azimuth="130" elevation="-20"/>
+  </visual>
+
+  <asset>
+    <texture type="skybox" builtin="gradient" rgb1="0.3 0.5 0.7" rgb2="0 0 0" width="512" height="3072"/>
+    <texture name="grid" type="2d" builtin="checker" rgb1=".2 .3 .4" rgb2=".1 0.15 0.2" width="512" height="512"
+      mark="cross" markrgb=".8 .8 .8"/>
+    <material name="grid" texture="grid" texrepeat="2 2" texuniform="true" reflectance="0.2"/>
+    <material name="target_mat" rgba="1 0.5 0 1" emission="0.5"/>
+  </asset>
+
+  <worldbody>
+    <light pos="0 0 2" dir="0 0 -1" directional="true"/>
+    <geom name="floor" size="2 2 0.05" type="plane" material="grid"/>
+
+    <!-- Colorful landmarks for the wrist camera to sweep across. -->
+    <geom name="lm_red" type="sphere" size="0.06" pos="0.9 0.6 0.5" rgba="0.85 0.2 0.2 1"/>
+    <geom name="lm_green" type="box" size="0.06 0.06 0.06" pos="0.95 -0.5 0.35" rgba="0.2 0.7 0.3 1"/>
+    <geom name="lm_blue" type="cylinder" size="0.05 0.15" pos="0.4 -0.9 0.15" rgba="0.25 0.4 0.85 1"/>
+    <geom name="lm_yellow" type="capsule" size="0.05 0.12" pos="0.3 0.95 0.25" rgba="0.9 0.8 0.2 1"/>
+    <geom name="lm_purple" type="sphere" size="0.07" pos="1.1 0.05 0.7" rgba="0.6 0.3 0.8 1"/>
+
+    <!-- Bright target the camera keeps centered. -->
+    <body name="target" pos="0.6 0 0.5" mocap="true">
+      <geom type="sphere" size="0.03" contype="0" conaffinity="0" material="target_mat"/>
+    </body>
+  </worldbody>
+</mujoco>

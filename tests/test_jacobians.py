@@ -82,6 +82,16 @@ class TestJacobians(absltest.TestCase):
         frame_task.set_target(lie.SE3.sample_uniform())
         self.check_jacobian_finite_diff(frame_task, tol=_TOL)
 
+    def test_look_at_task(self):
+        look_at_task = mink.LookAtTask(
+            frame_name="left_foot",
+            frame_type="site",
+            axis=(0.0, 0.0, 1.0),
+        )
+        # Far target so the line-of-sight stays well-conditioned across configs.
+        look_at_task.set_target(np.array([2.0, 2.0, 3.0]))
+        self.check_jacobian_finite_diff(look_at_task, tol=_TOL)
+
     def test_relative_frame_task(self):
         relative_frame_task = mink.RelativeFrameTask(
             frame_name="left_foot",

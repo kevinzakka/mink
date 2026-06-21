@@ -52,6 +52,10 @@ autodoc_type_aliases = {
     "npt.ArrayLike": "ArrayLike",
 }
 
+# Keep the in-page "On this page" TOC to section headings (one entry per task /
+# limit) instead of listing every class and method, which overflows the pane.
+toc_object_entries = False
+
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
@@ -63,6 +67,9 @@ html_theme_options = {
         "image_light": "_static/logo.png",
         "image_dark": "_static/logo.png",
     },
+    # Expand the in-page "On this page" TOC so individual tasks/limits (H3
+    # sections nested under H2 groups) appear in the right pane.
+    "show_toc_level": 2,
 }
 
 favicons = [

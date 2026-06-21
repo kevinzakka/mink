@@ -6,7 +6,25 @@
 Tasks
 *****
 
-.. automodule:: mink.tasks.task
+Base classes
+============
+
+Objective
+---------
+
+.. autoclass:: mink.tasks.task.Objective
+    :members:
+
+Base task
+---------
+
+.. autoclass:: mink.tasks.task.BaseTask
+    :members:
+
+Task
+----
+
+.. autoclass:: mink.tasks.task.Task
     :members:
 
 Kinematic Tasks
@@ -28,6 +46,12 @@ Center of mass task
 -------------------
 
 .. automodule:: mink.tasks.com_task
+    :members:
+
+Look-at task
+------------
+
+.. automodule:: mink.tasks.look_at_task
     :members:
 
 Equality constraint task
