@@ -303,52 +303,8 @@ Complete Example
 
 The following example combines pose tracking with regularization and limits.
 
-.. code:: python
-
-   import mujoco
-   from mink import (
-       Configuration,
-       ConfigurationLimit,
-       FrameTask,
-       PostureTask,
-       VelocityLimit,
-       solve_ik,
-   )
-
-   # Load and configure.
-   model = mujoco.MjModel.from_xml_path("franka_emika_panda/mjx_scene.xml")
-   configuration = Configuration(model)
-   configuration.update_from_keyframe("home")
-
-   # Primary task: pose tracking.
-   task = FrameTask(
-       frame_name="attachment_site",
-       frame_type="site",
-       position_cost=1.0,
-       orientation_cost=1.0,
-   )
-
-   # Regularization: bias toward home configuration.
-   # This handles both singularities (resists extreme velocities near them)
-   # and nullspace drift (fills unused DOFs with a preference).
-   posture_task = PostureTask(model, cost=0.1)
-   posture_task.set_target_from_configuration(configuration)
-
-   tasks = [task, posture_task]
-
-   # Limits: joint bounds + velocity cap.
-   velocity_limits = {f"joint{i}": 2.0 for i in range(1, 8)}
-   limits = [
-       ConfigurationLimit(model),
-       VelocityLimit(model, velocity_limits),
-   ]
-
-   # IK loop.
-   dt = 0.01
-   for _ in range(steps):
-       task.set_target(get_target())  # Update target each step.
-       vel = solve_ik(configuration, tasks, dt, "daqp", limits=limits)
-       configuration.integrate_inplace(vel, dt)
+.. literalinclude:: ../../examples/docs/tasks_and_limits.py
+   :language: python
 
 Next Steps
 ==========
