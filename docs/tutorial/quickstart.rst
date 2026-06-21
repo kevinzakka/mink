@@ -144,7 +144,7 @@ task error:
 
    dt = 1.0 / fps
    for _ in range(n_frames):
-       vel = solve_ik(configuration, [task], dt)
+       vel = solve_ik(configuration, [task], dt, "daqp")
        configuration.integrate_inplace(vel, dt)
 
 The ``dt`` parameter is the time between successive calls to ``solve_ik``.
@@ -200,7 +200,7 @@ Complete Example
    # Run IK loop.
    dt = 1.0 / fps
    for _ in range(n_frames):
-       vel = solve_ik(configuration, [task], dt)
+       vel = solve_ik(configuration, [task], dt, "daqp")
        configuration.integrate_inplace(vel, dt)
 
    # Check result.

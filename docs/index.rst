@@ -52,7 +52,9 @@ Drive an end-effector to a target position:
 .. code-block:: python
 
    import mujoco
-   from mink import Configuration, FrameTask, solve_ik
+   import numpy as np
+
+   from mink import Configuration, FrameTask, SE3, solve_ik
 
    model = mujoco.MjModel.from_xml_path("robot.xml")
    configuration = Configuration(model)
@@ -63,10 +65,10 @@ Drive an end-effector to a target position:
        position_cost=1.0,
        orientation_cost=0.0,
    )
-   task.set_target_from_position([0.5, 0.0, 0.3])
+   task.set_target(SE3.from_translation(np.array([0.5, 0.0, 0.3])))
 
    for _ in range(max_iters):
-       vel = solve_ik(configuration, [task], dt=0.01)
+       vel = solve_ik(configuration, [task], dt=0.01, solver="daqp")
        configuration.integrate_inplace(vel, dt=0.01)
 
 - :doc:`installation`

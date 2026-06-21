@@ -244,8 +244,9 @@ Collision Avoidance
 -------------------
 
 :class:`~mink.CollisionAvoidanceLimit` prevents specified geometries from
-colliding. Pairs of geom groups that should remain separated are specified as
-follows:
+colliding. Pairs of geom groups that should remain separated are specified by
+name. The names must match collision geoms defined in the model; replace those
+below with the geoms relevant to your robot:
 
 .. code:: python
 
@@ -253,7 +254,7 @@ follows:
 
    collision_limit = CollisionAvoidanceLimit(
        model,
-       geom_pairs=[(["hand"], ["link4", "link5"])],
+       geom_pairs=[(["hand_capsule"], ["forearm", "upper_arm"])],
        minimum_distance_from_collisions=0.05,
    )
 
