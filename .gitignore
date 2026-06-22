@@ -17,3 +17,6 @@ build/
 .DS_Store
 .pytest_cache/
 .claude/
+
+# Vendored toolpath for the engraving example (a global ``*.npy`` rule hides it).
+!examples/mujoco_M_toolpath.npy

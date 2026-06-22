@@ -31,6 +31,7 @@ from .limits import Limit as Limit
 from .limits import VelocityLimit as VelocityLimit
 from .solve_ik import build_ik as build_ik
 from .solve_ik import solve_ik as solve_ik
+from .tasks import AxisAlignTask as AxisAlignTask
 from .tasks import ComTask as ComTask
 from .tasks import DampingTask as DampingTask
 from .tasks import DofFreezingTask as DofFreezingTask

@@ -49,6 +49,19 @@ using :class:`~mink.LookAtTask`.
 
 `View source code <https://github.com/kevinzakka/mink/blob/main/examples/arm_ur5e_wrist_cam_lookat.py>`__
 
+Panda surface engraving
+-----------------------
+
+A Panda engraves the MuJoCo "M" into a domed block, holding the spindle normal to
+the curved surface with :class:`~mink.AxisAlignTask` while a ``FrameTask`` drives
+the tip along the toolpath.
+
+.. raw:: html
+
+   <img width="400" src="https://raw.githubusercontent.com/kevinzakka/mink/assets/arm_panda_engrave.gif">
+
+`View source code <https://github.com/kevinzakka/mink/blob/main/examples/arm_panda_engrave.py>`__
+
 Bimanual manipulation with ALOHA
 --------------------------------
 

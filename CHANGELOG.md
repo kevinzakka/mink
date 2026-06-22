@@ -12,6 +12,12 @@ All notable changes to this project will be documented in this file.
 | :---: | :---: |
 | ![](https://github.com/kevinzakka/mink/blob/assets/arm_ur5e_wrist_cam_lookat.gif?raw=true) | ![](https://github.com/kevinzakka/mink/blob/assets/humanoid_apollo.gif?raw=true) |
 
+- `AxisAlignTask`: aligns a frame's local axis with a target *direction* in the world (a surface normal, gravity, a machine axis). It is the sibling of `LookAtTask`: look-at points an axis at a point, axis-align points it along a direction at infinity. Like look-at it is a two-DOF task that leaves roll about the axis free, but its Jacobian has no translation term since only rotation changes a direction. See `examples/arm_panda_engrave.py`, where a Panda holds the spindle normal to a curved surface while engraving.
+
+| Panda engraving the MuJoCo "M" |
+| :---: |
+| ![](https://github.com/kevinzakka/mink/blob/assets/arm_panda_engrave.gif?raw=true) |
+
 ### Removed
 
 - `examples/humanoid_h1.py` and the `unitree_h1` model assets, whose whole-body tracking is already covered by `examples/humanoid_g1.py`.

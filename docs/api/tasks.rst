@@ -54,6 +54,12 @@ Look-at task
 .. automodule:: mink.tasks.look_at_task
     :members:
 
+Axis-align task
+---------------
+
+.. automodule:: mink.tasks.axis_align_task
+    :members:
+
 Equality constraint task
 ------------------------
 
