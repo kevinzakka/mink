@@ -34,6 +34,7 @@ as the quickstart.
 
       - Joint position bounds (:class:`~mink.ConfigurationLimit`)
       - Velocity bounds (:class:`~mink.VelocityLimit`)
+      - Free-joint velocity bounds (:class:`~mink.FreeJointVelocityLimit`)
       - Collision avoidance (:class:`~mink.CollisionAvoidanceLimit`)
 
 Internally, tasks become quadratic objectives in the QP and limits become

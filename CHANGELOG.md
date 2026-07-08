@@ -6,6 +6,8 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+- `FreeJointVelocityLimit`: bounds the linear and angular velocity of a free joint (floating base), which `VelocityLimit` ignores.
+
 - `LookAtTask`: points a frame's local axis at a target position in the world. It is a two-DOF task that constrains only the line of sight and leaves roll about the gaze axis free, so unlike a `FrameTask` orientation target it does not over-constrain the orientation. Its Jacobian is derived in the local frame from the body Jacobian and includes the translation term, so the solver may translate the frame as well as rotate it to keep the target in view.
 
 | UR5e wrist camera | Apollo whole-body gaze |

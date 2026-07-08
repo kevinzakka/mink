@@ -27,6 +27,7 @@ from .lie import MatrixLieGroup as MatrixLieGroup
 from .limits import CollisionAvoidanceLimit as CollisionAvoidanceLimit
 from .limits import ConfigurationLimit as ConfigurationLimit
 from .limits import Constraint as Constraint
+from .limits import FreeJointVelocityLimit as FreeJointVelocityLimit
 from .limits import Limit as Limit
 from .limits import VelocityLimit as VelocityLimit
 from .solve_ik import build_ik as build_ik

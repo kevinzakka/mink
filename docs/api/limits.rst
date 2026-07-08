@@ -24,6 +24,12 @@ Velocity limits
 .. automodule:: mink.limits.velocity_limit
    :members:
 
+Free-joint velocity limits
+==========================
+
+.. automodule:: mink.limits.free_joint_velocity_limit
+   :members:
+
 
 Collision avoidance limits
 ==========================
