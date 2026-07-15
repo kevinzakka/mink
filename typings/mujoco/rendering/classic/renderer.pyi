@@ -3,10 +3,10 @@ Defines a renderer class for the MuJoCo Python native bindings.
 """
 from __future__ import annotations
 import mujoco as mujoco
-from mujoco.cgl import GLContext
+from mujoco.glfw import GLContext
 from mujoco.rendering.classic import gl_context
-import numpy
 import numpy as np
+import numpy
 __all__: list[str] = ['GLContext', 'Renderer', 'gl_context', 'mujoco', 'np']
 class Renderer:
     """
