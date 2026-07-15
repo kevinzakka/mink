@@ -20,6 +20,10 @@ All notable changes to this project will be documented in this file.
 | :---: |
 | ![](https://github.com/kevinzakka/mink/blob/assets/arm_panda_engrave.gif?raw=true) |
 
+### Changed
+
+- Bumped minimum `mujoco` to `3.10.0` and switched `Configuration.get_inertia_matrix` from `mju_sym2dense` back to `mj_fullM`, whose new signature `mj_fullM(m, d, dst)` reads the CSR-format `data.M` directly.
+
 ### Removed
 
 - `examples/humanoid_h1.py` and the `unitree_h1` model assets, whose whole-body tracking is already covered by `examples/humanoid_g1.py`.
