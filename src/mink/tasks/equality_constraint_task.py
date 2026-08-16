@@ -97,6 +97,10 @@ class EqualityConstraintTask(Task):
         self._eq_ids = self._resolve_equality_ids(model, equalities)
         self._eq_types = model.eq_type[self._eq_ids].copy()
         self._neq_total = len(self._eq_ids)
+        # Maps a MuJoCo equality constraint id to its position in `_eq_ids`, so
+        # that per-constraint costs can be looked up from `efc_id` values.
+        self._eq_id_to_pos = np.full(model.neq, -1)
+        self._eq_id_to_pos[self._eq_ids] = np.arange(self._neq_total)
         self._mask: np.ndarray | None = None
 
         super().__init__(cost=np.zeros((1,)), gain=gain, lm_damping=lm_damping)
@@ -158,7 +162,7 @@ class EqualityConstraintTask(Task):
             configuration.data.efc_type == mujoco.mjtConstraint.mjCNSTR_EQUALITY
         ) & np.isin(configuration.data.efc_id, self._eq_ids)
         active_eq_ids = configuration.data.efc_id[self._mask]
-        self.cost = self._cost[active_eq_ids]
+        self.cost = self._cost[self._eq_id_to_pos[active_eq_ids]]
 
     def _resolve_equality_ids(
         self, model: mujoco.MjModel, equalities: Sequence[int | str] | None

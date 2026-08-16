@@ -62,6 +62,43 @@ class TestEqualityConstraintTask(absltest.TestCase):
             np.array([23.0, 23.0, 23.0, 17.0, 17.0, 17.0]),
         )
 
+    def test_subset_of_constraints_compute_uses_correct_costs(self):
+        """Costs are looked up by position in the subset, not by equality id."""
+        model = load_robot_description("cassie_mj_description")
+        configuration = Configuration(model)
+        configuration.update_from_keyframe("home")
+        task = EqualityConstraintTask(
+            model=model,
+            cost=[23.0, 17.0],
+            equalities=[0, 3],
+        )
+        # Previously raised IndexError: cost was indexed by equality id 3.
+        error = task.compute_error(configuration)
+        self.assertEqual(error.shape, (6,))
+        np.testing.assert_array_equal(
+            task.cost,
+            np.array([23.0, 23.0, 23.0, 17.0, 17.0, 17.0]),
+        )
+        jacobian = task.compute_jacobian(configuration)
+        self.assertEqual(jacobian.shape, (6, model.nv))
+
+    def test_subset_costs_follow_constraint_order(self):
+        """Costs map to their equality even when the subset is not in id order."""
+        model = load_robot_description("cassie_mj_description")
+        configuration = Configuration(model)
+        configuration.update_from_keyframe("home")
+        task = EqualityConstraintTask(
+            model=model,
+            cost=[17.0, 23.0],
+            equalities=[3, 0],
+        )
+        task.compute_error(configuration)
+        # efc rows are ordered by equality id: id 0 (cost 23) then id 3 (cost 17).
+        np.testing.assert_array_equal(
+            task.cost,
+            np.array([23.0, 23.0, 23.0, 17.0, 17.0, 17.0]),
+        )
+
     def test_duplicate_constraint_ids_throws(self):
         model = load_robot_description("cassie_mj_description")
         with self.assertRaises(TaskDefinitionError) as cm:
