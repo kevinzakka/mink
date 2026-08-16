@@ -124,6 +124,89 @@ class TestConfigurationLimit(absltest.TestCase):
         np.testing.assert_allclose(limit.lower, expected_lower)
         np.testing.assert_allclose(limit.upper, expected_upper)
 
+    _BALL_JOINT_XML = """
+    <mujoco>
+      <compiler angle="radian"/>
+      <worldbody>
+        <body>
+          <joint name="ball" type="ball" limited="true" range="0 1.0"/>
+          <geom type="sphere" size=".1" mass=".1"/>
+        </body>
+      </worldbody>
+    </mujoco>
+    """
+
+    def test_ball_joint_excluded_from_box_constraint(self):
+        model = mujoco.MjModel.from_xml_string(self._BALL_JOINT_XML)
+        limit = ConfigurationLimit(model)
+        self.assertEqual(len(limit.indices), 0)
+        self.assertIsNone(limit.projection_matrix)
+
+    def test_ball_joint_angle_row(self):
+        gain = 0.5
+        model = mujoco.MjModel.from_xml_string(self._BALL_JOINT_XML)
+        limit = ConfigurationLimit(model, gain=gain)
+        configuration = Configuration(model)
+
+        # At the identity orientation the axis is undefined: the row is zero and the
+        # constraint is vacuous with slack gain * max_angle.
+        G, h = limit.compute_qp_inequalities(configuration, 1e-3)
+        assert G is not None and h is not None
+        self.assertEqual(G.shape, (1, model.nv))
+        self.assertEqual(h.shape, (1,))
+        np.testing.assert_allclose(G, 0.0)
+        self.assertAlmostEqual(h[0], gain * 1.0)
+
+        # Rotated 0.4 rad about y: row is the rotation axis, slack shrinks.
+        angle = 0.4
+        q = np.array([np.cos(angle / 2), 0.0, np.sin(angle / 2), 0.0])
+        configuration.update(q=q)
+        G, h = limit.compute_qp_inequalities(configuration, 1e-3)
+        assert G is not None and h is not None
+        np.testing.assert_allclose(G[0], [0.0, 1.0, 0.0], atol=1e-12)
+        self.assertAlmostEqual(h[0], gain * (1.0 - angle))
+
+    def test_ball_joint_step_respects_angle_limit(self, tol=1e-9):
+        """Saturating the constraint lands exactly on the angle limit."""
+        model = mujoco.MjModel.from_xml_string(self._BALL_JOINT_XML)
+        limit = ConfigurationLimit(model, gain=1.0)
+        configuration = Configuration(model)
+        angle = 0.4
+        q = np.array([np.cos(angle / 2), 0.0, np.sin(angle / 2), 0.0])
+        configuration.update(q=q)
+        G, h = limit.compute_qp_inequalities(configuration, 1e-3)
+        assert G is not None and h is not None
+        # Step along the rotation axis with the maximum allowed magnitude.
+        q_next = configuration.integrate(G[0] * h[0], dt=1.0)
+        angle_next = 2.0 * np.arctan2(np.linalg.norm(q_next[1:]), abs(q_next[0]))
+        self.assertAlmostEqual(angle_next, 1.0, delta=tol)
+
+    def test_ball_and_hinge_joints_combined(self):
+        xml_str = """
+        <mujoco>
+          <compiler angle="radian"/>
+          <worldbody>
+            <body>
+              <joint name="ball" type="ball" limited="true" range="0 1.0"/>
+              <geom type="sphere" size=".1" mass=".1"/>
+              <body>
+                <joint name="hinge" type="hinge" limited="true" range="0 1.57"/>
+                <geom type="sphere" size=".1" mass=".1"/>
+              </body>
+            </body>
+          </worldbody>
+        </mujoco>
+        """
+        model = mujoco.MjModel.from_xml_string(xml_str)
+        limit = ConfigurationLimit(model)
+        configuration = Configuration(model)
+        # Only the hinge is box-constrained; the ball contributes one angle row.
+        self.assertEqual(len(limit.indices), 1)
+        G, h = limit.compute_qp_inequalities(configuration, 1e-3)
+        assert G is not None and h is not None
+        self.assertEqual(G.shape, (3, model.nv))
+        self.assertEqual(h.shape, (3,))
+
     def test_far_from_limit(self, tol=1e-10):
         """Limit has no effect when the configuration is far away."""
         dt = 1e-3  # [s]

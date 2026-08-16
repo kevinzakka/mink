@@ -58,12 +58,17 @@ class Configuration:
         self.data = mujoco.MjData(model)
         self._logger = logging.getLogger(__package__)
 
-        # Precompute limited joint indices for vectorized check_limits.
+        # Precompute limited joint indices for vectorized check_limits. Ball joints
+        # are tracked separately: their range bounds the rotation angle, not qpos.
         limited = model.jnt_limited.astype(bool)
         limited &= model.jnt_type != mujoco.mjtJoint.mjJNT_FREE
-        self._limited_jnt_ids = np.where(limited)[0]
+        is_ball = model.jnt_type == mujoco.mjtJoint.mjJNT_BALL
+        self._limited_jnt_ids = np.where(limited & ~is_ball)[0]
         self._limited_qposadr = model.jnt_qposadr[self._limited_jnt_ids]
         self._limited_range = model.jnt_range[self._limited_jnt_ids]
+        self._limited_ball_jnt_ids = np.where(limited & is_ball)[0]
+        self._limited_ball_qposadr = model.jnt_qposadr[self._limited_ball_jnt_ids]
+        self._limited_ball_max_angle = model.jnt_range[self._limited_ball_jnt_ids, 1]
 
         # Cached identity matrix for QP assembly.
         self._eye_nv = np.eye(model.nv)
@@ -112,32 +117,54 @@ class Configuration:
             NotWithinConfigurationLimits: If the current configuration is outside
                 the joint limits.
         """
-        if len(self._limited_jnt_ids) == 0:
-            return
-        qvals = self.data.qpos[self._limited_qposadr]
-        violations = (qvals < self._limited_range[:, 0] - tol) | (
-            qvals > self._limited_range[:, 1] + tol
-        )
-        if not violations.any():
-            return
-        if safety_break:
-            idx = int(np.argmax(violations))
-            jnt = int(self._limited_jnt_ids[idx])
-            raise exceptions.NotWithinConfigurationLimits(
-                joint_id=jnt,
-                value=int(qvals[idx]),
-                lower=self._limited_range[idx, 0],
-                upper=self._limited_range[idx, 1],
-                model=self.model,
+        if len(self._limited_jnt_ids) > 0:
+            qvals = self.data.qpos[self._limited_qposadr]
+            violations = (qvals < self._limited_range[:, 0] - tol) | (
+                qvals > self._limited_range[:, 1] + tol
             )
-        for idx in np.where(violations)[0]:
-            jnt = int(self._limited_jnt_ids[idx])
-            qval = qvals[idx]
-            qmin = self._limited_range[idx, 0]
-            qmax = self._limited_range[idx, 1]
+            if violations.any():
+                if safety_break:
+                    idx = int(np.argmax(violations))
+                    jnt = int(self._limited_jnt_ids[idx])
+                    raise exceptions.NotWithinConfigurationLimits(
+                        joint_id=jnt,
+                        value=float(qvals[idx]),
+                        lower=self._limited_range[idx, 0],
+                        upper=self._limited_range[idx, 1],
+                        model=self.model,
+                    )
+                for idx in np.where(violations)[0]:
+                    jnt = int(self._limited_jnt_ids[idx])
+                    qval = qvals[idx]
+                    qmin = self._limited_range[idx, 0]
+                    qmax = self._limited_range[idx, 1]
+                    self._logger.debug(
+                        f"Value {qval:.2f} at joint {jnt} is outside of its limits: "
+                        f"[{qmin:.2f}, {qmax:.2f}]"
+                    )
+
+        # A limited ball joint bounds its total rotation angle relative to the
+        # reference orientation.
+        for jnt, padr, max_angle in zip(
+            self._limited_ball_jnt_ids,
+            self._limited_ball_qposadr,
+            self._limited_ball_max_angle,
+        ):
+            quat = self.data.qpos[padr : padr + 4]
+            angle = 2.0 * np.arctan2(np.linalg.norm(quat[1:]), abs(quat[0]))
+            if angle <= max_angle + tol:
+                continue
+            if safety_break:
+                raise exceptions.NotWithinConfigurationLimits(
+                    joint_id=int(jnt),
+                    value=float(angle),
+                    lower=0.0,
+                    upper=float(max_angle),
+                    model=self.model,
+                )
             self._logger.debug(
-                f"Value {qval:.2f} at joint {jnt} is outside of its limits: "
-                f"[{qmin:.2f}, {qmax:.2f}]"
+                f"Rotation angle {angle:.2f} at ball joint {jnt} exceeds its limit "
+                f"{max_angle:.2f}"
             )
 
     def get_frame_jacobian(self, frame_name: str, frame_type: str) -> np.ndarray:

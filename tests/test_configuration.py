@@ -207,6 +207,39 @@ class TestConfiguration(absltest.TestCase):
         )
         mink.Configuration(model).check_limits()  # Early return, no raise.
 
+    def test_check_limits_ball_joint(self):
+        """A limited ball joint is checked on its rotation angle, not its qpos."""
+        model = mujoco.MjModel.from_xml_string(
+            """
+            <mujoco>
+              <compiler angle="radian"/>
+              <worldbody>
+                <body>
+                  <joint name="ball" type="ball" limited="true" range="0 1.0"/>
+                  <geom type="sphere" size=".1" mass=".1"/>
+                </body>
+              </worldbody>
+            </mujoco>
+            """
+        )
+        configuration = mink.Configuration(model)
+        configuration.check_limits()  # Identity: zero angle, should not raise.
+
+        # Rotated 0.5 rad about x: within the 1.0 rad limit.
+        angle = 0.5
+        q = np.array([np.cos(angle / 2), np.sin(angle / 2), 0.0, 0.0])
+        configuration.update(q=q)
+        configuration.check_limits()  # Should not raise.
+
+        # Rotated 1.5 rad about x: exceeds the limit. The quaternion w component
+        # (0.73) lies inside [0, 1], so a qpos-based check would miss this.
+        angle = 1.5
+        q = np.array([np.cos(angle / 2), np.sin(angle / 2), 0.0, 0.0])
+        configuration.update(q=q)
+        with self.assertRaises(mink.NotWithinConfigurationLimits):
+            configuration.check_limits()
+        configuration.check_limits(safety_break=False)  # Should not raise.
+
     def test_native_fallback_get_frame_jacobian(self):
         cfg = mink.Configuration(self.model, self.q_ref)
         jac = cfg.get_frame_jacobian("attachment_site", "site")
