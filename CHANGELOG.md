@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed
+
+- `EqualityConstraintTask`: costs are now looked up by position in the selected subset instead of by equality id. Previously `equalities=[0, 3]` raised `IndexError` on the first solve and out-of-order subsets mapped costs to the wrong constraints.
+
 ### Added
 
 - `FreeJointVelocityLimit`: bounds the linear and angular velocity of a free joint (floating base), which `VelocityLimit` ignores.
