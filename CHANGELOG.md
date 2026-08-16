@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 
 - `EqualityConstraintTask`: costs are now looked up by position in the selected subset instead of by equality id. Previously `equalities=[0, 3]` raised `IndexError` on the first solve and out-of-order subsets mapped costs to the wrong constraints.
+- `ConfigurationLimit` / `Configuration.check_limits`: a limited ball joint is now constrained on its total rotation angle (`range[1]`), matching MuJoCo semantics. Previously its quaternion qpos was box-constrained against the range and `check_limits` compared the quaternion w component, so violations went undetected.
 
 ### Added
 
