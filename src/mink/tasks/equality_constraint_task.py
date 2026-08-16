@@ -60,9 +60,11 @@ class EqualityConstraintTask(Task):
         equalities: ID or name of the equality constraints to regulate. If not provided,
             the task will regulate all equality constraints in the model.
         cost: Cost vector for the equality constraint task. Either a scalar, in which
-            case the same cost is applied to all constraints, or a vector of shape
-            ``(neq,)``, where ``neq`` is the number of equality constraints in the
-            model.
+            case the same cost is applied to all regulated constraints, or a vector
+            with one entry per regulated constraint, ``cost[i]`` pairing with
+            ``equalities[i]``. Internally the expanded per-row cost always follows
+            constraint-id order, which is also the row order of the error and
+            Jacobian.
 
     Raises:
         InvalidConstraint: If a specified equality constraint name or ID is not found,
@@ -94,7 +96,12 @@ class EqualityConstraintTask(Task):
         lm_damping: float = 0.0,
     ):
         self._logger = logging.getLogger(__package__)
-        self._eq_ids = self._resolve_equality_ids(model, equalities)
+        eq_ids = self._resolve_equality_ids(model, equalities)
+        # Store ids sorted so that the expanded cost vector is always in constraint-id
+        # order, which is also the row order of the efc arrays. `_cost_order` permutes
+        # a user cost vector (paired with `equalities`) into that order.
+        self._cost_order = np.argsort(eq_ids)
+        self._eq_ids = eq_ids[self._cost_order]
         self._eq_types = model.eq_type[self._eq_ids].copy()
         self._neq_total = len(self._eq_ids)
         # Maps a MuJoCo equality constraint id to its position in `_eq_ids`, so
@@ -121,9 +128,11 @@ class EqualityConstraintTask(Task):
         if not np.all(cost >= 0.0):
             raise TaskDefinitionError(f"{self.__class__.__name__} cost must be >= 0")
 
-        # Per constraint cost.
+        # Per constraint cost, permuted into constraint-id order.
         self._cost = (
-            np.full((self._neq_total,), cost[0]) if cost.shape[0] == 1 else cost.copy()
+            np.full((self._neq_total,), cost[0])
+            if cost.shape[0] == 1
+            else cost[self._cost_order]
         )
 
         # Expanded per constraint dimension.

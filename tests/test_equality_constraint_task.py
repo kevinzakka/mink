@@ -92,12 +92,12 @@ class TestEqualityConstraintTask(absltest.TestCase):
             cost=[17.0, 23.0],
             equalities=[3, 0],
         )
+        # Rows are ordered by equality id: id 0 (cost 23) then id 3 (cost 17), and
+        # the ordering is identical before and after the first compute.
+        expected = np.array([23.0, 23.0, 23.0, 17.0, 17.0, 17.0])
+        np.testing.assert_array_equal(task.cost, expected)
         task.compute_error(configuration)
-        # efc rows are ordered by equality id: id 0 (cost 23) then id 3 (cost 17).
-        np.testing.assert_array_equal(
-            task.cost,
-            np.array([23.0, 23.0, 23.0, 17.0, 17.0, 17.0]),
-        )
+        np.testing.assert_array_equal(task.cost, expected)
 
     def test_duplicate_constraint_ids_throws(self):
         model = load_robot_description("cassie_mj_description")
