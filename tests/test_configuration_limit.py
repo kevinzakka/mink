@@ -142,6 +142,12 @@ class TestConfigurationLimit(absltest.TestCase):
         self.assertEqual(len(limit.indices), 0)
         self.assertIsNone(limit.projection_matrix)
 
+    def test_ball_joint_min_distance_exceeding_range_throws(self):
+        """A margin that eliminates the ball joint's range fails at construction."""
+        model = mujoco.MjModel.from_xml_string(self._BALL_JOINT_XML)
+        with self.assertRaises(LimitDefinitionError):
+            ConfigurationLimit(model, min_distance_from_limits=1.5)
+
     def test_ball_joint_angle_row(self):
         gain = 0.5
         model = mujoco.MjModel.from_xml_string(self._BALL_JOINT_XML)

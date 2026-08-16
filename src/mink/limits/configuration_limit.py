@@ -16,6 +16,13 @@ class ConfigurationLimit(Limit):
     their range. A limited ball joint is constrained on its total rotation angle,
     bounded by the second element of its range (the first element is ignored,
     following MuJoCo semantics).
+
+    .. note::
+
+        The ball joint constraint is a first-order linearization that only bounds
+        motion along the current rotation axis; motion orthogonal to the axis grows
+        the angle at second order. Pair it with a velocity limit on the ball
+        joint's degrees of freedom so that large steps cannot overshoot the limit.
     """
 
     def __init__(
@@ -32,9 +39,9 @@ class ConfigurationLimit(Limit):
                 allowed to move towards the joint limits at each timestep. Values lower
                 ttan 1 are safer but may make the joints move slowly.
             min_distance_from_limits: Offset in meters (slide joints) or radians
-                (hinge joints) to be added to the limits. Positive values decrease the
-                range of motion, negative values increase it (i.e. negative values
-                allow penetration).
+                (hinge and ball joints) to be added to the limits. Positive values
+                decrease the range of motion, negative values increase it (i.e.
+                negative values allow penetration).
         """
         if not 0.0 < gain <= 1.0:
             raise LimitDefinitionError(
@@ -69,6 +76,11 @@ class ConfigurationLimit(Limit):
         self._ball_max_angle = (
             model.jnt_range[ball_jnt_list, 1] - min_distance_from_limits
         )
+        if np.any(self._ball_max_angle <= 0.0):
+            raise LimitDefinitionError(
+                f"{self.__class__.__name__} ball joint max rotation angle must be "
+                "positive after subtracting min_distance_from_limits"
+            )
 
         self.indices = np.array(index_list)
         self.indices.setflags(write=False)
@@ -112,6 +124,7 @@ class ConfigurationLimit(Limit):
 
         G_list: list[np.ndarray] = []
         h_list: list[np.ndarray] = []
+        q = configuration.q
 
         if self.projection_matrix is not None:
             # Upper.
@@ -120,7 +133,7 @@ class ConfigurationLimit(Limit):
                 m=self.model,
                 qvel=delta_q_max,
                 dt=1.0,
-                qpos1=configuration.q,
+                qpos1=q,
                 qpos2=self.upper,
             )
 
@@ -133,7 +146,7 @@ class ConfigurationLimit(Limit):
                 # NOTE: mujoco.mj_differentiatePos does `qpos2 - qpos1` so notice the
                 # order swap here compared to above.
                 qpos1=self.lower,
-                qpos2=configuration.q,
+                qpos2=q,
             )
 
             p_min = self.gain * delta_q_min[self.indices]
@@ -151,11 +164,12 @@ class ConfigurationLimit(Limit):
             self._ball_qposadr, self._ball_dofadr, self._ball_max_angle
         ):
             phi = np.empty(3)
-            mujoco.mju_quat2Vel(phi, configuration.q[padr : padr + 4], 1.0)
+            mujoco.mju_quat2Vel(phi, q[padr : padr + 4], 1.0)
             angle = float(np.linalg.norm(phi))
             row = np.zeros((1, self.model.nv))
-            # At the identity orientation the axis is undefined; the zero row leaves
-            # the constraint vacuous, which is correct since any direction is free.
+            # At the identity orientation the axis is undefined and the row is left
+            # zero. The exact bound there, norm(dq) <= max_angle, is not expressible
+            # as a linear row, so the constraint is inactive for this step.
             if angle > 1e-9:
                 row[0, dadr : dadr + 3] = phi / angle
             G_list.append(row)
