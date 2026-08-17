@@ -25,6 +25,25 @@ except ImportError:
     _native = None  # type: ignore[assignment]
 
 
+def _resolve_frame_id(
+    model: mujoco.MjModel, frame_name: str | int, frame_type: str
+) -> int:
+    """Validate a frame type and resolve a frame name or id to an id."""
+    if frame_type not in consts.SUPPORTED_FRAMES:
+        raise exceptions.UnsupportedFrame(frame_type, consts.SUPPORTED_FRAMES)
+    if isinstance(frame_name, str):
+        frame_id = mujoco.mj_name2id(
+            model, consts.FRAME_TO_ENUM[frame_type], frame_name
+        )
+        if frame_id == -1:
+            raise exceptions.InvalidFrame(frame_name, frame_type, model)
+        return frame_id
+    frame_id = int(frame_name)
+    if not 0 <= frame_id < getattr(model, consts.FRAME_TO_COUNT_ATTR[frame_type]):
+        raise exceptions.InvalidFrame(frame_id, frame_type, model)
+    return frame_id
+
+
 class Configuration:
     """Encapsulates a model and data for convenient access to kinematic quantities.
 
@@ -73,7 +92,7 @@ class Configuration:
         self._eye_nv = np.eye(model.nv)
 
         # Cache of resolved frame ids; these are static for a given model.
-        self._frame_id_cache: dict[tuple[str, str], int] = {}
+        self._frame_id_cache: dict[tuple[str | int, str], int] = {}
 
         self.update(q=q)
 
@@ -165,7 +184,7 @@ class Configuration:
                 f"{max_angle:.2f}"
             )
 
-    def get_frame_jacobian(self, frame_name: str, frame_type: str) -> np.ndarray:
+    def get_frame_jacobian(self, frame_name: str | int, frame_type: str) -> np.ndarray:
         r"""Compute the Jacobian matrix of a frame velocity.
 
         Denoting our frame by :math:`B` and the world frame by :math:`W`, the
@@ -177,7 +196,7 @@ class Configuration:
             {}_B v_{WB} = {}_B J_{WB} \dot{q}
 
         Args:
-            frame_name: Name of the frame in the MJCF.
+            frame_name: Name or id of the frame in the MJCF.
             frame_type: Type of frame. Can be a geom, a body or a site.
 
         Returns:
@@ -202,28 +221,17 @@ class Configuration:
 
         return jac
 
-    def _resolve_frame_id(self, frame_name: str, frame_type: str) -> int:
-        """Validate frame type and resolve name to ID (cached; ids are static)."""
+    def _resolve_frame_id(self, frame_name: str | int, frame_type: str) -> int:
+        """Resolve and memoize a frame identifier (ids are static for a model)."""
         key = (frame_name, frame_type)
         cached = self._frame_id_cache.get(key)
-        if cached is not None:
-            return cached
-        if frame_type not in consts.SUPPORTED_FRAMES:
-            raise exceptions.UnsupportedFrame(frame_type, consts.SUPPORTED_FRAMES)
-        frame_id = mujoco.mj_name2id(
-            self.model, consts.FRAME_TO_ENUM[frame_type], frame_name
-        )
-        if frame_id == -1:
-            raise exceptions.InvalidFrame(
-                frame_name=frame_name,
-                frame_type=frame_type,
-                model=self.model,
-            )
-        self._frame_id_cache[key] = frame_id
-        return frame_id
+        if cached is None:
+            cached = _resolve_frame_id(self.model, frame_name, frame_type)
+            self._frame_id_cache[key] = cached
+        return cached
 
     def _get_transform_frame_to_world_wxyz_xyz(
-        self, frame_name: str, frame_type: str
+        self, frame_name: str | int, frame_type: str
     ) -> np.ndarray:
         """Return the raw wxyz_xyz[7] array for a frame pose. Internal use."""
         frame_id = self._resolve_frame_id(frame_name, frame_type)
@@ -236,11 +244,13 @@ class Configuration:
             translation=xpos,
         ).wxyz_xyz
 
-    def get_transform_frame_to_world(self, frame_name: str, frame_type: str) -> SE3:
+    def get_transform_frame_to_world(
+        self, frame_name: str | int, frame_type: str
+    ) -> SE3:
         """Get the pose of a frame at the current configuration.
 
         Args:
-            frame_name: Name of the frame in the MJCF.
+            frame_name: Name or id of the frame in the MJCF.
             frame_type: Type of frame. Can be a geom, a body or a site.
 
         Returns:
@@ -252,9 +262,9 @@ class Configuration:
 
     def _get_transform_wxyz_xyz(
         self,
-        source_name: str,
+        source_name: str | int,
         source_type: str,
-        dest_name: str,
+        dest_name: str | int,
         dest_type: str,
     ) -> np.ndarray:
         """Return the raw wxyz_xyz[7] for a relative transform. Internal use."""
@@ -268,18 +278,18 @@ class Configuration:
 
     def get_transform(
         self,
-        source_name: str,
+        source_name: str | int,
         source_type: str,
-        dest_name: str,
+        dest_name: str | int,
         dest_type: str,
     ) -> SE3:
         """Get the pose of a frame with respect to another frame at the current
         configuration.
 
         Args:
-            source_name: Name of the frame in the MJCF.
+            source_name: Name or id of the frame in the MJCF.
             source_type: Source type of frame. Can be a geom, a body or a site.
-            dest_name: Name of the frame to get the pose in.
+            dest_name: Name or id of the frame to get the pose in.
             dest_type: Dest type of frame. Can be a geom, a body or a site.
 
         Returns:

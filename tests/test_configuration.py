@@ -240,6 +240,35 @@ class TestConfiguration(absltest.TestCase):
             configuration.check_limits()
         configuration.check_limits(safety_break=False)  # Should not raise.
 
+    def test_frame_id_matches_frame_name(self):
+        """A frame id (Python or numpy integer) resolves the same as its name."""
+        configuration = mink.Configuration(self.model, self.q_ref)
+        site_id = self.model.site("attachment_site").id
+        jac = configuration.get_frame_jacobian("attachment_site", "site")
+        np.testing.assert_array_equal(
+            jac, configuration.get_frame_jacobian(site_id, "site")
+        )
+        np_site_id = np.int32(site_id)
+        np.testing.assert_array_equal(
+            jac,
+            configuration.get_frame_jacobian(np_site_id, "site"),  # type: ignore[arg-type]
+        )
+        np.testing.assert_array_equal(
+            configuration.get_transform_frame_to_world(
+                "attachment_site", "site"
+            ).wxyz_xyz,
+            configuration.get_transform_frame_to_world(site_id, "site").wxyz_xyz,
+        )
+
+    def test_frame_id_out_of_range_raises(self):
+        configuration = mink.Configuration(self.model)
+        with self.assertRaises(mink.InvalidFrame):
+            configuration.get_transform_frame_to_world(self.model.nsite, "site")
+        with self.assertRaises(mink.InvalidFrame):
+            configuration.get_transform_frame_to_world(-1, "site")
+        with self.assertRaises(mink.UnsupportedFrame):
+            configuration.get_transform_frame_to_world(0, "joint")
+
     def test_native_fallback_get_frame_jacobian(self):
         cfg = mink.Configuration(self.model, self.q_ref)
         jac = cfg.get_frame_jacobian("attachment_site", "site")

@@ -24,10 +24,10 @@ class RelativeFrameTask(Task):
     """Regulate the pose of a frame relative to another frame.
 
     Attributes:
-        frame_name: Name of the frame to regulate, typically the name of body, geom
+        frame_name: Name or id of the frame to regulate, typically a body, geom
             or site in the robot model.
         frame_type: The frame type: `body`, `geom` or `site`.
-        root_name: Name of the frame the task is relative to.
+        root_name: Name or id of the frame the task is relative to.
         root_type: The root frame type: `body`, `geom` or `site`.
         transform_target_to_root: Target pose in the root frame.
     """
@@ -37,9 +37,9 @@ class RelativeFrameTask(Task):
 
     def __init__(
         self,
-        frame_name: str,
+        frame_name: str | int,
         frame_type: str,
-        root_name: str,
+        root_name: str | int,
         root_type: str,
         position_cost: npt.ArrayLike,
         orientation_cost: npt.ArrayLike,

@@ -58,7 +58,7 @@ class LookAtTask(Task):
     in both cases the Levenberg-Marquardt ``lm_damping`` keeps the step bounded.
 
     Attributes:
-        frame_name: Name of the frame to control, typically a body, geom or site.
+        frame_name: Name or id of the frame to control, typically a body, geom or site.
         frame_type: The frame type: ``body``, ``geom`` or ``site``.
         axis: Unit gaze axis in the frame's local coordinates.
         target_pos: Target position to look at, in the world frame.
@@ -82,7 +82,7 @@ class LookAtTask(Task):
 
     def __init__(
         self,
-        frame_name: str,
+        frame_name: str | int,
         frame_type: str,
         axis: npt.ArrayLike = (0.0, 0.0, 1.0),
         cost: npt.ArrayLike = 1.0,
@@ -92,7 +92,7 @@ class LookAtTask(Task):
         """Constructor.
 
         Args:
-            frame_name: Name of the frame to control.
+            frame_name: Name or id of the frame to control.
             frame_type: The frame type: ``body``, ``geom`` or ``site``.
             axis: Gaze axis in the frame's local coordinates. Need not be
                 normalized; it is normalized internally. Defaults to the local

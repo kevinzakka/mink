@@ -2,6 +2,7 @@ import mujoco
 import numpy as np
 
 from . import constants as consts
+from .configuration import _resolve_frame_id
 from .exceptions import InvalidKeyframe, InvalidMocapBody
 
 
@@ -9,7 +10,7 @@ def move_mocap_to_frame(
     model: mujoco.MjModel,
     data: mujoco.MjData,
     mocap_name: str,
-    frame_name: str,
+    frame_name: str | int,
     frame_type: str,
 ) -> None:
     """Initialize mocap body pose at a desired frame.
@@ -18,14 +19,19 @@ def move_mocap_to_frame(
         model: Mujoco model.
         data: Mujoco data.
         mocap_name: The name of the mocap body.
-        frame_name: The desired frame name.
+        frame_name: Name or id of the frame in the MJCF.
         frame_type: The desired frame type. Can be "body", "geom" or "site".
+
+    Raises:
+        InvalidMocapBody: If the body is not a mocap body.
+        InvalidFrame: If the frame does not exist in the model.
+        UnsupportedFrame: If the frame type is not supported.
     """
     mocap_id = model.body(mocap_name).mocapid[0]
     if mocap_id == -1:
         raise InvalidMocapBody(mocap_name, model)
 
-    obj_id = mujoco.mj_name2id(model, consts.FRAME_TO_ENUM[frame_type], frame_name)
+    obj_id = _resolve_frame_id(model, frame_name, frame_type)
     xpos = getattr(data, consts.FRAME_TO_POS_ATTR[frame_type])[obj_id]
     xmat = getattr(data, consts.FRAME_TO_XMAT_ATTR[frame_type])[obj_id]
 

@@ -2,6 +2,7 @@
 
 import unittest.mock
 
+import mujoco
 import numpy as np
 from absl.testing import absltest
 from robot_descriptions.loaders.mujoco import load_robot_description
@@ -21,6 +22,25 @@ class TestFrameTask(absltest.TestCase):
     def setUp(self):
         self.configuration = Configuration(self.model)
         self.configuration.update_from_keyframe("stand")
+
+    def test_unnamed_frame_usable_by_id(self):
+        """A geom without a name can be targeted by its id."""
+        xml_str = """
+        <mujoco>
+          <worldbody>
+            <body>
+              <joint type="hinge" axis="0 0 1"/>
+              <geom type="sphere" size=".1" pos=".2 0 0" mass=".1"/>
+            </body>
+          </worldbody>
+        </mujoco>
+        """
+        model = mujoco.MjModel.from_xml_string(xml_str)
+        configuration = Configuration(model)
+        task = FrameTask(0, "geom", position_cost=1.0, orientation_cost=0.0)
+        task.set_target_from_configuration(configuration)
+        error = task.compute_error(configuration)
+        np.testing.assert_array_almost_equal(error, np.zeros(6))
 
     def test_cost_correctly_broadcast(self):
         task = FrameTask(

@@ -24,7 +24,7 @@ class FrameTask(Task):
     """Regulate the position and orientation of a frame of interest on the robot.
 
     Attributes:
-        frame_name: Name of the frame to regulate, typically the name of body, geom
+        frame_name: Name or id of the frame to regulate, typically a body, geom
             or site in the robot model.
         frame_type: The frame type: `body`, `geom` or `site`.
         transform_target_to_world: Target pose of the frame in the world frame.
@@ -54,7 +54,7 @@ class FrameTask(Task):
 
     def __init__(
         self,
-        frame_name: str,
+        frame_name: str | int,
         frame_type: str,
         position_cost: npt.ArrayLike,
         orientation_cost: npt.ArrayLike,

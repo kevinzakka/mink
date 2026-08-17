@@ -50,7 +50,7 @@ class AxisAlignTask(Task):
     step bounded.
 
     Attributes:
-        frame_name: Name of the frame to control, typically a body, geom or site.
+        frame_name: Name or id of the frame to control, typically a body, geom or site.
         frame_type: The frame type: ``body``, ``geom`` or ``site``.
         axis: Unit axis in the frame's local coordinates.
         target_dir: Target direction to align with, in the world frame.
@@ -74,7 +74,7 @@ class AxisAlignTask(Task):
 
     def __init__(
         self,
-        frame_name: str,
+        frame_name: str | int,
         frame_type: str,
         axis: npt.ArrayLike = (0.0, 0.0, 1.0),
         cost: npt.ArrayLike = 1.0,
@@ -84,7 +84,7 @@ class AxisAlignTask(Task):
         """Constructor.
 
         Args:
-            frame_name: Name of the frame to control.
+            frame_name: Name or id of the frame to control.
             frame_type: The frame type: ``body``, ``geom`` or ``site``.
             axis: Axis in the frame's local coordinates. Need not be normalized; it
                 is normalized internally. Defaults to the local ``+z`` axis.

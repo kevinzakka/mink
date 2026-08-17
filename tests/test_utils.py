@@ -6,7 +6,12 @@ from absl.testing import absltest
 from robot_descriptions.loaders.mujoco import load_robot_description
 
 from mink import utils
-from mink.exceptions import InvalidKeyframe, InvalidMocapBody
+from mink.exceptions import (
+    InvalidFrame,
+    InvalidKeyframe,
+    InvalidMocapBody,
+    UnsupportedFrame,
+)
 
 
 class TestUtils(absltest.TestCase):
@@ -98,6 +103,32 @@ class TestUtils(absltest.TestCase):
         # Should now be the same.
         np.testing.assert_allclose(data.body("mocap").xpos, body_pos)
         np.testing.assert_allclose(data.body("mocap").xquat, body_quat)
+
+    def test_move_mocap_to_frame_by_id_and_invalid_frames(self):
+        xml_str = """
+        <mujoco>
+          <worldbody>
+            <body name="target"><geom type="sphere" size=".1" mass=".1"/></body>
+            <body name="mocap" mocap="true" pos="1 1 1">
+              <geom type="sphere" size=".1" mass=".1"/>
+            </body>
+          </worldbody>
+        </mujoco>
+        """
+        model = mujoco.MjModel.from_xml_string(xml_str)
+        data = mujoco.MjData(model)
+        mujoco.mj_forward(model, data)
+
+        # Moving by id lands the mocap exactly on the target body.
+        utils.move_mocap_to_frame(model, data, "mocap", model.body("target").id, "body")
+        np.testing.assert_allclose(data.mocap_pos[0], data.body("target").xpos)
+
+        with self.assertRaises(InvalidFrame):
+            utils.move_mocap_to_frame(model, data, "mocap", "nonexistent", "body")
+        with self.assertRaises(InvalidFrame):
+            utils.move_mocap_to_frame(model, data, "mocap", model.nbody, "body")
+        with self.assertRaises(UnsupportedFrame):
+            utils.move_mocap_to_frame(model, data, "mocap", 0, "joint")
 
     def test_get_freejoint_dims(self):
         q_ids, v_ids = utils.get_freejoint_dims(self.model)

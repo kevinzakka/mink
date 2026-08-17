@@ -6,7 +6,7 @@ from typing import Sequence
 import mujoco
 import numpy as np
 
-from ..configuration import Configuration
+from ..configuration import Configuration, _resolve_frame_id
 from .limit import Constraint, Limit
 
 # Type aliases.
@@ -291,14 +291,7 @@ class CollisionAvoidanceLimit(Limit):
     def _homogenize_geom_id_list(self, geom_list: GeomSequence) -> list[int]:
         """Take a heterogeneous list of geoms (specified via ID or name) and return
         a homogenous list of IDs (int)."""
-        list_of_int: list[int] = []
-        for g in geom_list:
-            if isinstance(g, int):
-                list_of_int.append(g)
-            else:
-                assert isinstance(g, str)
-                list_of_int.append(self.model.geom(g).id)
-        return list_of_int
+        return [_resolve_frame_id(self.model, g, "geom") for g in geom_list]
 
     def _collision_pairs_to_geom_id_pairs(self, collision_pairs: CollisionPairs):
         geom_id_pairs = []

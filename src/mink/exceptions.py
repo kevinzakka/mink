@@ -4,6 +4,8 @@ from typing import Sequence
 
 import mujoco
 
+from . import constants
+
 
 class MinkError(Exception):
     """Base class for Mink exceptions."""
@@ -28,32 +30,38 @@ class UnsupportedFrame(MinkError):
 
 
 class InvalidFrame(MinkError):
-    """Exception raised when a frame name is not found in the robot model."""
+    """Exception raised when a frame name or id is not found in the robot model."""
 
     def __init__(
         self,
-        frame_name: str,
+        frame_name: str | int,
         frame_type: str,
         model: mujoco.MjModel,
     ):
-        if frame_type == "body":
-            available_names_of_type_frame_type = [
-                model.body(i).name for i in range(model.nbody)
-            ]
-        elif frame_type == "site":
-            available_names_of_type_frame_type = [
-                model.site(i).name for i in range(model.nsite)
-            ]
+        if not isinstance(frame_name, str):
+            count = getattr(model, constants.FRAME_TO_COUNT_ATTR[frame_type])
+            message = (
+                f"{frame_type} id {frame_name} is out of range for this model; "
+                f"expected 0 <= id < {count}."
+            )
         else:
-            assert frame_type == "geom"
-            available_names_of_type_frame_type = [
-                model.geom(i).name for i in range(model.ngeom)
-            ]
-
-        message = (
-            f"{frame_type} '{frame_name}' does not exist in the model. "
-            f"Available {frame_type} names: {available_names_of_type_frame_type}"
-        )
+            if frame_type == "body":
+                available_names_of_type_frame_type = [
+                    model.body(i).name for i in range(model.nbody)
+                ]
+            elif frame_type == "site":
+                available_names_of_type_frame_type = [
+                    model.site(i).name for i in range(model.nsite)
+                ]
+            else:
+                assert frame_type == "geom"
+                available_names_of_type_frame_type = [
+                    model.geom(i).name for i in range(model.ngeom)
+                ]
+            message = (
+                f"{frame_type} '{frame_name}' does not exist in the model. "
+                f"Available {frame_type} names: {available_names_of_type_frame_type}"
+            )
 
         super().__init__(message)
 

@@ -22,6 +22,11 @@ FRAME_TO_XMAT_ATTR = {
     "geom": "geom_xmat",
     "site": "site_xmat",
 }
+FRAME_TO_COUNT_ATTR = {
+    "body": "nbody",
+    "geom": "ngeom",
+    "site": "nsite",
+}
 
 
 def dof_width(joint_type: int) -> int:

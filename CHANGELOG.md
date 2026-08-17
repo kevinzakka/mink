@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file.
 ### Changed
 
 - Bumped minimum `mujoco` to 3.10.0 and switched `Configuration.get_inertia_matrix` to the new `mj_fullM(model, data, dst)` signature, replacing the `mju_sym2dense` workaround (#149). Type stubs regenerated against 3.11.0.
+- `move_mocap_to_frame` raises `InvalidFrame` for unknown frames instead of silently using the last frame in the model, and `CollisionAvoidanceLimit` validates geom names and ids, raising `InvalidFrame` instead of a raw `KeyError`/`IndexError`.
 
 ### Fixed
 
@@ -18,6 +19,8 @@ All notable changes to this project will be documented in this file.
 | ![](https://github.com/kevinzakka/mink/blob/assets/googly_eyes.gif?raw=true) | ![](https://github.com/kevinzakka/mink/blob/assets/googly_eyes_no_limit.gif?raw=true) |
 
 ### Added
+
+- Frame-based APIs (`FrameTask`, `RelativeFrameTask`, `LookAtTask`, `AxisAlignTask`, `Configuration` getters, `move_mocap_to_frame`) now accept an integer frame id wherever a frame name was expected, for frames without names (#166).
 
 - Add support for Python 3.14.
 
