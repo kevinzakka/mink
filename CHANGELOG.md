@@ -6,6 +6,8 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
+- Documented DOF freezing: new tutorial section with video, a derivation of the reduced-QP equivalence, and docstring fixes. The docstring's joint-name recipe now covers ball and free joints, and the examples demonstrate the constraint.
+
 - Bumped minimum `mujoco` to 3.10.0 and switched `Configuration.get_inertia_matrix` to the new `mj_fullM(model, data, dst)` signature, replacing the `mju_sym2dense` workaround (#149). Type stubs regenerated against 3.11.0.
 - `move_mocap_to_frame` raises `InvalidFrame` for unknown frames instead of silently using the last frame in the model, and `CollisionAvoidanceLimit` validates geom names and ids, raising `InvalidFrame` instead of a raw `KeyError`/`IndexError`.
 
