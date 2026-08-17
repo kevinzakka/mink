@@ -1,9 +1,10 @@
 """Example demonstrating DOF freezing with equality constraints.
 
 This example alternates between frozen and unfrozen modes every 5 seconds.
-When frozen (red target), joints 0-1 are locked. When unfrozen (green target),
-all joints are free to move. The end-effector follows a circular trajectory
-that requires base rotation, illustrating the impact of the constraints.
+When frozen (red target), joints 0-2 are locked. When unfrozen (green target),
+all joints are free to move. The target swings around the base at constant
+radius, which requires base rotation: frozen phases cannot follow it, free
+phases track it closely.
 """
 
 from pathlib import Path
@@ -45,8 +46,10 @@ def main():
         posture_task := mink.PostureTask(model=model, cost=1e-1),
     ]
 
-    # Constraint to freeze base rotation and shoulder lift.
-    freeze_constraint = mink.DofFreezingTask(model=model, dof_indices=[0, 1])
+    # Constraint to freeze the first three joints. With only the base rotation
+    # and shoulder lift frozen, the arm's redundancy can still track the
+    # target; freezing the upper-arm roll as well removes that escape.
+    freeze_constraint = mink.DofFreezingTask(model=model, dof_indices=[0, 1, 2])
 
     with mujoco.viewer.launch_passive(
         model=model, data=data, show_left_ui=False, show_right_ui=False
@@ -60,9 +63,11 @@ def main():
 
         mink.move_mocap_to_frame(model, data, "target", "attachment_site", "site")
         center = data.mocap_pos[0].copy()
+        radius = float(np.linalg.norm(center[:2]))
+        azimuth0 = float(np.arctan2(center[1], center[0]))
 
-        # Wide circular trajectory that requires base rotation.
-        radius = 0.25
+        # Constant-radius azimuth swing that requires base rotation.
+        swing_amplitude = np.deg2rad(60.0)
         freq = 0.1
         toggle_period = 5.0  # Toggle constraints every 5 seconds.
         target_geom_id = model.geom("target").id
@@ -78,10 +83,13 @@ def main():
             phase = int(local_time / toggle_period) % 2
             constraints = [freeze_constraint] if phase == 0 else []
 
-            # Circular trajectory around the robot.
-            angle = 2 * np.pi * freq * local_time
-            data.mocap_pos[0] = center + np.array(
-                [radius * np.cos(angle), radius * np.sin(angle), 0.0]
+            # Same out-and-back swing every phase: frozen phases fail on it,
+            # free phases track it.
+            azimuth = azimuth0 - swing_amplitude * abs(
+                np.sin(2 * np.pi * freq * local_time)
+            )
+            data.mocap_pos[0] = np.array(
+                [radius * np.cos(azimuth), radius * np.sin(azimuth), center[2]]
             )
 
             # Color the target based on constraint state.

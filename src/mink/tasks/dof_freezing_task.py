@@ -16,6 +16,14 @@ class DofFreezingTask(Task):
     This task is typically used as an equality constraint to prevent specific
     joints from moving. It enforces zero velocity on the selected DOFs.
 
+    .. note::
+
+        Passed through the ``constraints`` argument of :func:`~mink.solve_ik`,
+        the frozen DOFs are held exactly and the remaining DOFs solve the same
+        problem as if the frozen ones were deleted
+        (:ref:`derivation <dof-freezing-derivation>`). Passed as a regular
+        task, the freeze is a soft preference instead.
+
     Attributes:
         dof_indices: List of DOF indices to freeze (zero velocity).
 
@@ -35,16 +43,20 @@ class DofFreezingTask(Task):
             tasks=[frame_task, com_task],
             constraints=[dof_freezing_task],  # Enforce exactly
             dt=dt,
-            solver="proxqp",
+            solver="daqp",
         )
 
-        # Freeze specific joints by name.
+        # Freeze specific joints by name. A joint spans several consecutive
+        # DOFs: 1 for hinge and slide, 3 for ball, 6 for free.
+        from mink.constants import dof_width
+
         joint_names = ["shoulder_pan", "shoulder_lift"]
         dof_indices = []
         for joint_name in joint_names:
             joint_id = model.joint(joint_name).id
             dof_adr = model.jnt_dofadr[joint_id]
-            dof_indices.append(dof_adr)
+            width = dof_width(model.jnt_type[joint_id])
+            dof_indices.extend(range(dof_adr, dof_adr + width))
 
         dof_freezing_task = DofFreezingTask(model=model, dof_indices=dof_indices)
     """
@@ -108,6 +120,7 @@ class DofFreezingTask(Task):
             Zero vector of shape :math:`(k,)` where :math:`k` is the number
             of frozen DOFs.
         """
+        del configuration  # Unused.
         return self._error
 
     def compute_jacobian(self, configuration: Configuration) -> np.ndarray:
@@ -124,4 +137,5 @@ class DofFreezingTask(Task):
             Jacobian matrix of shape :math:`(k, n_v)` where :math:`k` is the
             number of frozen DOFs and :math:`n_v` is the number of velocity DOFs.
         """
+        del configuration  # Unused.
         return self._jacobian

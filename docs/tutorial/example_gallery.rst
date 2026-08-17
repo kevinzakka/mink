@@ -62,6 +62,21 @@ the tip along the toolpath.
 
 `View source code <https://github.com/kevinzakka/mink/blob/main/examples/arm_panda_engrave.py>`__
 
+Panda with frozen joints
+------------------------
+
+Alternates between freezing and releasing the first three joints with
+:class:`~mink.DofFreezingTask` while the target swings around the base.
+Frozen phases (red) cannot follow; free phases (green) track.
+
+.. raw:: html
+
+   <video width="400" controls>
+     <source src="https://raw.githubusercontent.com/kevinzakka/mink/assets/docs/dof_freezing.mp4" type="video/mp4">
+   </video>
+
+`View source code <https://github.com/kevinzakka/mink/blob/main/examples/arm_panda_dof_freezing.py>`__
+
 Bimanual manipulation with ALOHA
 --------------------------------
 

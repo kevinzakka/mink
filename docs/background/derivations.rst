@@ -234,3 +234,104 @@ With the library’s convention ``v = Δq / dt`` and
 The damping task therefore commands zero velocity; it acts as a
 regularizer that suppresses unnecessary motion when higher-priority tasks
 leave residual degrees of freedom.
+
+
+--------------------
+Equality constraints
+--------------------
+
+.. _dof-freezing-derivation:
+
+DOF freezing
+============
+
+Freezing a set of degrees of freedom imposes the equality constraint
+
+.. math::
+
+    \Delta q_f = 0,
+
+where :math:`\Delta q_f` contains the frozen tangent-space coordinates. For
+hinge and slide joints, this fixes the corresponding joint displacement
+exactly. For ball and free joints, individual tangent-space components are
+frozen only to first order.
+
+Let :math:`\Delta q_r` denote the remaining coordinates. Partitioning the QP
+accordingly gives
+
+.. math::
+    \begin{aligned}
+    \min_{\Delta q_r,\, \Delta q_f} \quad
+    & \tfrac12 \Delta q_r^{\top} H_{rr}\Delta q_r
+    + \Delta q_r^{\top} H_{rf}\Delta q_f
+    + \tfrac12 \Delta q_f^{\top} H_{ff}\Delta q_f
+    + c_r^{\top}\Delta q_r
+    + c_f^{\top}\Delta q_f \\
+    \text{s.t.} \quad
+    & G_r\Delta q_r + G_f\Delta q_f \leq h, \\
+    & \Delta q_f = 0.
+    \end{aligned}
+
+Substituting the equality constraint removes all terms involving
+:math:`\Delta q_f`:
+
+.. math::
+    \begin{aligned}
+    \min_{\Delta q_r} \quad
+    & \tfrac12 \Delta q_r^{\top} H_{rr}\Delta q_r
+    + c_r^{\top}\Delta q_r \\
+    \text{s.t.} \quad
+    & G_r\Delta q_r \leq h.
+    \end{aligned}
+
+Thus, exact DOF freezing is equivalent to eliminating the frozen decision
+variables from the QP: delete the corresponding rows and columns of
+:math:`H`, entries of :math:`c`, and columns of :math:`G`. The
+equality-constrained formulation produces the same minimizer over the
+remaining coordinates while preserving the original QP dimensions.
+
+An inequality involving only frozen coordinates reduces to
+:math:`0 \leq h_j`. If :math:`h_j < 0`, the constraint is already violated
+and no choice of the remaining coordinates can restore feasibility, since the
+coordinates on which the constraint depends are fixed.
+
+Soft freezing
+-------------
+
+A large penalty on the frozen coordinates is not equivalent to imposing
+:math:`\Delta q_f = 0`. For example, adding
+
+.. math::
+
+    \tfrac12 \Delta q_f^\top C \Delta q_f
+
+to the objective makes motion in those coordinates expensive, but does not
+forbid it. The optimizer may still choose :math:`\Delta q_f \neq 0` if doing
+so sufficiently reduces another part of the objective.
+
+This matters whenever the frozen and remaining coordinates are coupled through
+:math:`H_{rf}`. Ignoring inequality constraints, the optimal value of
+:math:`\Delta q_f` for a fixed :math:`\Delta q_r` is
+
+.. math::
+
+    \Delta q_f^\star
+    =
+    -(H_{ff} + C)^{-1}
+    \left(H_{rf}^{\top}\Delta q_r + c_f\right).
+
+Substituting this back into the objective gives the reduced Hessian
+
+.. math::
+
+    H_{rr}
+    - H_{rf}(H_{ff} + C)^{-1}H_{rf}^{\top}.
+
+Thus, a finite soft penalty changes the optimization over the remaining
+coordinates while still allowing the nominally frozen coordinates to move.
+Only in the limit of an infinite penalty does this recover exact freezing.
+
+Zeroing columns of a task Jacobian is not equivalent either. It removes those
+coordinates from that task's cost rather than constraining them. The
+coordinates remain decision variables and may still move because of other
+tasks or active constraints.

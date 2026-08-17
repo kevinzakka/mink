@@ -5,6 +5,7 @@ from mink import (
     SE3,
     Configuration,
     ConfigurationLimit,
+    DofFreezingTask,
     FrameTask,
     PostureTask,
     VelocityLimit,
@@ -39,6 +40,10 @@ limits = [
     VelocityLimit(model, velocity_limits),
 ]
 
+# Constraint: hold the forearm roll (joint5) still. Enforced exactly; the six
+# remaining joints suffice to track the circle.
+freeze_task = DofFreezingTask(model, dof_indices=[4])
+
 # IK loop: track a target that traces a small circle in front of the arm.
 home_pose = configuration.get_transform_frame_to_world("attachment_site", "site")
 dt = 0.01
@@ -49,5 +54,7 @@ for step in range(steps):
     task.set_target(
         SE3.from_translation(offset) @ home_pose
     )  # Update target each step.
-    vel = solve_ik(configuration, tasks, dt, "daqp", limits=limits)
+    vel = solve_ik(
+        configuration, tasks, dt, "daqp", limits=limits, constraints=[freeze_task]
+    )
     configuration.integrate_inplace(vel, dt)

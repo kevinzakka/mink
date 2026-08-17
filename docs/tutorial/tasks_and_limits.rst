@@ -281,6 +281,67 @@ between specified geometry pairs:
 
 *Collision avoidance prevents self-contact between the hand and upper arm.*
 
+Freezing Degrees of Freedom
+===========================
+
+Sometimes selected degrees of freedom must remain fixed while the rest of the
+robot moves. mink supports this through :class:`~mink.DofFreezingTask`, which
+can be passed through the ``constraints`` argument of :func:`~mink.solve_ik`:
+
+.. code:: python
+
+   from mink import DofFreezingTask
+
+   # Freeze the first two degrees of freedom.
+   freeze_task = DofFreezingTask(model, dof_indices=[0, 1])
+
+   for _ in range(steps):
+       vel = solve_ik(
+           configuration,
+           [task, posture_task],
+           dt,
+           "daqp",
+           constraints=[freeze_task],
+       )
+       configuration.integrate_inplace(vel, dt)
+
+When passed through ``constraints``, DOF freezing is a hard equality
+constraint: the selected degrees of freedom cannot move. This differs from
+passing the same object through ``tasks``, where zero displacement is a soft
+objective that can be traded against other tasks.
+
+``dof_indices`` are tangent-space indices, not configuration-space indices.
+A ball joint therefore contributes three indices and a free joint six. The
+``constraints`` list can change between calls, so degrees of freedom can be
+frozen and released at runtime. See
+`arm_panda_dof_freezing.py <https://github.com/kevinzakka/mink/blob/main/examples/arm_panda_dof_freezing.py>`__
+for an example that toggles the constraint while tracking a trajectory.
+
+.. warning::
+
+   Equality constraints and limits are both hard constraints. If they conflict,
+   the QP is infeasible. For example, freezing a joint that is already outside
+   its configuration limits prevents the solver from moving it back into the
+   feasible region. In this case, :func:`~mink.solve_ik` raises
+   :class:`~mink.NoSolutionFound` rather than returning a degraded solution.
+
+.. raw:: html
+
+   <video width="400" controls>
+     <source src="https://raw.githubusercontent.com/kevinzakka/mink/assets/docs/dof_freezing.mp4" type="video/mp4">
+   </video>
+
+*Red target: the first three degrees of freedom are frozen and the arm cannot
+follow. Green target: the constraints are removed and tracking resumes.*
+
+.. note::
+
+   Freezing with an equality constraint gives the same solution for the
+   unfrozen degrees of freedom as a reduced QP with the frozen coordinates
+   deleted. See the :ref:`derivation <dof-freezing-derivation>` for the
+   algebra and for why soft penalties or zeroed Jacobian columns are not
+   equivalent to exact freezing.
+
 Practical Guidelines
 ====================
 
@@ -298,6 +359,8 @@ When to Use What
 - :class:`~mink.VelocityLimit`, for smooth, rate-limited motion.
 - :class:`~mink.CollisionAvoidanceLimit`, when self-collision or environment
   collision is possible.
+- :class:`~mink.DofFreezingTask` (via ``constraints``), when selected joints
+  must not move.
 
 Complete Example
 ================

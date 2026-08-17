@@ -35,7 +35,7 @@ doc:
 .PHONY: doc-live
 doc-live:
 	rm -rf docs/_build
-	uv run --group doc sphinx-autobuild docs docs/_build
+	uv run --group doc sphinx-autobuild docs docs/_build --watch src/mink
 
 .PHONY: build
 build:
