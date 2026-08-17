@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Changed
+
+- Bumped minimum `mujoco` to 3.10.0 and switched `Configuration.get_inertia_matrix` to the new `mj_fullM(model, data, dst)` signature, replacing the `mju_sym2dense` workaround (#149). Type stubs regenerated against 3.11.0.
+
 ### Fixed
 
 - `EqualityConstraintTask`: costs are now looked up by position in the selected subset instead of by equality id. Previously `equalities=[0, 3]` raised `IndexError` on the first solve and out-of-order subsets mapped costs to the wrong constraints.

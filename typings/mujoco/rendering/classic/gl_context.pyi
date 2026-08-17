@@ -3,8 +3,8 @@ Exports GLContext for MuJoCo Python bindings.
 """
 from __future__ import annotations
 import ctypes as ctypes
-from mujoco.cgl import GLContext
 from mujoco.cgl import GLContext as _GLContext
+from mujoco.cgl import GLContext
 import os as os
 import platform as platform
 __all__: list[str] = ['GLContext', 'ctypes', 'os', 'platform']

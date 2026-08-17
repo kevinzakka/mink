@@ -322,18 +322,10 @@ class Configuration:
             The joint-space inertia matrix :math:`M(\mathbf{q})`.
         """
         # Run the composite rigid body inertia (CRB) algorithm to populate the joint
-        # space inertia matrix data.M.
+        # space inertia matrix data.M, then densify its symmetric CSR format.
         mujoco.mj_makeM(self.model, self.data)
-        # data.M is stored in a lower-triangular implicitly-symmetric CSR format and
-        # can be converted to a dense symmetric matrix via mujoco.mju_sym2dense.
         M = np.empty((self.nv, self.nv), dtype=np.float64)
-        mujoco.mju_sym2dense(
-            M,
-            self.data.M,
-            self.model.M_rownnz,
-            self.model.M_rowadr,
-            self.model.M_colind,
-        )
+        mujoco.mj_fullM(self.model, self.data, M)
         return M
 
     # Aliases.
