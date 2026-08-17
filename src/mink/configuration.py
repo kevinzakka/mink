@@ -58,8 +58,7 @@ class Configuration:
         self.data = mujoco.MjData(model)
         self._logger = logging.getLogger(__package__)
 
-        # Precompute limited joint indices for vectorized check_limits. Ball joints
-        # are tracked separately: their range bounds the rotation angle, not qpos.
+        # Precompute limited joint indices for vectorized check_limits.
         limited = model.jnt_limited.astype(bool)
         limited &= model.jnt_type != mujoco.mjtJoint.mjJNT_FREE
         is_ball = model.jnt_type == mujoco.mjtJoint.mjJNT_BALL
@@ -143,8 +142,7 @@ class Configuration:
                         f"[{qmin:.2f}, {qmax:.2f}]"
                     )
 
-        # A limited ball joint bounds its total rotation angle relative to the
-        # reference orientation.
+        # Ball joints are limited on their rotation angle.
         for jnt, padr, max_angle in zip(
             self._limited_ball_jnt_ids,
             self._limited_ball_qposadr,

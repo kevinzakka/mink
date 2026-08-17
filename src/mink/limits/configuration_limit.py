@@ -60,8 +60,7 @@ class ConfigurationLimit(Limit):
             # Skip free joints and joints without limits.
             if jnt_type == mujoco.mjtJoint.mjJNT_FREE or not model.jnt_limited[jnt]:
                 continue
-            # A ball joint's range bounds its total rotation angle, not its qpos
-            # values, so it cannot be folded into the box constraint below.
+            # Ball joints bound the rotation angle and are handled separately.
             if jnt_type == mujoco.mjtJoint.mjJNT_BALL:
                 ball_jnt_list.append(jnt)
                 continue
@@ -81,6 +80,12 @@ class ConfigurationLimit(Limit):
                 f"{self.__class__.__name__} ball joint max rotation angle must be "
                 "positive after subtracting min_distance_from_limits"
             )
+
+        # Scratch buffers for the ball joint rows.
+        n_ball = len(ball_jnt_list)
+        self._ball_G = np.zeros((n_ball, model.nv))
+        self._ball_h = np.empty(n_ball)
+        self._phi = np.empty(3)
 
         self.indices = np.array(index_list)
         self.indices.setflags(write=False)
@@ -156,23 +161,23 @@ class ConfigurationLimit(Limit):
             h_list.append(p_max)
             h_list.append(p_min)
 
-        # A limited ball joint bounds its total rotation angle. Linearized about the
-        # current orientation, the angle grows along the rotation axis, so the
-        # constraint is a^T dq <= gain * (max_angle - angle), matching MuJoCo's own
-        # limit constraint.
-        for padr, dadr, max_angle in zip(
-            self._ball_qposadr, self._ball_dofadr, self._ball_max_angle
+        # Ball joints: a^T dq <= gain * (max_angle - angle) along the rotation axis.
+        phi = self._phi
+        for i, (padr, dadr, max_angle) in enumerate(
+            zip(self._ball_qposadr, self._ball_dofadr, self._ball_max_angle)
         ):
-            phi = np.empty(3)
             mujoco.mju_quat2Vel(phi, q[padr : padr + 4], 1.0)
             angle = float(np.linalg.norm(phi))
-            row = np.zeros((1, self.model.nv))
-            # At the identity orientation the axis is undefined and the row is left
-            # zero. The exact bound there, norm(dq) <= max_angle, is not expressible
-            # as a linear row, so the constraint is inactive for this step.
+            axis = self._ball_G[i, dadr : dadr + 3]
+            # The axis is undefined at the identity; leave the row zero.
             if angle > 1e-9:
-                row[0, dadr : dadr + 3] = phi / angle
-            G_list.append(row)
-            h_list.append(np.array([self.gain * (max_angle - angle)]))
+                axis[:] = phi
+                axis /= angle
+            else:
+                axis[:] = 0.0
+            self._ball_h[i] = self.gain * (max_angle - angle)
+        if len(self._ball_h) > 0:
+            G_list.append(self._ball_G)
+            h_list.append(self._ball_h)
 
         return Constraint(G=np.vstack(G_list), h=np.hstack(h_list))
