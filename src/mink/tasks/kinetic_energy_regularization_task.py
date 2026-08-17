@@ -30,7 +30,9 @@ class KineticEnergyRegularizationTask(BaseTask):
 
         This task can be seen as an inertia-weighted version of the
         :class:`~.DampingTask`. Degrees of freedom with higher inertia will move less
-        for the same cost.
+        for the same cost. Conversely, low-inertia degrees of freedom are nearly free
+        to move, so pair this task with a small uniform :class:`~.DampingTask` to
+        keep them from absorbing all the motion.
 
     .. warning::
 

@@ -2,9 +2,8 @@
 
 Example usage:
 
-    python examples/kinetic_energy_reg.py --help
-    python examples/kinetic_energy_reg.py --energy_reg 0.0   # No regularization.
-    python examples/kinetic_energy_reg.py --energy_reg 1e-5  # Low regularization.
+    python examples/kinetic_energy_reg.py --energy_reg 0.0         # No reg.
+    python examples/kinetic_energy_reg.py --energy_reg 1e-3        # Heavy reg.
 """
 
 import argparse
@@ -41,8 +40,15 @@ if __name__ == "__main__":
     parser.add_argument(
         "--energy_reg",
         type=float,
-        default=0.0,
+        default=1e-4,
         help="Regularization weight for the kinetic energy task.",
+    )
+    parser.add_argument(
+        "--damping",
+        type=float,
+        default=5e-2,
+        help="Uniform damping cost. Kinetic energy regularization makes low-inertia "
+        "joints nearly free to move, so without this the wrists flail.",
     )
     args = parser.parse_args()
 
@@ -58,6 +64,8 @@ if __name__ == "__main__":
 
     kinetic_energy_task = mink.KineticEnergyRegularizationTask(cost=args.energy_reg)
     kinetic_energy_task.set_dt(_DT)  # NOTE: This is required!
+
+    damping_task = mink.DampingTask(model, cost=args.damping)
 
     # For storing and visualizing the end-effector path.
     positions: Deque[np.ndarray] = deque(maxlen=_MAX_TRACE_POINTS)
@@ -104,7 +112,7 @@ if __name__ == "__main__":
         configuration.integrate_inplace(vel, _DT)
     qpos0 = configuration.q.copy()
 
-    tasks = [end_effector_task, kinetic_energy_task]
+    tasks = [end_effector_task, kinetic_energy_task, damping_task]
 
     with mujoco.viewer.launch_passive(
         model=model, data=data, show_left_ui=False, show_right_ui=False
