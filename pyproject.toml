@@ -132,6 +132,9 @@ sdist.exclude = ["examples", "benchmarks", "docs", "tests", "typings", "uv.lock"
 [tool.cibuildwheel]
 build-frontend = "build[uv]"
 
+[tool.cibuildwheel.windows]
+archs = ["AMD64"]
+
 [tool.cibuildwheel.macos]
 archs = ["x86_64", "arm64"]
 

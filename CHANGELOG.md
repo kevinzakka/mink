@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Changed
+
+- Stopped building 32-bit Windows wheels. `mujoco` only ships `win_amd64` wheels, so the `win32` wheels could not install their own dependency.
+
 ## [1.3.0] - 2026-08-17
 
 ### Changed
