@@ -43,14 +43,24 @@ class TestJacobians(absltest.TestCase):
 
         self.target_q = np.random.uniform(low=lower, high=upper)
 
-    def check_jacobian_finite_diff(self, task: mink.Task, tol: float):
+    def check_jacobian_finite_diff(
+        self,
+        task: mink.Task,
+        tol: float,
+        model: mujoco.MjModel | None = None,
+        qs: np.ndarray | None = None,
+    ):
         """Check that a task Jacobian is de/dq by finite differences.
 
         Args:
             task: Task to test the Jacobian of.
             tol: Test tolerance.
+            model: Model to test on. Defaults to the class model.
+            qs: Configurations to test at. Defaults to the class samples.
         """
-        configuration = mink.Configuration(self.model)
+        model = self.model if model is None else model
+        qs = self.random_q if qs is None else qs
+        configuration = mink.Configuration(model)
 
         def e(q) -> np.ndarray:
             configuration.update(q)
@@ -60,14 +70,14 @@ class TestJacobians(absltest.TestCase):
             configuration.update(q)
             return task.compute_jacobian(configuration)
 
-        for q_0 in self.random_q:
+        for q_0 in qs:
             J_0 = J(q_0)
             e_0 = e(q_0)
             J_finite = np.empty_like(J_0)
-            for i in range(self.model.nv):
-                e_i = np.eye(self.model.nv)[i]
+            for i in range(model.nv):
+                e_i = np.eye(model.nv)[i]
                 q_perturbed = q_0.copy()
-                mujoco.mj_integratePos(self.model, q_perturbed, e_i, _STEP_SIZE)
+                mujoco.mj_integratePos(model, q_perturbed, e_i, _STEP_SIZE)
                 J_finite[:, i] = (e(q_perturbed) - e_0) / _STEP_SIZE
             norm_diff = float(np.linalg.norm(J_0 - J_finite, ord=np.inf))
             self.assertLess(norm_diff, tol)
@@ -153,6 +163,33 @@ class TestJacobians(absltest.TestCase):
     def test_equality_constraint_task(self):
         equality_constraint_task = mink.EqualityConstraintTask(self.model, cost=1.0)
         self.check_jacobian_finite_diff(equality_constraint_task, tol=_TOL)
+
+    def test_equality_constraint_task_tendon(self):
+        xml = """
+        <mujoco>
+          <worldbody>
+            <body>
+              <joint name="j1" type="slide" axis="1 0 0"/>
+              <geom type="sphere" size="0.05" mass="0.1"/>
+            </body>
+            <body pos="0 1 0">
+              <joint name="j2" type="slide" axis="1 0 0"/>
+              <geom type="sphere" size="0.05" mass="0.1"/>
+            </body>
+          </worldbody>
+          <tendon>
+            <fixed name="t1"><joint joint="j1" coef="1"/></fixed>
+            <fixed name="t2"><joint joint="j2" coef="1"/></fixed>
+          </tendon>
+          <equality>
+            <tendon name="coupling" tendon1="t1" tendon2="t2"/>
+          </equality>
+        </mujoco>
+        """
+        model = mujoco.MjModel.from_xml_string(xml)
+        task = mink.EqualityConstraintTask(model, cost=1.0)
+        qs = np.array([[0.5, -0.3], [-0.1, 0.4]])
+        self.check_jacobian_finite_diff(task, tol=_TOL, model=model, qs=qs)
 
 
 if __name__ == "__main__":

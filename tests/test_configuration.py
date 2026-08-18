@@ -130,6 +130,27 @@ class TestConfiguration(absltest.TestCase):
         mujoco.mj_mulM(self.model, configuration.data, Mv_ref, v)
         np.testing.assert_allclose(M @ v, Mv_ref, atol=1e-12)
 
+    def test_get_inertia_matrix_includes_tendon_armature(self):
+        xml = """
+        <mujoco>
+          <worldbody>
+            <body>
+              <joint name="j1" type="slide" axis="1 0 0"/>
+              <geom type="sphere" size="0.05" mass="0.1"/>
+            </body>
+          </worldbody>
+          <tendon>
+            <fixed name="t1" armature="0.25"><joint joint="j1" coef="2"/></fixed>
+          </tendon>
+        </mujoco>
+        """
+        model = mujoco.MjModel.from_xml_string(xml)
+        configuration = mink.Configuration(model)
+        M = configuration.get_inertia_matrix()
+        # A fixed tendon has length coef * q, so its armature adds
+        # armature * coef^2 to the body mass: M = 0.1 + 0.25 * 2^2.
+        self.assertAlmostEqual(float(M[0, 0]), 0.1 + 0.25 * 4.0)
+
     def test_check_limits(self):
         """Check that an error is raised iff a joint limit is exceeded."""
         configuration = mink.Configuration(self.model, q=self.q_ref)

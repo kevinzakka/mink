@@ -5,7 +5,7 @@ import numpy as np
 from absl.testing import absltest
 from robot_descriptions.loaders.mujoco import load_robot_description
 
-from mink import Configuration
+from mink import Configuration, solve_ik
 from mink.exceptions import InvalidConstraint, TaskDefinitionError
 from mink.tasks import EqualityConstraintTask
 
@@ -158,6 +158,54 @@ class TestEqualityConstraintTask(absltest.TestCase):
         configuration.update_from_keyframe("home")
         jacobian = task.compute_jacobian(configuration)
         self.assertEqual(jacobian.shape, (12, configuration.nv))
+
+    def test_tendon_ik_converges_to_coupled_lengths(self):
+        # Fixed tendons with coef 1 have length q, and both reference lengths
+        # are zero at qpos0, so the equality reduces to q1 = q2.
+        xml = """
+        <mujoco>
+          <worldbody>
+            <body>
+              <joint name="j1" type="slide" axis="1 0 0"/>
+              <geom type="sphere" size="0.05" mass="0.1"/>
+            </body>
+            <body pos="0 1 0">
+              <joint name="j2" type="slide" axis="1 0 0"/>
+              <geom type="sphere" size="0.05" mass="0.1"/>
+            </body>
+          </worldbody>
+          <tendon>
+            <fixed name="t1"><joint joint="j1" coef="1"/></fixed>
+            <fixed name="t2"><joint joint="j2" coef="1"/></fixed>
+          </tendon>
+          <equality>
+            <tendon name="coupling" tendon1="t1" tendon2="t2"/>
+          </equality>
+        </mujoco>
+        """
+        model = mujoco.MjModel.from_xml_string(xml)
+        configuration = Configuration(model, np.array([0.5, -0.3]))
+        task = EqualityConstraintTask(model=model, cost=1.0)
+
+        # If tendon kinematics were stale, both lengths would read zero and the
+        # final check would pass trivially. Verify the violation is seen.
+        error = task.compute_error(configuration)
+        self.assertEqual(error.shape, (1,))
+        self.assertAlmostEqual(abs(float(error[0])), 0.8)
+
+        # J^T J is rank one (motion along [1, 1] is free); damping selects the
+        # minimum-norm correction.
+        dt = 0.1
+        for _ in range(100):
+            velocity = solve_ik(
+                configuration, [task], dt=dt, solver="daqp", damping=1e-8
+            )
+            configuration.integrate_inplace(velocity, dt)
+
+        ten_length = configuration.data.ten_length
+        self.assertAlmostEqual(float(ten_length[0]), float(ten_length[1]), places=6)
+        error = task.compute_error(configuration)
+        np.testing.assert_allclose(error, 0.0, atol=1e-6)
 
 
 if __name__ == "__main__":

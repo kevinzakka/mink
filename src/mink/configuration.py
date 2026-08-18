@@ -108,6 +108,9 @@ class Configuration:
         # mj_kinematics. An extra call to mj_comPos is required for updated Jacobians.
         mujoco.mj_kinematics(self.model, self.data)
         mujoco.mj_comPos(self.model, self.data)
+        # ten_length and ten_J feed mjEQ_TENDON rows and tendon armature in M.
+        if self.model.ntendon > 0:
+            mujoco.mj_tendon(self.model, self.data)
         if self.model.neq > 0:
             mujoco.mj_makeConstraint(self.model, self.data)
 
