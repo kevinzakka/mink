@@ -130,6 +130,7 @@ class TestRelativeFrameTask(absltest.TestCase):
         )
 
     def test_matches_frame_task(self):
+        """With the world as root, the relative task reduces to the frame task."""
         relative_task = RelativeFrameTask(
             frame_name="pelvis",
             frame_type="body",
@@ -150,11 +151,11 @@ class TestRelativeFrameTask(absltest.TestCase):
 
         np.testing.assert_allclose(
             frame_task.compute_error(self.configuration),
-            -relative_task.compute_error(self.configuration),
+            relative_task.compute_error(self.configuration),
         )
         np.testing.assert_allclose(
             frame_task.compute_jacobian(self.configuration),
-            -relative_task.compute_jacobian(self.configuration),
+            relative_task.compute_jacobian(self.configuration),
         )
 
     def test_qp_objective_without_target(self):
@@ -202,7 +203,9 @@ class TestRelativeFrameTaskNativeFallback(absltest.TestCase):
             position_cost=1.0,
             orientation_cost=1.0,
         )
-        self.task.set_target(SE3.sample_uniform())
+        self.task.set_target(
+            SE3.exp(np.array([0.2, -0.1, 0.3, 0.4, -0.2, 0.1], dtype=np.float64))
+        )
 
     def test_compute_error_fallback(self):
         err = self.task.compute_error(self.configuration)
@@ -224,6 +227,25 @@ class TestRelativeFrameTaskNativeFallback(absltest.TestCase):
             H_fb, c_fb = self.task.compute_qp_objective(self.configuration)
         np.testing.assert_allclose(H_fb, H, atol=1e-10)
         np.testing.assert_allclose(c_fb, c, atol=1e-10)
+
+    def test_pure_translation_error_fallback(self):
+        current = self.configuration.get_transform(
+            "pelvis", "body", "torso_link", "body"
+        )
+        self.task.set_target(current @ SE3.from_translation(np.array([0.0, 0.01, 0.0])))
+
+        error = self.task.compute_error(self.configuration)
+        jacobian = self.task.compute_jacobian(self.configuration)
+        H, c = self.task.compute_qp_objective(self.configuration)
+        with unittest.mock.patch("mink.tasks.relative_frame_task._native", None):
+            error_fb = self.task.compute_error(self.configuration)
+            jacobian_fb = self.task.compute_jacobian(self.configuration)
+            H_fb, c_fb = self.task.compute_qp_objective(self.configuration)
+
+        np.testing.assert_allclose(error_fb, error, atol=1e-12)
+        np.testing.assert_allclose(jacobian_fb, jacobian, atol=1e-12)
+        np.testing.assert_allclose(H_fb, H, atol=1e-12)
+        np.testing.assert_allclose(c_fb, c, atol=1e-12)
 
 
 if __name__ == "__main__":

@@ -6,7 +6,13 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
-- Stopped building 32-bit Windows wheels. `mujoco` only ships `win_amd64` wheels, so the `win32` wheels could not install their own dependency.
+- **Breaking**: `RelativeFrameTask.compute_error` and `compute_jacobian` now follow the `FrameTask` sign convention. IK solutions are unchanged, and a world-rooted relative task now matches `FrameTask` exactly.
+- `FrameTask` and `RelativeFrameTask` now use fused native error/Jacobian kernels, with expanded derivation and convention documentation. Task QP assembly is ~1.5x faster (~1.15x end-to-end on the G1 benchmark).
+
+### Fixed
+
+- Corrected Lie-group exponential, logarithm, and Jacobian calculations at small rotation angles and exactly 180°. Pose tasks now retain translation–rotation coupling when the orientation residual is zero or tiny.
+- `Objective.value` now includes the documented `1/2` factor on its quadratic term.
 
 ## [1.3.0] - 2026-08-17
 

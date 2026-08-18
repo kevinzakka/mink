@@ -82,6 +82,20 @@ class TestJacobians(absltest.TestCase):
         frame_task.set_target(lie.SE3.sample_uniform())
         self.check_jacobian_finite_diff(frame_task, tol=_TOL)
 
+    def test_frame_task_with_pure_translation_error(self):
+        configuration = mink.Configuration(self.model, q=self.random_q[0])
+        frame_task = mink.FrameTask(
+            frame_name="left_foot",
+            frame_type="site",
+            position_cost=1.0,
+            orientation_cost=1.0,
+        )
+        current = configuration.get_transform_frame_to_world("left_foot", "site")
+        frame_task.set_target(
+            current @ lie.SE3.from_translation(np.array([0.3, -0.2, 0.1]))
+        )
+        self.check_jacobian_finite_diff(frame_task, tol=_TOL)
+
     def test_look_at_task(self):
         look_at_task = mink.LookAtTask(
             frame_name="left_foot",
@@ -102,6 +116,24 @@ class TestJacobians(absltest.TestCase):
             orientation_cost=1.0,
         )
         relative_frame_task.set_target(lie.SE3.sample_uniform())
+        self.check_jacobian_finite_diff(relative_frame_task, tol=_TOL)
+
+    def test_relative_frame_task_with_pure_translation_error(self):
+        configuration = mink.Configuration(self.model, q=self.random_q[0])
+        relative_frame_task = mink.RelativeFrameTask(
+            frame_name="left_foot",
+            frame_type="site",
+            root_name="torso_1_link",
+            root_type="body",
+            position_cost=1.0,
+            orientation_cost=1.0,
+        )
+        current = configuration.get_transform(
+            "left_foot", "site", "torso_1_link", "body"
+        )
+        relative_frame_task.set_target(
+            current @ lie.SE3.from_translation(np.array([0.3, -0.2, 0.1]))
+        )
         self.check_jacobian_finite_diff(relative_frame_task, tol=_TOL)
 
     def test_posture_task(self):

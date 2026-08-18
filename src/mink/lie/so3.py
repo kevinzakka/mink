@@ -7,9 +7,11 @@ import mujoco
 import numpy as np
 
 from .base import MatrixLieGroup
-from .utils import get_epsilon
 
 _IDENTITIY_WXYZ = np.array([1.0, 0.0, 0.0, 0.0], dtype=np.float64)
+# Squared-angle cutoff: below this, the closed forms lose precision to
+# subtractive cancellation while the Taylor series remain effectively exact.
+_JACOBIAN_TAYLOR_THRESHOLD_SQUARED = 1e-2
 
 
 class RollPitchYaw(NamedTuple):
@@ -165,24 +167,26 @@ class SO3(MatrixLieGroup):
     # Eq. 132.
     @classmethod
     def exp(cls, tangent: np.ndarray) -> SO3:
-        axis = np.array(tangent)
-        theta = mujoco.mju_normalize3(axis)
+        theta = np.linalg.norm(tangent)
+        half_theta = 0.5 * theta
         wxyz = np.empty(4, dtype=np.float64)
-        # NOTE mju_axisAngle2Quat does not normalize the quaternion but is guaranteed
-        # to return a unit quaternion when axis is a unit vector. In our case,
-        # mju_normalize3 ensures that axis is a unit vector.
-        mujoco.mju_axisAngle2Quat(wxyz, axis, theta)
+        wxyz[0] = np.cos(half_theta)
+        if theta == 0.0:
+            wxyz[1:] = 0.0
+        else:
+            wxyz[1:] = (np.sin(half_theta) / theta) * tangent
         return SO3(wxyz=wxyz)
 
     # Eq. 133.
     def log(self) -> np.ndarray:
         q = np.array(self.wxyz)
-        q *= np.sign(q[0])
+        if q[0] < 0.0:
+            q = -q
         w, v = q[0], q[1:]
-        norm = mujoco.mju_normalize3(v)
-        if norm < get_epsilon(v.dtype):
+        norm = np.linalg.norm(v)
+        if norm == 0.0:
             return np.zeros_like(v)
-        return 2 * np.arctan2(norm, w) * v
+        return (2 * np.arctan2(norm, w) / norm) * v
 
     # Eq. 139.
     def adjoint(self) -> np.ndarray:
@@ -195,7 +199,7 @@ class SO3(MatrixLieGroup):
     def ljac(cls, other: np.ndarray) -> np.ndarray:
         theta = np.float64(mujoco.mju_norm3(other))
         t2 = theta * theta
-        if theta < get_epsilon(theta.dtype):
+        if t2 < _JACOBIAN_TAYLOR_THRESHOLD_SQUARED:
             alpha = (1.0 / 2.0) * (
                 1.0 - t2 / 12.0 * (1.0 - t2 / 30.0 * (1.0 - t2 / 56.0))
             )
@@ -233,14 +237,13 @@ class SO3(MatrixLieGroup):
     def ljacinv(cls, other: np.ndarray) -> np.ndarray:
         theta = np.float64(mujoco.mju_norm3(other))
         t2 = theta * theta
-        if theta < get_epsilon(theta.dtype):
+        if t2 < _JACOBIAN_TAYLOR_THRESHOLD_SQUARED:
             beta = (1.0 / 12.0) * (
                 1.0 + t2 / 60.0 * (1.0 + t2 / 42.0 * (1.0 + t2 / 40.0))
             )
         else:
-            beta = (1.0 / t2) * (
-                1.0 - (theta * np.sin(theta) / (2.0 * (1.0 - np.cos(theta))))
-            )
+            half_theta = 0.5 * theta
+            beta = (1.0 - half_theta / np.tan(half_theta)) / t2
         # ljacinv = eye(3) - 0.5 * skew_other + beta * (skew_other @ skew_other)
         ljacinv = np.empty((3, 3))
         # skew_other @ skew_other == outer(other) - inner(other) * eye(3)

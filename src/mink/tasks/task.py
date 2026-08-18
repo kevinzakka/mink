@@ -21,7 +21,7 @@ class Objective(NamedTuple):
 
     def value(self, x: np.ndarray) -> float:
         """Returns the value of the objective at the input vector."""
-        return float(x.T @ self.H @ x + self.c @ x)
+        return float(0.5 * x.T @ self.H @ x + self.c @ x)
 
 
 class BaseTask(abc.ABC):
@@ -168,7 +168,7 @@ class Task(BaseTask):
         .. math::
 
             \| J \Delta q + \alpha e \|_{W}^2 = \frac{1}{2} \Delta q^T H
-            \Delta q + c^T q
+            \Delta q + c^T \Delta q
 
         The weight matrix :math:`W \in \mathbb{R}^{k \times k}` weights and
         normalizes task coordinates to the same unit. The unit of the overall

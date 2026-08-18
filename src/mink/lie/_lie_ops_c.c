@@ -16,7 +16,8 @@
 /* Inline math helpers (equivalent to mju_* functions)                       */
 /* ========================================================================= */
 
-static const double EPS = 1e-10;
+/* Squared-angle cutoff for cancellation-prone Jacobian coefficients. */
+static const double JACOBIAN_TAYLOR_THRESHOLD_SQ = 1e-2;
 
 static inline double vec3_dot(const double *a, const double *b) {
     return a[0]*b[0] + a[1]*b[1] + a[2]*b[2];
@@ -79,6 +80,31 @@ static inline void mat33_mul(double *C, const double *A, const double *B) {
     }
 }
 
+/* C = A @ B for 6x6 row-major matrices. */
+static void mat66_mul(double *C, const double *A, const double *B) {
+    for (int i = 0; i < 6; i++) {
+        for (int j = 0; j < 6; j++) {
+            double s = 0.0;
+            for (int k = 0; k < 6; k++) s += A[6*i+k] * B[6*k+j];
+            C[6*i+j] = s;
+        }
+    }
+}
+
+/* M = s * (A @ blockdiag(R^T, R^T)) for 6x6 row-major A and 3x3 row-major R. */
+static void mat66_mul_blockdiag_transpose(double *M, const double *A,
+                                          const double *R, double s) {
+    for (int i = 0; i < 6; i++) {
+        for (int b = 0; b < 6; b += 3) {
+            const double *row = A + 6*i + b;
+            for (int j = 0; j < 3; j++) {
+                M[6*i + b + j] =
+                    s * (row[0]*R[3*j] + row[1]*R[3*j+1] + row[2]*R[3*j+2]);
+            }
+        }
+    }
+}
+
 /* out = in^T for 3x3 row-major matrices. */
 static inline void mat33_transpose(double *out, const double *in) {
     out[0] = in[0]; out[1] = in[3]; out[2] = in[6];
@@ -97,7 +123,7 @@ static void so3_log(double *omega, const double *wxyz) {
     if (q[0] < 0.0) { q[0] = -q[0]; q[1] = -q[1]; q[2] = -q[2]; q[3] = -q[3]; }
     double v[3] = {q[1], q[2], q[3]};
     double norm = vec3_normalize(v);
-    if (norm < EPS) {
+    if (norm == 0.0) {
         omega[0] = 0.0; omega[1] = 0.0; omega[2] = 0.0;
         return;
     }
@@ -112,10 +138,11 @@ static void so3_ljacinv(double *out, const double *omega) {
     double theta = vec3_norm(omega);
     double t2 = theta * theta;
     double beta;
-    if (theta < EPS) {
+    if (t2 < JACOBIAN_TAYLOR_THRESHOLD_SQ) {
         beta = (1.0/12.0) * (1.0 + t2/60.0 * (1.0 + t2/42.0 * (1.0 + t2/40.0)));
     } else {
-        beta = (1.0/t2) * (1.0 - (theta * sin(theta) / (2.0 * (1.0 - cos(theta)))));
+        double half = 0.5 * theta;
+        beta = (1.0 - half / tan(half)) / t2;
     }
     /* out = I + beta * (outer(omega, omega) - dot(omega, omega) * I) - 0.5 * skew(omega) */
     double inner = vec3_dot(omega, omega);
@@ -192,24 +219,9 @@ static void _se3_log(double *tangent, const double *wxyz_xyz) {
     double omega[3];
     so3_log(omega, wxyz_xyz);
 
-    double theta = vec3_norm(omega);
-    double t2 = theta * theta;
-
-    /* Build Vinv matrix (3x3, row-major). */
-    double skw[9], skw2[9], vinv[9];
-    skew3(skw, omega);
-    mat33_mul(skw2, skw, skw);
-
-    if (t2 < EPS) {
-        /* vinv = I - 0.5 * skew + skew^2 / 12 */
-        for (int i = 0; i < 9; i++) vinv[i] = -0.5 * skw[i] + skw2[i] / 12.0;
-        vinv[0] += 1.0; vinv[4] += 1.0; vinv[8] += 1.0;
-    } else {
-        double half = 0.5 * theta;
-        double coeff = (1.0 - 0.5 * theta * cos(half) / sin(half)) / t2;
-        for (int i = 0; i < 9; i++) vinv[i] = -0.5 * skw[i] + coeff * skw2[i];
-        vinv[0] += 1.0; vinv[4] += 1.0; vinv[8] += 1.0;
-    }
+    /* The SE3 translation inverse is the SO3 left Jacobian inverse. */
+    double vinv[9];
+    so3_ljacinv(vinv, omega);
 
     /* v = vinv @ translation */
     const double *t = wxyz_xyz + 4;
@@ -261,10 +273,12 @@ static void _getQ(double *Q, const double *c) {
     double A = 0.5;
     double B, C, D;
 
-    if (t2 < EPS) {
-        B = (1.0/6.0) + (1.0/120.0) * t2;
-        C = -(1.0/24.0) + (1.0/720.0) * t2;
-        D = -(1.0/60.0);
+    if (t2 < JACOBIAN_TAYLOR_THRESHOLD_SQ) {
+        double t4 = t2 * t2;
+        double t6 = t4 * t2;
+        B = 1.0/6.0 - t2/120.0 + t4/5040.0 - t6/362880.0;
+        C = -1.0/24.0 + t2/720.0 - t4/40320.0 + t6/3628800.0;
+        D = 1.0/120.0 - t2/2520.0 + t4/120960.0 - t6/9979200.0;
     } else {
         double t4 = t2 * t2;
         double st = sin(theta);
@@ -298,24 +312,13 @@ static void _getQ(double *Q, const double *c) {
 }
 
 /*
- * SE3 jlog: compute rjacinv(log(T)) directly from wxyz_xyz[7].
+ * SE3 jlog from a precomputed tangent = log(T): rjacinv(tangent).
  * Returns 6x6 matrix in row-major order.
  */
-static void _se3_jlog(double *jlog, const double *wxyz_xyz) {
-    double tangent[6];
-    _se3_log(tangent, wxyz_xyz);
-
+static void _se3_jlog_from_tangent(double *jlog, const double *tangent) {
     /* rjacinv(tangent) = ljacinv(-tangent) */
     double neg[6] = {-tangent[0], -tangent[1], -tangent[2],
                      -tangent[3], -tangent[4], -tangent[5]};
-
-    double theta_sq = vec3_dot(neg + 3, neg + 3);
-    if (theta_sq < EPS) {
-        /* Return identity. */
-        for (int i = 0; i < 36; i++) jlog[i] = 0.0;
-        for (int i = 0; i < 6; i++) jlog[7*i] = 1.0;  /* diagonal */
-        return;
-    }
 
     for (int i = 0; i < 36; i++) jlog[i] = 0.0;
 
@@ -342,6 +345,16 @@ static void _se3_jlog(double *jlog, const double *wxyz_xyz) {
     for (int i = 0; i < 3; i++)
         for (int j = 0; j < 3; j++)
             jlog[6*i+(j+3)] = -JQJ[3*i+j];
+}
+
+/*
+ * SE3 jlog: compute rjacinv(log(T)) directly from wxyz_xyz[7].
+ * Returns 6x6 matrix in row-major order.
+ */
+static void _se3_jlog(double *jlog, const double *wxyz_xyz) {
+    double tangent[6];
+    _se3_log(tangent, wxyz_xyz);
+    _se3_jlog_from_tangent(jlog, tangent);
 }
 
 /* ========================================================================= */
@@ -414,6 +427,72 @@ static void _se3_rotation_adjoint_from_xmat(double *adj, const double *xmat) {
 }
 
 /* ========================================================================= */
+/* Fused task kernels                                                        */
+/* ========================================================================= */
+
+/*
+ * Fused error and Jacobian map for the frame task.
+ *
+ * Inputs are the target and frame poses in the world frame (wxyz_xyz[7]).
+ * With E_inv = target^{-1} @ frame, the inverse pose residual, and R_wf the
+ * frame rotation:
+ *
+ *   error = -log(E_inv) = target (-) frame
+ *   M     = -Jlog6(E_inv) @ blockdiag(R_wf^T, R_wf^T)
+ *
+ * M maps MuJoCo's world-aligned frame Jacobian to the task Jacobian, i.e.
+ * J_task = M @ J_world_aligned: the blockdiag factor re-expresses the
+ * Jacobian in the local frame and -Jlog6 is the derivative of the error
+ * with respect to a local perturbation of the frame.
+ */
+static void _se3_frame_task_terms(double *error, double *M,
+                                  const double *target, const double *frame) {
+    double E_inv[7], tau[6], jlog[36], R_wf[9];
+    _se3_inverse_multiply(E_inv, target, frame);
+    _se3_log(tau, E_inv);
+    for (int i = 0; i < 6; i++) error[i] = -tau[i];
+    _se3_jlog_from_tangent(jlog, tau);
+    quat_to_mat33(R_wf, frame);
+    mat66_mul_blockdiag_transpose(M, jlog, R_wf, -1.0);
+}
+
+/*
+ * Fused error and Jacobian maps for the relative frame task.
+ *
+ * Inputs are the target pose in the root frame and the world poses of the
+ * frame and root (wxyz_xyz[7] each). With T_rf = root^{-1} @ frame the
+ * frame pose in the root, E_inv = target^{-1} @ T_rf the inverse pose
+ * residual, and R_wf, R_wr the frame and root rotations:
+ *
+ *   error   = -log(E_inv) = target (-) T_rf
+ *   M_frame = -Jlog6(E_inv) @ blockdiag(R_wf^T, R_wf^T)
+ *   M_root  =  Jlog6(E_inv) @ Ad(T_rf^{-1}) @ blockdiag(R_wr^T, R_wr^T)
+ *
+ * This mirrors _se3_frame_task_terms with the world replaced by the root.
+ * The task Jacobian is recovered from MuJoCo's world-aligned frame
+ * Jacobians as J_task = M_frame @ J_frame + M_root @ J_root.
+ */
+static void _se3_relative_frame_task_terms(
+    double *error, double *M_frame, double *M_root,
+    const double *target, const double *frame_world, const double *root_world) {
+    double T_rf[7], E_inv[7], tau[6], jlog[36], R[9];
+    _se3_inverse_multiply(T_rf, root_world, frame_world);
+    _se3_inverse_multiply(E_inv, target, T_rf);
+    _se3_log(tau, E_inv);
+    for (int i = 0; i < 6; i++) error[i] = -tau[i];
+    _se3_jlog_from_tangent(jlog, tau);
+    quat_to_mat33(R, frame_world);
+    mat66_mul_blockdiag_transpose(M_frame, jlog, R, -1.0);
+
+    double T_fr[7], adj[36], jlog_adj[36];
+    _se3_inverse(T_fr, T_rf);
+    _se3_adjoint(adj, T_fr);
+    mat66_mul(jlog_adj, jlog, adj);
+    quat_to_mat33(R, root_world);
+    mat66_mul_blockdiag_transpose(M_root, jlog_adj, R, 1.0);
+}
+
+/* ========================================================================= */
 /* Python wrapper functions                                                  */
 /* ========================================================================= */
 
@@ -435,6 +514,17 @@ static int parse_array(PyObject *arg, double *buf, npy_intp expected_len) {
     return 0;
 }
 
+/* Helper: allocate a new 1-D (len d0) or 2-D (d0 x d1) numpy array from buf. */
+static PyObject *make_array(const double *buf, int ndim, npy_intp d0, npy_intp d1) {
+    npy_intp dims[2] = {d0, d1};
+    PyObject *out = PyArray_SimpleNew(ndim, dims, NPY_DOUBLE);
+    if (!out) return NULL;
+    double *odata = (double *)PyArray_DATA((PyArrayObject *)out);
+    npy_intp size = ndim == 1 ? d0 : d0 * d1;
+    for (npy_intp i = 0; i < size; i++) odata[i] = buf[i];
+    return out;
+}
+
 static PyObject *py_se3_log(PyObject *self, PyObject *args) {
     (void)self;
     PyObject *arg;
@@ -444,13 +534,7 @@ static PyObject *py_se3_log(PyObject *self, PyObject *args) {
 
     double tangent[6];
     _se3_log(tangent, wxyz_xyz);
-
-    npy_intp dims[1] = {6};
-    PyObject *out = PyArray_SimpleNew(1, dims, NPY_DOUBLE);
-    if (!out) return NULL;
-    double *odata = (double *)PyArray_DATA((PyArrayObject *)out);
-    for (int i = 0; i < 6; i++) odata[i] = tangent[i];
-    return out;
+    return make_array(tangent, 1, 6, 0);
 }
 
 static PyObject *py_se3_inverse_multiply(PyObject *self, PyObject *args) {
@@ -463,13 +547,7 @@ static PyObject *py_se3_inverse_multiply(PyObject *self, PyObject *args) {
 
     double result[7];
     _se3_inverse_multiply(result, a, b);
-
-    npy_intp dims[1] = {7};
-    PyObject *out = PyArray_SimpleNew(1, dims, NPY_DOUBLE);
-    if (!out) return NULL;
-    double *odata = (double *)PyArray_DATA((PyArrayObject *)out);
-    for (int i = 0; i < 7; i++) odata[i] = result[i];
-    return out;
+    return make_array(result, 1, 7, 0);
 }
 
 static PyObject *py_se3_rminus(PyObject *self, PyObject *args) {
@@ -482,13 +560,7 @@ static PyObject *py_se3_rminus(PyObject *self, PyObject *args) {
 
     double tangent[6];
     _se3_rminus(tangent, a, b);
-
-    npy_intp dims[1] = {6};
-    PyObject *out = PyArray_SimpleNew(1, dims, NPY_DOUBLE);
-    if (!out) return NULL;
-    double *odata = (double *)PyArray_DATA((PyArrayObject *)out);
-    for (int i = 0; i < 6; i++) odata[i] = tangent[i];
-    return out;
+    return make_array(tangent, 1, 6, 0);
 }
 
 static PyObject *py_se3_jlog(PyObject *self, PyObject *args) {
@@ -500,13 +572,7 @@ static PyObject *py_se3_jlog(PyObject *self, PyObject *args) {
 
     double jlog[36];
     _se3_jlog(jlog, wxyz_xyz);
-
-    npy_intp dims[2] = {6, 6};
-    PyObject *out = PyArray_SimpleNew(2, dims, NPY_DOUBLE);
-    if (!out) return NULL;
-    double *odata = (double *)PyArray_DATA((PyArrayObject *)out);
-    for (int i = 0; i < 36; i++) odata[i] = jlog[i];
-    return out;
+    return make_array(jlog, 2, 6, 6);
 }
 
 static PyObject *py_se3_adjoint(PyObject *self, PyObject *args) {
@@ -518,13 +584,7 @@ static PyObject *py_se3_adjoint(PyObject *self, PyObject *args) {
 
     double adj[36];
     _se3_adjoint(adj, wxyz_xyz);
-
-    npy_intp dims[2] = {6, 6};
-    PyObject *out = PyArray_SimpleNew(2, dims, NPY_DOUBLE);
-    if (!out) return NULL;
-    double *odata = (double *)PyArray_DATA((PyArrayObject *)out);
-    for (int i = 0; i < 36; i++) odata[i] = adj[i];
-    return out;
+    return make_array(adj, 2, 6, 6);
 }
 
 static PyObject *py_se3_rotation_adjoint_from_xmat(PyObject *self, PyObject *args) {
@@ -536,13 +596,7 @@ static PyObject *py_se3_rotation_adjoint_from_xmat(PyObject *self, PyObject *arg
 
     double adj[36];
     _se3_rotation_adjoint_from_xmat(adj, xmat);
-
-    npy_intp dims[2] = {6, 6};
-    PyObject *out = PyArray_SimpleNew(2, dims, NPY_DOUBLE);
-    if (!out) return NULL;
-    double *odata = (double *)PyArray_DATA((PyArrayObject *)out);
-    for (int i = 0; i < 36; i++) odata[i] = adj[i];
-    return out;
+    return make_array(adj, 2, 6, 6);
 }
 
 static PyObject *py_se3_inverse(PyObject *self, PyObject *args) {
@@ -554,13 +608,7 @@ static PyObject *py_se3_inverse(PyObject *self, PyObject *args) {
 
     double result[7];
     _se3_inverse(result, wxyz_xyz);
-
-    npy_intp dims[1] = {7};
-    PyObject *out = PyArray_SimpleNew(1, dims, NPY_DOUBLE);
-    if (!out) return NULL;
-    double *odata = (double *)PyArray_DATA((PyArrayObject *)out);
-    for (int i = 0; i < 7; i++) odata[i] = result[i];
-    return out;
+    return make_array(result, 1, 7, 0);
 }
 
 static PyObject *py_xmat_xpos_to_wxyz_xyz(PyObject *self, PyObject *args) {
@@ -576,13 +624,48 @@ static PyObject *py_xmat_xpos_to_wxyz_xyz(PyObject *self, PyObject *args) {
     result[4] = xpos[0];
     result[5] = xpos[1];
     result[6] = xpos[2];
+    return make_array(result, 1, 7, 0);
+}
 
-    npy_intp dims[1] = {7};
-    PyObject *out = PyArray_SimpleNew(1, dims, NPY_DOUBLE);
-    if (!out) return NULL;
-    double *odata = (double *)PyArray_DATA((PyArrayObject *)out);
-    for (int i = 0; i < 7; i++) odata[i] = result[i];
-    return out;
+static PyObject *py_se3_frame_task_terms(PyObject *self, PyObject *args) {
+    (void)self;
+    PyObject *arg_target, *arg_frame;
+    if (!PyArg_ParseTuple(args, "OO", &arg_target, &arg_frame)) return NULL;
+    double target[7], frame[7];
+    if (parse_array(arg_target, target, 7) < 0) return NULL;
+    if (parse_array(arg_frame, frame, 7) < 0) return NULL;
+
+    double error[6], M[36];
+    _se3_frame_task_terms(error, M, target, frame);
+
+    PyObject *error_out = make_array(error, 1, 6, 0);
+    if (!error_out) return NULL;
+    PyObject *M_out = make_array(M, 2, 6, 6);
+    if (!M_out) { Py_DECREF(error_out); return NULL; }
+    return Py_BuildValue("NN", error_out, M_out);
+}
+
+static PyObject *py_se3_relative_frame_task_terms(PyObject *self, PyObject *args) {
+    (void)self;
+    PyObject *arg_target, *arg_frame, *arg_root;
+    if (!PyArg_ParseTuple(args, "OOO", &arg_target, &arg_frame, &arg_root)) {
+        return NULL;
+    }
+    double target[7], frame[7], root[7];
+    if (parse_array(arg_target, target, 7) < 0) return NULL;
+    if (parse_array(arg_frame, frame, 7) < 0) return NULL;
+    if (parse_array(arg_root, root, 7) < 0) return NULL;
+
+    double error[6], M_frame[36], M_root[36];
+    _se3_relative_frame_task_terms(error, M_frame, M_root, target, frame, root);
+
+    PyObject *error_out = make_array(error, 1, 6, 0);
+    if (!error_out) return NULL;
+    PyObject *M_frame_out = make_array(M_frame, 2, 6, 6);
+    if (!M_frame_out) { Py_DECREF(error_out); return NULL; }
+    PyObject *M_root_out = make_array(M_root, 2, 6, 6);
+    if (!M_root_out) { Py_DECREF(error_out); Py_DECREF(M_frame_out); return NULL; }
+    return Py_BuildValue("NNN", error_out, M_frame_out, M_root_out);
 }
 
 /* ========================================================================= */
@@ -606,15 +689,22 @@ static PyMethodDef methods[] = {
      "SE3 inverse: wxyz_xyz[7] -> wxyz_xyz[7]"},
     {"xmat_xpos_to_wxyz_xyz", py_xmat_xpos_to_wxyz_xyz, METH_VARARGS,
      "Convert MuJoCo xmat[9] + xpos[3] to SE3 wxyz_xyz[7]"},
+    {"se3_frame_task_terms", py_se3_frame_task_terms, METH_VARARGS,
+     "Frame task error and Jacobian map: target[7], frame[7] -> "
+     "(error[6], M[6,6])"},
+    {"se3_relative_frame_task_terms", py_se3_relative_frame_task_terms,
+     METH_VARARGS,
+     "Relative frame task error and Jacobian maps: target[7], frame[7], "
+     "root[7] -> (error[6], M_frame[6,6], M_root[6,6])"},
     {NULL, NULL, 0, NULL}
 };
 
 static struct PyModuleDef module = {
-    PyModuleDef_HEAD_INIT,
-    "_lie_ops_c",
-    "Fused lie group operations (C implementation)",
-    -1,
-    methods
+    .m_base = PyModuleDef_HEAD_INIT,
+    .m_name = "_lie_ops_c",
+    .m_doc = "Fused lie group operations (C implementation)",
+    .m_size = -1,
+    .m_methods = methods,
 };
 
 PyMODINIT_FUNC PyInit__lie_ops_c(void) {

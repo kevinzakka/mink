@@ -111,6 +111,28 @@ class RelativeFrameTask(Task):
         )
 
     def compute_error(self, configuration: Configuration) -> np.ndarray:
+        r"""Compute the relative frame task error.
+
+        The error is the right-minus difference between the target pose
+        :math:`T_{rf}^*` and the current pose :math:`T_{rf}` of our frame,
+        both relative to the root frame :math:`r`:
+
+        .. math::
+
+            e(q) = T_{rf}^* \ominus T_{rf}
+            = \log(T_{rf}^{-1} \cdot T_{rf}^*) = \log E_{rf}
+
+        The root is where the poses are compared; the resulting twist is
+        expressed in the controlled frame :math:`f`, matching the
+        :class:`~mink.tasks.frame_task.FrameTask` convention with the world
+        frame replaced by the root frame.
+
+        Args:
+            configuration: Robot configuration :math:`q`.
+
+        Returns:
+            Relative frame task error vector :math:`e(q)`.
+        """
         if self.transform_target_to_root is None:
             raise TargetNotSet(self.__class__.__name__)
 
@@ -119,12 +141,54 @@ class RelativeFrameTask(Task):
         )
         target = self.transform_target_to_root.wxyz_xyz
         if _native is not None:
-            return _native.se3_rminus(frame, target)
-        return SE3(wxyz_xyz=frame).rminus(SE3(wxyz_xyz=target))
+            return _native.se3_rminus(target, frame)
+        return SE3(wxyz_xyz=target).rminus(SE3(wxyz_xyz=frame))
 
     def compute_jacobian(self, configuration: Configuration) -> np.ndarray:
+        r"""Compute the relative frame task Jacobian.
+
+        The Jacobian is the derivative of the task error with respect to the
+        configuration displacement :math:`\Delta q`:
+
+        .. math::
+
+            J(q) = -\text{Jlog}_6(E_{rf}^{-1}) \,
+            \left({}_f J_{0f} - \text{Ad}(T_{fr}) \, {}_r J_{0r}\right)
+
+        where :math:`E_{rf} = T_{rf}^{-1} T_{rf}^*` is the pose residual,
+        :math:`T_{fr} = T_{rf}^{-1}`, and :math:`{}_f J_{0f}`,
+        :math:`{}_r J_{0r}` are the body Jacobians of the frame and the root.
+        See :ref:`derivations` for how this formula is derived and evaluated
+        from MuJoCo quantities.
+
+        Args:
+            configuration: Robot configuration :math:`q`.
+
+        Returns:
+            Relative frame task jacobian :math:`J(q)`.
+        """
         if self.transform_target_to_root is None:
             raise TargetNotSet(self.__class__.__name__)
+
+        target = self.transform_target_to_root.wxyz_xyz
+
+        if _native is not None:
+            frame_world = configuration._get_transform_frame_to_world_wxyz_xyz(
+                self.frame_name, self.frame_type
+            )
+            root_world = configuration._get_transform_frame_to_world_wxyz_xyz(
+                self.root_name, self.root_type
+            )
+            jac_frame = configuration._get_frame_jacobian_world_aligned(
+                self.frame_name, self.frame_type
+            )
+            jac_root = configuration._get_frame_jacobian_world_aligned(
+                self.root_name, self.root_type
+            )
+            _, M_frame, M_root = _native.se3_relative_frame_task_terms(
+                target, frame_world, root_world
+            )
+            return M_frame @ jac_frame + M_root @ jac_root
 
         jacobian_frame_in_frame = configuration.get_frame_jacobian(
             self.frame_name, self.frame_type
@@ -135,22 +199,13 @@ class RelativeFrameTask(Task):
         frame = configuration._get_transform_wxyz_xyz(
             self.frame_name, self.frame_type, self.root_name, self.root_type
         )
-        target = self.transform_target_to_root.wxyz_xyz
-
-        if _native is not None:
-            T_ft = _native.se3_inverse_multiply(target, frame)
-            A_rf = _native.se3_adjoint(_native.se3_inverse(frame))
-            return _native.se3_jlog(T_ft) @ (
-                jacobian_frame_in_frame - A_rf @ jacobian_root_in_root
-            )
-        else:
-            frame_se3 = SE3(wxyz_xyz=frame)
-            target_se3 = SE3(wxyz_xyz=target)
-            transform_frame_to_target = target_se3.inverse() @ frame_se3
-            return transform_frame_to_target.jlog() @ (
-                jacobian_frame_in_frame
-                - frame_se3.inverse().adjoint() @ jacobian_root_in_root
-            )
+        frame_se3 = SE3(wxyz_xyz=frame)
+        target_se3 = SE3(wxyz_xyz=target)
+        E_inv = target_se3.inverse() @ frame_se3
+        return -E_inv.jlog() @ (
+            jacobian_frame_in_frame
+            - frame_se3.inverse().adjoint() @ jacobian_root_in_root
+        )
 
     def _error_and_jacobian(
         self, configuration: Configuration
@@ -160,30 +215,40 @@ class RelativeFrameTask(Task):
         if self.transform_target_to_root is None:
             raise TargetNotSet(self.__class__.__name__)
 
-        jacobian_frame_in_frame = configuration.get_frame_jacobian(
-            self.frame_name, self.frame_type
-        )
-        jacobian_root_in_root = configuration.get_frame_jacobian(
-            self.root_name, self.root_type
-        )
-        frame = configuration._get_transform_wxyz_xyz(
-            self.frame_name, self.frame_type, self.root_name, self.root_type
-        )
         target = self.transform_target_to_root.wxyz_xyz
 
         if _native is not None:
-            error = _native.se3_rminus(frame, target)
-            T_ft = _native.se3_inverse_multiply(target, frame)
-            A_rf = _native.se3_adjoint(_native.se3_inverse(frame))
-            jacobian = _native.se3_jlog(T_ft) @ (
-                jacobian_frame_in_frame - A_rf @ jacobian_root_in_root
+            frame_world = configuration._get_transform_frame_to_world_wxyz_xyz(
+                self.frame_name, self.frame_type
             )
+            root_world = configuration._get_transform_frame_to_world_wxyz_xyz(
+                self.root_name, self.root_type
+            )
+            jac_frame = configuration._get_frame_jacobian_world_aligned(
+                self.frame_name, self.frame_type
+            )
+            jac_root = configuration._get_frame_jacobian_world_aligned(
+                self.root_name, self.root_type
+            )
+            error, M_frame, M_root = _native.se3_relative_frame_task_terms(
+                target, frame_world, root_world
+            )
+            jacobian = M_frame @ jac_frame + M_root @ jac_root
         else:
+            jacobian_frame_in_frame = configuration.get_frame_jacobian(
+                self.frame_name, self.frame_type
+            )
+            jacobian_root_in_root = configuration.get_frame_jacobian(
+                self.root_name, self.root_type
+            )
+            frame = configuration._get_transform_wxyz_xyz(
+                self.frame_name, self.frame_type, self.root_name, self.root_type
+            )
             frame_se3 = SE3(wxyz_xyz=frame)
             target_se3 = SE3(wxyz_xyz=target)
-            error = frame_se3.rminus(target_se3)
-            transform_frame_to_target = target_se3.inverse() @ frame_se3
-            jacobian = transform_frame_to_target.jlog() @ (
+            error = target_se3.rminus(frame_se3)
+            E_inv = target_se3.inverse() @ frame_se3
+            jacobian = -E_inv.jlog() @ (
                 jacobian_frame_in_frame
                 - frame_se3.inverse().adjoint() @ jacobian_root_in_root
             )

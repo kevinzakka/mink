@@ -8,9 +8,11 @@ import numpy as np
 from ..exceptions import InvalidMocapBody
 from .base import MatrixLieGroup
 from .so3 import SO3
-from .utils import get_epsilon, skew
+from .utils import skew
 
 _IDENTITY_WXYZ_XYZ = np.array([1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], dtype=np.float64)
+# Squared-angle cutoff for the cancellation-prone coefficients in Eqn. 180.
+_Q_TAYLOR_THRESHOLD_SQUARED = 1e-2
 
 
 @dataclass(frozen=True)
@@ -124,20 +126,9 @@ class SE3(MatrixLieGroup):
     def exp(cls, tangent: np.ndarray) -> SE3:
         assert tangent.shape == (cls.tangent_dim,)
         rotation = SO3.exp(tangent[3:])
-        theta = np.float64(mujoco.mju_norm3(tangent[3:]))
-        t2 = theta * theta
-        if t2 < get_epsilon(t2.dtype):
-            v_mat = rotation.as_matrix()
-        else:
-            skew_omega = skew(tangent[3:])
-            v_mat = (
-                np.eye(3, dtype=np.float64)
-                + (1.0 - np.cos(theta)) / t2 * skew_omega
-                + (theta - np.sin(theta)) / (t2 * theta) * (skew_omega @ skew_omega)
-            )
         return cls.from_rotation_and_translation(
             rotation=rotation,
-            translation=v_mat @ tangent[:3],
+            translation=SO3.ljac(tangent[3:]) @ tangent[:3],
         )
 
     def inverse(self) -> SE3:
@@ -168,25 +159,8 @@ class SE3(MatrixLieGroup):
 
     def log(self) -> np.ndarray:
         omega = self.rotation().log()
-        theta = np.float64(mujoco.mju_norm3(omega))
-        t2 = theta * theta
-        skew_omega = skew(omega)
-        skew_omega2 = skew_omega @ skew_omega
-        if t2 < get_epsilon(t2.dtype):
-            vinv_mat = (
-                np.eye(3, dtype=np.float64) - 0.5 * skew_omega + skew_omega2 / 12.0
-            )
-        else:
-            half_theta = 0.5 * theta
-            vinv_mat = (
-                np.eye(3, dtype=np.float64)
-                - 0.5 * skew_omega
-                + (1.0 - 0.5 * theta * np.cos(half_theta) / np.sin(half_theta))
-                / t2
-                * skew_omega2
-            )
         tangent = np.empty(SE3.tangent_dim, dtype=np.float64)
-        tangent[:3] = vinv_mat @ self.translation()
+        tangent[:3] = SO3.ljacinv(omega) @ self.translation()
         tangent[3:] = omega
         return tangent
 
@@ -205,9 +179,6 @@ class SE3(MatrixLieGroup):
     # Eqn 179 a)
     @classmethod
     def ljac(cls, other: np.ndarray) -> np.ndarray:
-        theta_squared = np.float64(mujoco.mju_dot3(other[3:], other[3:]))
-        if theta_squared < get_epsilon(theta_squared.dtype):
-            return np.eye(cls.tangent_dim)
         ljac_se3 = np.zeros((cls.tangent_dim, cls.tangent_dim), dtype=np.float64)
         ljac_translation = _getQ(other)
         ljac_so3 = SO3.ljac(other[3:])
@@ -219,9 +190,6 @@ class SE3(MatrixLieGroup):
     # Eqn 179 b)
     @classmethod
     def ljacinv(cls, other: np.ndarray) -> np.ndarray:
-        theta_squared = np.float64(mujoco.mju_dot3(other[3:], other[3:]))
-        if theta_squared < get_epsilon(theta_squared.dtype):
-            return np.eye(cls.tangent_dim)
         ljacinv_se3 = np.zeros((cls.tangent_dim, cls.tangent_dim), dtype=np.float64)
         ljac_translation = _getQ(other)
         ljacinv_so3 = SO3.ljacinv(other[3:])
@@ -266,10 +234,12 @@ def _getQ(c) -> np.ndarray:
     theta = np.float64(mujoco.mju_norm3(c[3:]))
     t2 = theta * theta
     A = 0.5
-    if t2 < get_epsilon(t2.dtype):
-        B = (1.0 / 6.0) + (1.0 / 120.0) * t2
-        C = -(1.0 / 24.0) + (1.0 / 720.0) * t2
-        D = -(1.0 / 60.0)
+    if t2 < _Q_TAYLOR_THRESHOLD_SQUARED:
+        t4 = t2 * t2
+        t6 = t4 * t2
+        B = 1.0 / 6.0 - t2 / 120.0 + t4 / 5040.0 - t6 / 362880.0
+        C = -1.0 / 24.0 + t2 / 720.0 - t4 / 40320.0 + t6 / 3628800.0
+        D = 1.0 / 120.0 - t2 / 2520.0 + t4 / 120960.0 - t6 / 9979200.0
     else:
         t4 = t2 * t2
         sin_theta = np.sin(theta)

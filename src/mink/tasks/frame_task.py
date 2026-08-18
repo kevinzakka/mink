@@ -121,17 +121,18 @@ class FrameTask(Task):
     def compute_error(self, configuration: Configuration) -> np.ndarray:
         r"""Compute the frame task error.
 
-        This error is a twist :math:`e(q) \in se(3)` expressed in the local frame,
-        i.e., it is a body twist. It is computed by taking the right-minus difference
-        between the target pose :math:`T_{0t}` and current frame pose :math:`T_{0b}`:
+        This error is a twist :math:`e(q) \in se(3)` expressed in the
+        controlled frame :math:`f`, i.e., a body twist. It is the right-minus
+        difference between the target pose :math:`T_{0f}^*` and current frame
+        pose :math:`T_{0f}`:
 
         .. math::
 
-            e(q) := {}_b \xi_{0b} = -(T_{t0} \ominus T_{b0})
-            = -\log(T_{t0} \cdot T_{0b}) = -\log(T_{tb}) = \log(T_{bt})
+            e(q) = T_{0f}^* \ominus T_{0f}
+            = \log(T_{0f}^{-1} \cdot T_{0f}^*) = \log E_f
 
-        where :math:`b` denotes our frame, :math:`t` the target frame and
-        :math:`0` the inertial frame.
+        where :math:`f` denotes our frame, :math:`0` the world frame, and
+        :math:`E_f` the pose residual (see :ref:`derivations`).
 
         Args:
             configuration: Robot configuration :math:`q`.
@@ -153,8 +154,17 @@ class FrameTask(Task):
     def compute_jacobian(self, configuration: Configuration) -> np.ndarray:
         r"""Compute the frame task Jacobian.
 
-        The derivation of the formula for this Jacobian is detailed in
-        [FrameTaskJacobian]_.
+        The Jacobian is the derivative of the task error with respect to the
+        configuration displacement :math:`\Delta q`:
+
+        .. math::
+
+            J(q) = -\text{Jlog}_6(E_f^{-1}) \, {}_f J_{0f}
+
+        where :math:`E_f = T_{0f}^{-1} T_{0f}^*` is the pose residual and
+        :math:`{}_f J_{0f}` is the body Jacobian of the frame. The derivation
+        of this formula is detailed in [FrameTaskJacobian]_; see
+        :ref:`derivations` for how it is evaluated from MuJoCo quantities.
 
         Args:
             configuration: Robot configuration :math:`q`.
@@ -165,16 +175,19 @@ class FrameTask(Task):
         if self.transform_target_to_world is None:
             raise TargetNotSet(self.__class__.__name__)
 
-        jac = configuration.get_frame_jacobian(self.frame_name, self.frame_type)
         frame = configuration._get_transform_frame_to_world_wxyz_xyz(
             self.frame_name, self.frame_type
         )
         target = self.transform_target_to_world.wxyz_xyz
         if _native is not None:
-            T_tb = _native.se3_inverse_multiply(target, frame)
-            return -_native.se3_jlog(T_tb) @ jac
-        T_tb = SE3(wxyz_xyz=target).inverse() @ SE3(wxyz_xyz=frame)
-        return -T_tb.jlog() @ jac
+            jac = configuration._get_frame_jacobian_world_aligned(
+                self.frame_name, self.frame_type
+            )
+            _, M = _native.se3_frame_task_terms(target, frame)
+            return M @ jac
+        jac = configuration.get_frame_jacobian(self.frame_name, self.frame_type)
+        E_inv = SE3(wxyz_xyz=target).inverse() @ SE3(wxyz_xyz=frame)
+        return -E_inv.jlog() @ jac
 
     def _error_and_jacobian(
         self, configuration: Configuration
@@ -187,19 +200,21 @@ class FrameTask(Task):
         frame = configuration._get_transform_frame_to_world_wxyz_xyz(
             self.frame_name, self.frame_type
         )
-        jac = configuration.get_frame_jacobian(self.frame_name, self.frame_type)
         target = self.transform_target_to_world.wxyz_xyz
 
         if _native is not None:
-            error = _native.se3_rminus(target, frame)
-            T_tb = _native.se3_inverse_multiply(target, frame)
-            jacobian = -_native.se3_jlog(T_tb) @ jac
+            jac = configuration._get_frame_jacobian_world_aligned(
+                self.frame_name, self.frame_type
+            )
+            error, M = _native.se3_frame_task_terms(target, frame)
+            jacobian = M @ jac
         else:
+            jac = configuration.get_frame_jacobian(self.frame_name, self.frame_type)
             target_se3 = SE3(wxyz_xyz=target)
             frame_se3 = SE3(wxyz_xyz=frame)
             error = target_se3.minus(frame_se3)
-            T_tb = target_se3.inverse() @ frame_se3
-            jacobian = -T_tb.jlog() @ jac
+            E_inv = target_se3.inverse() @ frame_se3
+            jacobian = -E_inv.jlog() @ jac
 
         return error, jacobian
 
