@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+
+- Elastic tasks: pass `elastic=True` (and optionally `penalty=...`) to `FrameTask` and other pose tasks (`RelativeFrameTask`, `ComTask`, `LookAtTask`, `AxisAlignTask`) to enforce them as an exact L1 penalty that holds like a constraint and yields gracefully when infeasible. New `InvalidPenalty` exception, `arm_ur5e_elastic.py` example, and tutorial section.
+
 ### Changed
 
 - **Breaking**: `RelativeFrameTask.compute_error` and `compute_jacobian` now follow the `FrameTask` sign convention. IK solutions are unchanged, and a world-rooted relative task now matches `FrameTask` exactly.
