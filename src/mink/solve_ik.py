@@ -1,6 +1,6 @@
 """Build and solve the inverse kinematics problem."""
 
-from typing import Sequence
+from typing import Sequence, TypeGuard
 
 import numpy as np
 import qpsolvers
@@ -11,7 +11,7 @@ from .limits import ConfigurationLimit, Limit
 from .tasks import BaseTask, Objective, Task
 
 
-def _is_elastic(task: BaseTask) -> bool:
+def _is_elastic(task: BaseTask) -> TypeGuard[Task]:
     return isinstance(task, Task) and task.elastic
 
 
@@ -26,7 +26,7 @@ def _compute_qp_objective(
     summing per-task Hessians. Per-task Levenberg-Marquardt terms :math:`\mu_i`
     sum into the diagonal alongside the global ``damping``. Any task that returns
     no residual (e.g. an inertia-weighted Hessian) is added densely. Elastic tasks
-    are skipped here; see :func:`_compute_qp_elastic`.
+    must be excluded by the caller; see :func:`_compute_qp_elastic`.
     """
     nv = configuration.model.nv
 
@@ -36,8 +36,6 @@ def _compute_qp_objective(
     H_dense: np.ndarray | None = None
     c_dense: np.ndarray | None = None
     for task in tasks:
-        if _is_elastic(task):
-            continue
         residual = task.compute_qp_residual(configuration)
         if residual is None:
             H_task, c_task = task.compute_qp_objective(configuration)
@@ -68,8 +66,8 @@ def _compute_qp_objective(
 
 
 def _compute_qp_elastic(
-    configuration: Configuration, tasks: Sequence[BaseTask]
-) -> tuple[np.ndarray, np.ndarray] | None:
+    configuration: Configuration, tasks: Sequence[Task]
+) -> tuple[np.ndarray, np.ndarray]:
     r"""Assemble the slack rows of all elastic tasks.
 
     Stacking the weighted residuals :math:`r = W J \Delta q - \bar{e}` of all
@@ -84,23 +82,16 @@ def _compute_qp_elastic(
     the problem: solvers that regularize the (zero) slack Hessian, such as
     DAQP's proximal iterations, then stay accurate for large penalties.
 
-    Returns ``(G, h)`` such that these rows read :math:`G [\Delta q; s] \leq h`,
-    or ``None`` if no task is elastic. Each task's :math:`-I` block sits only in
-    its own slack columns.
+    Returns ``(G, h)`` such that these rows read :math:`G [\Delta q; s] \leq h`.
+    Each task's :math:`-I` block sits only in its own slack columns.
     """
     scaled_jacobians: list[np.ndarray] = []
     scaled_errors: list[np.ndarray] = []
     for task in tasks:
-        if not _is_elastic(task):
-            continue
-        assert isinstance(task, Task)
         weighted_jacobian, weighted_error, _ = task.compute_qp_residual(configuration)
         penalty = task._penalty_vector(weighted_error.shape[0])
         scaled_jacobians.append(penalty[:, None] * weighted_jacobian)
         scaled_errors.append(penalty * weighted_error)
-
-    if not scaled_jacobians:
-        return None
 
     PWJ = np.vstack(scaled_jacobians)
     Pe = np.concatenate(scaled_errors)
@@ -202,14 +193,17 @@ def build_ik(
     Returns:
         Quadratic program of the inverse kinematics problem.
     """
+    elastic_tasks = [task for task in tasks if _is_elastic(task)]
+    if elastic_tasks:
+        tasks = [task for task in tasks if not _is_elastic(task)]
+
     H, c = _compute_qp_objective(configuration, tasks, damping)
     G, h = _compute_qp_inequalities(configuration, limits, dt)
     A, b = _compute_qp_equalities(configuration, constraints)
-    elastic = _compute_qp_elastic(configuration, tasks)
-    if elastic is None:
+    if not elastic_tasks:
         return qpsolvers.Problem(H, c, G, h, A, b)
 
-    G_elastic, h_elastic = elastic
+    G_elastic, h_elastic = _compute_qp_elastic(configuration, elastic_tasks)
     nv = H.shape[0]
     m = G_elastic.shape[1] - nv
     H_aug = np.zeros((nv + m, nv + m))
