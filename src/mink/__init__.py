@@ -6,6 +6,7 @@ from .constants import FRAME_TO_JAC_FUNC as FRAME_TO_JAC_FUNC
 from .constants import FRAME_TO_POS_ATTR as FRAME_TO_POS_ATTR
 from .constants import FRAME_TO_XMAT_ATTR as FRAME_TO_XMAT_ATTR
 from .constants import SUPPORTED_FRAMES as SUPPORTED_FRAMES
+from .elastic import Elastic as Elastic
 from .exceptions import IntegrationTimestepNotSet as IntegrationTimestepNotSet
 from .exceptions import InvalidConstraint as InvalidConstraint
 from .exceptions import InvalidDamping as InvalidDamping
