@@ -7,8 +7,10 @@ offering easy access to frame transforms and frame Jacobians. A frame refers to 
 system that can be attached to various parts of the robot, such as a body, geom, or site.
 """
 
+import functools
 import logging
 import os
+from typing import TYPE_CHECKING
 
 import mujoco
 import numpy as np
@@ -16,6 +18,9 @@ import numpy as np
 from . import constants as consts
 from . import exceptions
 from .lie import SE3, SO3
+
+if TYPE_CHECKING:
+    from .limits import ConfigurationLimit
 
 try:
     if os.environ.get("MINK_DISABLE_NATIVE", ""):
@@ -354,6 +359,13 @@ class Configuration:
         M = np.empty((self.nv, self.nv), dtype=np.float64)
         mujoco.mj_fullM(self.model, self.data, M)
         return M
+
+    @functools.cached_property
+    def _default_limit(self) -> "ConfigurationLimit":
+        """Configuration limit used when `solve_ik` is given ``limits=None``."""
+        from .limits import ConfigurationLimit  # noqa: PLC0415
+
+        return ConfigurationLimit(self.model)
 
     # Aliases.
 

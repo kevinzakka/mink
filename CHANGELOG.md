@@ -9,6 +9,7 @@ All notable changes to this project will be documented in this file.
 - **Breaking**: `RelativeFrameTask.compute_error` and `compute_jacobian` now follow the `FrameTask` sign convention. IK solutions are unchanged, and a world-rooted relative task now matches `FrameTask` exactly.
 - `FrameTask` and `RelativeFrameTask` now use fused native error/Jacobian kernels, with expanded derivation and convention documentation. Task QP assembly is ~1.5x faster (~1.15x end-to-end on the G1 benchmark).
 - SE(3) Jacobian small-angle series now use Horner form, matching SO(3).
+- `solve_ik` and `build_ik` with `limits=None` now reuse a `ConfigurationLimit` cached on the `Configuration` instead of rebuilding it every call (~2x faster on UR5e, ~5.6x on G1).
 
 ### Fixed
 
