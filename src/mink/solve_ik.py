@@ -7,7 +7,7 @@ import qpsolvers
 
 from .configuration import Configuration
 from .exceptions import NoSolutionFound
-from .limits import ConfigurationLimit, Limit
+from .limits import Limit
 from .tasks import BaseTask, Objective, Task
 
 
@@ -64,7 +64,7 @@ def _compute_qp_inequalities(
     configuration: Configuration, limits: Sequence[Limit] | None, dt: float
 ) -> tuple[np.ndarray | None, np.ndarray | None]:
     if limits is None:
-        limits = [ConfigurationLimit(configuration.model)]
+        limits = [configuration._default_limit]
     G_list: list[np.ndarray] = []
     h_list: list[np.ndarray] = []
     for limit in limits:

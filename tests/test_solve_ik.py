@@ -68,10 +68,16 @@ class TestSolveIK(absltest.TestCase):
         self.assertIsNone(problem.h)
 
     def test_default_limits(self):
-        """If no limits are provided, configuration limits are set."""
-        problem = mink.build_ik(self.configuration, [], dt=1.0)
-        self.assertIsNotNone(problem.G)
-        self.assertIsNotNone(problem.h)
+        """limits=None uses a cached ConfigurationLimit, built once per configuration."""
+        explicit = [mink.ConfigurationLimit(self.model)]
+        limit = self.configuration._default_limit
+        for q in (self.model.qpos0, self.model.key("home").qpos):
+            self.configuration.update(q)
+            default = mink.build_ik(self.configuration, [], dt=1.0)
+            expected = mink.build_ik(self.configuration, [], dt=1.0, limits=explicit)
+            np.testing.assert_array_equal(default.G, expected.G)
+            np.testing.assert_array_equal(default.h, expected.h)
+        self.assertIs(self.configuration._default_limit, limit)
 
     def test_fused_objective_matches_per_task_sum(self):
         """The fused QP objective equals the naive per-task sum, across a frame,
