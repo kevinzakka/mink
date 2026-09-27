@@ -6,6 +6,7 @@ import numpy as np
 import qpsolvers
 
 from .configuration import Configuration
+from .elastic import Elastic
 from .exceptions import NoSolutionFound
 from .limits import Limit
 from .tasks import BaseTask, Objective, Task
@@ -94,13 +95,27 @@ def _compute_qp_equalities(
     return np.vstack(A_list), np.hstack(b_list)
 
 
+def _compute_qp_elastic(
+    configuration: Configuration, constraints: Sequence[Elastic]
+) -> tuple[np.ndarray, np.ndarray]:
+    r"""Stack the slack rows :math:`-s \leq \rho \odot (J \Delta q + \alpha e)
+    \leq s` as :math:`G [\Delta q; s] \leq h`."""
+    rows = [c.compute_scaled_residual(configuration) for c in constraints]
+    PJ = np.vstack([r[0] for r in rows])
+    Pe = np.concatenate([r[1] for r in rows])
+    neg_eye = -np.eye(Pe.shape[0])
+    G = np.block([[PJ, neg_eye], [-PJ, neg_eye]])
+    h = np.concatenate([-Pe, Pe])
+    return G, h
+
+
 def build_ik(
     configuration: Configuration,
     tasks: Sequence[BaseTask],
     dt: float,
     damping: float = 1e-12,
     limits: Sequence[Limit] | None = None,
-    constraints: Sequence[Task] | None = None,
+    constraints: Sequence[Task | Elastic] | None = None,
 ) -> qpsolvers.Problem:
     r"""Build the quadratic program given the current configuration and tasks.
 
@@ -116,6 +131,12 @@ def build_ik(
 
     where :math:`v = \Delta q / dt` is the velocity in tangent space.
 
+    Each :class:`~mink.Elastic` constraint adds one slack variable :math:`s_i`
+    per penalized component, with cost :math:`s_i` and rows
+    :math:`-s \leq \rho \odot (J \Delta q + \alpha e) \leq s`. The decision
+    variable is then :math:`[\Delta q; s]`, and ``damping`` also regularizes
+    :math:`s`.
+
     Args:
         configuration: Robot configuration.
         tasks: List of kinematic tasks.
@@ -126,15 +147,32 @@ def build_ik(
         limits: List of limits to enforce. Set to empty list to disable. If None,
             defaults to a configuration limit.
         constraints: List of tasks to enforce as equality constraints. These tasks
-            will be satisfied exactly rather than in a least-squares sense.
+            will be satisfied exactly rather than in a least-squares sense. Wrap a
+            task in :class:`~mink.Elastic` to let it yield when it cannot be met.
 
     Returns:
         Quadratic program of the inverse kinematics problem.
     """
+    hard = [c for c in constraints or () if not isinstance(c, Elastic)]
+    elastic = [c for c in constraints or () if isinstance(c, Elastic)]
     H, c = _compute_qp_objective(configuration, tasks, damping)
     G, h = _compute_qp_inequalities(configuration, limits, dt)
-    A, b = _compute_qp_equalities(configuration, constraints)
-    return qpsolvers.Problem(H, c, G, h, A, b)
+    A, b = _compute_qp_equalities(configuration, hard)
+    if not elastic:
+        return qpsolvers.Problem(H, c, G, h, A, b)
+
+    # Append one slack per penalized component: x = [dq; s].
+    G_s, h_s = _compute_qp_elastic(configuration, elastic)
+    nv = H.shape[0]
+    m = G_s.shape[1] - nv
+    H = np.block([[H, np.zeros((nv, m))], [np.zeros((m, nv)), damping * np.eye(m)]])
+    c = np.concatenate([c, np.ones(m)])
+    if G is not None and h is not None:
+        G_s = np.vstack([np.hstack([G, np.zeros((G.shape[0], m))]), G_s])
+        h_s = np.concatenate([h, h_s])
+    if A is not None:
+        A = np.hstack([A, np.zeros((A.shape[0], m))])
+    return qpsolvers.Problem(H, c, G_s, h_s, A, b)
 
 
 def solve_ik(
@@ -145,7 +183,7 @@ def solve_ik(
     damping: float = 1e-12,
     safety_break: bool = False,
     limits: Sequence[Limit] | None = None,
-    constraints: Sequence[Task] | None = None,
+    constraints: Sequence[Task | Elastic] | None = None,
     **kwargs,
 ) -> np.ndarray:
     r"""Solve the differential inverse kinematics problem.
@@ -167,7 +205,8 @@ def solve_ik(
         limits: List of limits to enforce. Set to empty list to disable. If None,
             defaults to a configuration limit.
         constraints: List of tasks to enforce as equality constraints. These tasks
-            will be satisfied exactly rather than in a least-squares sense.
+            will be satisfied exactly rather than in a least-squares sense. Wrap a
+            task in :class:`~mink.Elastic` to let it yield when it cannot be met.
         kwargs: Keyword arguments to forward to the backend QP solver.
 
     Raises:
@@ -183,7 +222,7 @@ def solve_ik(
     result = qpsolvers.solve_problem(problem, solver=solver, **kwargs)
     if not result.found:
         raise NoSolutionFound(solver)
-    delta_q = result.x
-    assert delta_q is not None
+    assert result.x is not None
+    delta_q = result.x[: configuration.nv]
     v: np.ndarray = delta_q / dt
     return v
