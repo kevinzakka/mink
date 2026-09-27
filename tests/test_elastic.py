@@ -1,5 +1,7 @@
 """Tests for elastic.py."""
 
+from unittest import mock
+
 import mujoco
 import numpy as np
 import qpsolvers
@@ -48,19 +50,56 @@ def _residual(configuration, task, v, dt):
 
 
 class TestElastic(absltest.TestCase):
-    def test_matches_hard_constraint_when_feasible(self):
+    def test_held_step_is_the_hard_solution(self):
         configuration, frame_task, posture_task = _setup([0.1, 0.2, -0.1])
+        frame_task.gain = 0.3
         v_hard = mink.solve_ik(
             configuration, [posture_task], 0.01, "daqp", constraints=[frame_task]
         )
-        v_elastic = mink.solve_ik(
+        with mock.patch.object(
+            qpsolvers, "solve_problem", wraps=qpsolvers.solve_problem
+        ) as solve:
+            v = mink.solve_ik(
+                configuration,
+                [posture_task],
+                0.01,
+                "daqp",
+                constraints=[mink.Elastic(frame_task)],
+            )
+        self.assertEqual(solve.call_count, 1)
+        np.testing.assert_allclose(v, v_hard, atol=1e-10)
+
+    def test_held_iff_penalty_exceeds_multiplier(self):
+        configuration, frame_task, posture_task = _setup([0.1, 0.2, -0.1])
+        posture_task.set_cost(1.0)
+        problem = mink.build_ik(
+            configuration, [posture_task], 0.01, limits=[], constraints=[frame_task]
+        )
+        result = qpsolvers.solve_problem(problem, solver="daqp")
+        assert result.y is not None
+        lam = np.abs(result.y)
+        i = int(np.argmax(lam))
+
+        held = mink.Elastic(frame_task, penalty=lam + 0.1)
+        v = mink.solve_ik(
+            configuration, [posture_task], 0.01, "daqp", limits=[], constraints=[held]
+        )
+        r = _residual(configuration, frame_task, v, 0.01)
+        np.testing.assert_allclose(r, 0.0, atol=1e-6)
+
+        penalty = lam + 0.1
+        penalty[i] = 0.5 * lam[i]
+        yielding = mink.Elastic(frame_task, penalty=penalty)
+        v = mink.solve_ik(
             configuration,
             [posture_task],
             0.01,
             "daqp",
-            constraints=[mink.Elastic(frame_task)],
+            limits=[],
+            constraints=[yielding],
         )
-        np.testing.assert_allclose(v_elastic, v_hard, atol=1e-7)
+        r = _residual(configuration, frame_task, v, 0.01)
+        self.assertGreater(abs(r[i]), 1e-4)
 
     def test_yields_when_hard_constraint_is_infeasible(self):
         configuration, frame_task, posture_task = _setup([1.0, 0.2, -0.1])
@@ -79,50 +118,44 @@ class TestElastic(absltest.TestCase):
         self.assertGreater(abs(r[0]), 0.1)
         np.testing.assert_allclose(r[1:], 0.0, atol=1e-8)
 
-    def test_held_iff_penalty_exceeds_multiplier(self):
-        configuration, frame_task, posture_task = _setup([0.1, 0.2, -0.1])
-        problem = mink.build_ik(
-            configuration, [posture_task], 0.01, limits=[], constraints=[frame_task]
-        )
-        result = qpsolvers.solve_problem(problem, solver="daqp")
-        assert result.y is not None
-        lam = np.abs(result.y)
-        i = int(np.argmax(lam))
+    def test_stronger_penalty_wins_conflict(self):
+        xml = """
+        <mujoco>
+          <worldbody>
+            <body>
+              <joint type="slide" axis="1 0 0"/>
+              <geom size=".1"/>
+            </body>
+          </worldbody>
+        </mujoco>
+        """
+        model = mujoco.MjModel.from_xml_string(xml)
+        configuration = mink.Configuration(model)
 
-        held = mink.Elastic(frame_task, penalty=lam + 1e-3)
-        v = mink.solve_ik(
-            configuration, [posture_task], 0.01, "daqp", limits=[], constraints=[held]
-        )
-        r = _residual(configuration, frame_task, v, 0.01)
-        np.testing.assert_allclose(r, 0.0, atol=1e-6)
+        class Pin(mink.Task):
+            def __init__(self, target):
+                super().__init__(cost=np.ones(1))
+                self.target = target
 
-        penalty = lam + 1e-3
-        penalty[i] = 0.5 * lam[i]
-        yielding = mink.Elastic(frame_task, penalty=penalty)
+            def compute_error(self, configuration):
+                return configuration.q[:1] - self.target
+
+            def compute_jacobian(self, configuration):
+                return np.ones((1, 1))
+
         v = mink.solve_ik(
             configuration,
-            [posture_task],
+            [],
             0.01,
             "daqp",
+            damping=0.1,
             limits=[],
-            constraints=[yielding],
+            constraints=[
+                mink.Elastic(Pin(0.1), penalty=2e3),
+                mink.Elastic(Pin(-0.1), penalty=1e3),
+            ],
         )
-        r = _residual(configuration, frame_task, v, 0.01)
-        self.assertGreater(abs(r[i]), 1e-4)
-
-    def test_zero_penalty_frees_component(self):
-        configuration, frame_task, posture_task = _setup([0.1, 0.2, -0.1])
-        elastic = mink.Elastic(frame_task, penalty=[1e3, 1e3, 1e3, 0.0, 0.0, 0.0])
-        problem = mink.build_ik(
-            configuration, [posture_task], 0.01, constraints=[elastic]
-        )
-        self.assertEqual(problem.P.shape, (configuration.nv + 3,) * 2)
-        v = mink.solve_ik(
-            configuration, [posture_task], 0.01, "daqp", constraints=[elastic]
-        )
-        r = _residual(configuration, frame_task, v, 0.01)
-        np.testing.assert_allclose(r[:3], 0.0, atol=1e-8)
-        self.assertGreater(np.linalg.norm(r[3:]), 1e-4)
+        self.assertAlmostEqual(v[0] * 0.01, 0.1, places=8)
 
     def test_combines_with_hard_constraints(self):
         configuration, frame_task, posture_task = _setup([0.1, 0.2, -0.1])
@@ -138,14 +171,25 @@ class TestElastic(absltest.TestCase):
         r = _residual(configuration, frame_task, v, 0.01)
         np.testing.assert_allclose(r, 0.0, atol=1e-8)
 
+    def test_zero_penalty_frees_component(self):
+        configuration, frame_task, posture_task = _setup([0.1, 0.2, -0.1])
+        elastic = mink.Elastic(frame_task, penalty=[1e3, 1e3, 1e3, 0.0, 0.0, 0.0])
+        problem = mink.build_ik(
+            configuration, [posture_task], 0.01, constraints=[elastic]
+        )
+        self.assertEqual(problem.P.shape, (configuration.nv + 6,) * 2)
+        v = mink.solve_ik(
+            configuration, [posture_task], 0.01, "daqp", constraints=[elastic]
+        )
+        r = _residual(configuration, frame_task, v, 0.01)
+        np.testing.assert_allclose(r[:3], 0.0, atol=1e-8)
+        self.assertGreater(np.linalg.norm(r[3:]), 1e-4)
+
     def test_invalid_penalty_raises(self):
-        _, frame_task, _ = _setup([0.0, 0.0, 0.0])
+        configuration, frame_task, posture_task = _setup([0.0, 0.0, 0.0])
         for penalty in (-1.0, np.nan, np.inf, np.ones((2, 3))):
             with self.assertRaises(mink.InvalidConstraint):
                 mink.Elastic(frame_task, penalty=penalty)
-
-    def test_penalty_length_mismatch_raises(self):
-        configuration, frame_task, posture_task = _setup([0.0, 0.0, 0.0])
         elastic = mink.Elastic(frame_task, penalty=[1.0, 1.0, 1.0])
         with self.assertRaises(mink.InvalidConstraint):
             mink.build_ik(configuration, [posture_task], 0.01, constraints=[elastic])
