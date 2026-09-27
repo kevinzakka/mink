@@ -21,12 +21,16 @@ class Elastic:
     with :math:`|\cdot|` taken componentwise. Let :math:`\lambda` be the
     multiplier the task would have as a hard constraint. If
     :math:`|\lambda_i| < \rho_i` for every component, the solution is that of the
-    hard constraint. A component that would need more force yields, pulling with
+    hard constraint [SoftConstraintsMPC]_. A component that would need more force yields, pulling with
     constant force :math:`\rho_i`, and the QP stays feasible.
 
     As with hard constraints, the task's ``cost`` and ``lm_damping`` are ignored.
     The penalty is the only per-component scale. A zero penalty leaves that
     component unconstrained.
+
+    While held, the constraint is solved as a hard one. When it yields, the
+    penalty is solved with slack variables, and with DAQP penalties of about 0.1
+    or less may then fail to solve.
 
     Example:
 
@@ -70,14 +74,10 @@ class Elastic:
         self.task = task
         self.penalty = penalty
 
-    def compute_scaled_residual(
+    def compute_penalized_rows(
         self, configuration: Configuration
-    ) -> tuple[np.ndarray, np.ndarray]:
-        r"""Compute :math:`(\rho \odot J, \rho \odot \alpha e)` for components with
-        :math:`\rho_i > 0`.
-
-        The penalized residual is then
-        :math:`\rho \odot (J \Delta q + \alpha e)`.
+    ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+        r"""Compute :math:`(J, \alpha e, \rho)` over components with :math:`\rho_i > 0`.
 
         Raises:
             InvalidConstraint: If the penalty length does not match the task error.
@@ -89,6 +89,8 @@ class Elastic:
                 f"`penalty` has shape {self.penalty.shape} but the task error has "
                 f"shape {error.shape}"
             )
-        penalty = np.broadcast_to(self.penalty, error.shape)
-        active = penalty > 0.0
-        return penalty[active, None] * jacobian[active], penalty[active] * error[active]
+        rho = np.broadcast_to(self.penalty, error.shape)
+        if rho.all():
+            return jacobian, error, rho
+        active = rho > 0.0
+        return jacobian[active], error[active], rho[active]
