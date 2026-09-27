@@ -4,9 +4,13 @@ import abc
 from typing import NamedTuple
 
 import numpy as np
+import numpy.typing as npt
 
 from ..configuration import Configuration
-from ..exceptions import InvalidDamping, InvalidGain
+from ..exceptions import InvalidDamping, InvalidGain, InvalidPenalty
+
+DEFAULT_ELASTIC_PENALTY = 1e3
+r"""Default per-component penalty :math:`\rho` of an elastic task."""
 
 
 class Objective(NamedTuple):
@@ -84,15 +88,54 @@ class Task(BaseTask):
     dead-beat control (*i.e.* converge as fast as possible), but might be
     unstable as it neglects our first-order approximation. Lower values
     cause slow down the task, similar to low-pass filtering.
+
+    **Elastic mode.** By default a task contributes the quadratic cost
+    :math:`\| W (J \Delta q + \alpha e) \|^2` to the QP objective, so it competes
+    with every other task. Passing the task as a constraint instead makes it a hard
+    equality, which renders the QP infeasible whenever it conflicts with the
+    limits. With ``elastic=True``, the task stays in the ``tasks`` list but
+    contributes the exact :math:`\ell_1` penalty
+
+    .. math::
+
+        \rho^T | W (J \Delta q + \alpha e) |
+
+    where :math:`\rho \in \mathbb{R}^k_{>0}` is the ``penalty`` and :math:`|\cdot|`
+    is taken componentwise. The solver implements it with one slack variable per
+    task component (see :func:`~mink.build_ik`). By exact-penalty theory, if
+    :math:`\lambda` is the multiplier of the hard (weighted) equality
+    :math:`W J \Delta q = -\alpha W e`, the elastic task is satisfied exactly,
+    just like a constraint, whenever :math:`|\lambda_i| < \rho_i` for every
+    component :math:`i`. When holding a component would require a larger force
+    (limits bind, the target is out of reach, or other tasks pull harder than
+    :math:`\rho_i`), that component yields instead of making the QP infeasible.
+    Limits always remain hard.
+
+    Because the penalty is :math:`\ell_1`, the threshold is per component and
+    yielding is sparse: an out-of-reach target keeps as many components exact as
+    possible, and ``cost`` and ``penalty`` steer which ones give way. Notes:
+
+    - A component with zero cost has zero weighted residual and is therefore
+      unconstrained.
+    - Levenberg-Marquardt damping has no meaning without the quadratic term, so
+      ``elastic=True`` requires ``lm_damping == 0``.
+    - The penalty is not smooth: once a component yields, it does not pull any
+      harder. Add a separate, non-elastic copy of the task to ``tasks`` for a
+      quadratic pull that stays active after yielding.
     """
+
+    elastic: bool
+    penalty: float | np.ndarray
 
     def __init__(
         self,
         cost: np.ndarray,
         gain: float = 1.0,
         lm_damping: float = 0.0,
+        elastic: bool = False,
+        penalty: npt.ArrayLike = DEFAULT_ELASTIC_PENALTY,
     ):
-        """Constructor.
+        r"""Constructor.
 
         Args:
             cost: Cost vector with the same dimension as the error of the task.
@@ -102,6 +145,12 @@ class Task(BaseTask):
             is large) regularization term, which helps when targets are infeasible.
             Increase this value if the task is too jerky under unfeasible targets, but
             beware that a larger damping slows down the task.
+            elastic: If True, the task contributes an exact :math:`\ell_1` penalty
+                instead of a quadratic cost, so it holds like a constraint and
+                yields when infeasible. Requires ``lm_damping == 0``.
+            penalty: Positive, finite :math:`\ell_1` penalty weight of an elastic
+                task, in units of weighted task force. A scalar, or a vector with the
+                same dimension as the error of the task. Ignored unless ``elastic``.
         """
         if not 0.0 <= gain <= 1.0:
             raise InvalidGain("`gain` must be in the range [0, 1]")
@@ -109,9 +158,40 @@ class Task(BaseTask):
         if lm_damping < 0.0:
             raise InvalidDamping("`lm_damping` must be >= 0")
 
+        if elastic and lm_damping > 0.0:
+            raise InvalidDamping("`lm_damping` must be 0 for an elastic task")
+
         self.cost = cost
         self.gain = gain
         self.lm_damping = lm_damping
+        self.elastic = elastic
+        self.penalty = self._validate_penalty(penalty, cost.shape[0])
+
+    @staticmethod
+    def _validate_penalty(penalty: npt.ArrayLike, k: int) -> float | np.ndarray:
+        """Validate an elastic penalty, returning a float or an array of shape (k,)."""
+        penalty = np.asarray(penalty, dtype=float)
+        if penalty.shape not in ((), (1,), (k,)):
+            raise InvalidPenalty(
+                f"`penalty` must be a scalar or have shape ({k},), got {penalty.shape}"
+            )
+        if not np.all(np.isfinite(penalty)) or not np.all(penalty > 0.0):
+            raise InvalidPenalty("`penalty` must be finite and > 0")
+        if penalty.size == 1:
+            return float(penalty.item())
+        return penalty.copy()
+
+    def _penalty_vector(self, k: int) -> np.ndarray:
+        """Penalty broadcast to shape (k,), the dimension of the task error."""
+        penalty = self.penalty
+        if not isinstance(penalty, np.ndarray):
+            return np.full(k, penalty)
+        if penalty.shape != (k,):
+            raise InvalidPenalty(
+                f"`penalty` has shape {penalty.shape} but the task error has "
+                f"dimension {k}"
+            )
+        return penalty
 
     @abc.abstractmethod
     def compute_error(self, configuration: Configuration) -> np.ndarray:

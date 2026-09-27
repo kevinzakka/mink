@@ -145,6 +145,10 @@ class InvalidDamping(MinkError):
     """Exception raised when the damping is outside the valid range."""
 
 
+class InvalidPenalty(MinkError):
+    """Exception raised when an elastic task penalty is invalid."""
+
+
 class InvalidConstraint(MinkError):
     """Exception raised when a constraint is invalid."""
 

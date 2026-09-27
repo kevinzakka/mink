@@ -13,6 +13,7 @@ from .exceptions import InvalidFrame as InvalidFrame
 from .exceptions import InvalidGain as InvalidGain
 from .exceptions import InvalidKeyframe as InvalidKeyframe
 from .exceptions import InvalidMocapBody as InvalidMocapBody
+from .exceptions import InvalidPenalty as InvalidPenalty
 from .exceptions import InvalidTarget as InvalidTarget
 from .exceptions import LimitDefinitionError as LimitDefinitionError
 from .exceptions import MinkError as MinkError
