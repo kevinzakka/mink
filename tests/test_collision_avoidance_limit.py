@@ -8,6 +8,7 @@ from absl.testing import absltest
 from robot_descriptions.loaders.mujoco import load_robot_description
 
 from mink import SE3, Configuration, FrameTask, solve_ik
+from mink.exceptions import LimitDefinitionError
 from mink.limits import CollisionAvoidanceLimit
 from mink.limits.collision_avoidance_limit import compute_contact_normal_jacobian
 from mink.utils import get_body_geom_ids
@@ -129,6 +130,23 @@ class TestCollisionAvoidanceLimit(absltest.TestCase):
         # Check that the inequality constraint dimensions are valid.
         self.assertEqual(G.shape, (expected_max_num_contacts, self.model.nv))
         self.assertEqual(h.shape, (expected_max_num_contacts,))
+
+    def test_throws_error_if_gain_invalid(self):
+        for gain in (0.0, -1.0, 1.1):
+            with self.subTest(gain=gain):
+                with self.assertRaises(LimitDefinitionError):
+                    CollisionAvoidanceLimit(self.model, geom_pairs=[], gain=gain)
+
+    def test_detection_distance_must_exceed_minimum_distance(self):
+        for detection in (0.05, 0.01, float("nan")):
+            with self.subTest(detection=detection):
+                with self.assertRaises(LimitDefinitionError):
+                    CollisionAvoidanceLimit(
+                        model=self.model,
+                        geom_pairs=[],
+                        minimum_distance_from_collisions=0.05,
+                        collision_detection_distance=detection,
+                    )
 
     def test_contact_normal_jac_matches_mujoco(self):
         model = load_robot_description("ur5e_mj_description")

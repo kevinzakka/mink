@@ -7,6 +7,7 @@ import mujoco
 import numpy as np
 
 from ..configuration import Configuration, _resolve_frame_id
+from ..exceptions import LimitDefinitionError
 from .limit import Constraint, Limit
 
 # Type aliases.
@@ -102,11 +103,12 @@ class CollisionAvoidanceLimit(Limit):
         minimum_distance_from_collisions: The minimum distance to leave between
             any two geoms. A negative distance allows the geoms to penetrate by
             the specified amount.
-        collision_detection_distance: The distance between two geoms at which the
-            active collision avoidance limit will be active. A large value will
-            cause collisions to be detected early, but may incur high computational
-            cost. A negative value will cause the geoms to be detected only after
-            they penetrate by the specified amount.
+        collision_detection_distance: The distance between two geoms below which
+            the limit is active. Must exceed the minimum distance, and the margin
+            between them must exceed the largest distance the geoms can close in a
+            single step (roughly the maximum approach speed times dt); otherwise
+            pairs can pass through the band undetected. Larger values are safer
+            but cost more distance queries.
         bound_relaxation: An offset on the upper bound of each collision avoidance
             constraint.
         broadphase: If True, skip geom pairs that are provably out of collision
@@ -120,7 +122,7 @@ class CollisionAvoidanceLimit(Limit):
         geom_pairs: CollisionPairs,
         gain: float = 0.85,
         minimum_distance_from_collisions: float = 0.005,
-        collision_detection_distance: float = 0.01,
+        collision_detection_distance: float = 0.05,
         bound_relaxation: float = 0.0,
         broadphase: bool = True,
     ):
@@ -141,11 +143,12 @@ class CollisionAvoidanceLimit(Limit):
             minimum_distance_from_collisions: The minimum distance to leave between
                 any two geoms. A negative distance allows the geoms to penetrate by
                 the specified amount.
-            collision_detection_distance: The distance between two geoms at which the
-                active collision avoidance limit will be active. A large value will
-                cause collisions to be detected early, but may incur high computational
-                cost. A negative value will cause the geoms to be detected only after
-                they penetrate by the specified amount.
+            collision_detection_distance: The distance between two geoms below which
+                the limit is active. Must exceed the minimum distance, and the margin
+                between them must exceed the largest distance the geoms can close in a
+                single step (roughly the maximum approach speed times dt); otherwise
+                pairs can pass through the band undetected. Larger values are safer
+                but cost more distance queries.
             bound_relaxation: An offset on the upper bound of each collision avoidance
                 constraint.
             broadphase: If True (default), cheaply skip geom pairs whose bounding
@@ -155,6 +158,17 @@ class CollisionAvoidanceLimit(Limit):
                 that would not produce a constraint, so the resulting constraint is
                 identical to the unfiltered computation.
         """
+        if not 0.0 < gain <= 1.0:
+            raise LimitDefinitionError(
+                f"{self.__class__.__name__} gain must be in the range (0, 1]"
+            )
+        if not collision_detection_distance > minimum_distance_from_collisions:
+            raise LimitDefinitionError(
+                f"{self.__class__.__name__} collision_detection_distance "
+                f"({collision_detection_distance}) must exceed "
+                f"minimum_distance_from_collisions ({minimum_distance_from_collisions})"
+            )
+
         self.model = model
         self.gain = gain
         self.minimum_distance_from_collisions = minimum_distance_from_collisions
