@@ -400,9 +400,9 @@ QP per call, with the same solution up to solver accuracy.
 **Scaling.** In the penalized problem, each penalty is split between the slack
 rows and the slack cost, :math:`-s \leq \rho^p r \leq s` with cost
 :math:`\rho^{1-p} s`. Any split gives the same :math:`\ell_1` penalty. The
-default ``penalty_split=0.5`` keeps both scales within :math:`\sqrt{\rho}` of
-one, which keeps DAQP accurate for penalties from about :math:`10^{-5}` to
-:math:`10^{11}`.
+default ``Elastic(task, penalty_split=0.5)`` keeps both scales within
+:math:`\sqrt{\rho}` of one, which keeps DAQP accurate for penalties from about
+:math:`10^{-5}` to :math:`10^{11}`.
 
 .. note::
 

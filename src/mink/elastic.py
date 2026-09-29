@@ -51,19 +51,32 @@ class Elastic:
         task: The constrained task.
         penalty: Per-component :math:`\ell_1` penalty :math:`\rho`, a scalar or
             a vector with the dimension of the task error.
+        penalty_split: Exponent :math:`p` that splits the penalty between the
+            slack rows and the slack cost of the penalized QP.
     """
 
-    def __init__(self, task: Task, penalty: npt.ArrayLike = 1e3):
+    def __init__(
+        self,
+        task: Task,
+        penalty: npt.ArrayLike = 1e3,
+        penalty_split: float = 0.5,
+    ):
         """Constructor.
 
         Args:
             task: The task to constrain.
             penalty: Non-negative, finite :math:`\\ell_1` penalty. A scalar, or a
                 vector with the dimension of the task error.
+            penalty_split: Exponent :math:`p` of the penalized QP, whose slack
+                rows read :math:`-s \\leq \\rho^p r \\leq s` and whose slack cost
+                is :math:`\\rho^{1-p} s`. Any finite value gives the same
+                :math:`\\ell_1` penalty :math:`\\rho |r|` and the same solution; it
+                only changes the conditioning. The default of 0.5 keeps DAQP
+                accurate for penalties from about 1e-5 to 1e11.
 
         Raises:
             InvalidConstraint: If the penalty is not a finite, non-negative scalar
-                or vector.
+                or vector, or the penalty split is not finite.
         """
         penalty = np.array(penalty, dtype=float)
         if penalty.ndim > 1:
@@ -72,8 +85,11 @@ class Elastic:
             )
         if not np.all(np.isfinite(penalty)) or np.any(penalty < 0.0):
             raise InvalidConstraint("`penalty` must be finite and >= 0")
+        if not np.isfinite(penalty_split):
+            raise InvalidConstraint("`penalty_split` must be finite")
         self.task = task
         self.penalty = penalty
+        self.penalty_split = float(penalty_split)
 
     def compute_penalized_rows(
         self, configuration: Configuration

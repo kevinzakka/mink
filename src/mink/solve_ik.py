@@ -102,11 +102,11 @@ def _compute_qp(
     damping: float,
     limits: Sequence[Limit] | None,
     constraints: Sequence[Task | Elastic] | None,
-) -> tuple[qpsolvers.Problem, np.ndarray]:
+) -> tuple[qpsolvers.Problem, np.ndarray, np.ndarray]:
     r"""Assemble the QP with every constraint held exactly.
 
     Rows of elastic constraints come last in :math:`(A, b)`. Returns the problem
-    and the penalty :math:`\rho` of those rows.
+    and the penalty :math:`\rho` and penalty split :math:`p` of those rows.
     """
     hard: list[Task] = []
     elastic: list[Elastic] = []
@@ -119,11 +119,18 @@ def _compute_qp(
     G, h = _compute_qp_inequalities(configuration, limits, dt)
     A, b = _compute_qp_equalities(configuration, hard)
     rho = np.empty(0)
+    split = np.empty(0)
     if elastic:
         rows = [
             constraint.compute_penalized_rows(configuration) for constraint in elastic
         ]
         rho = np.concatenate([row[2] for row in rows])
+        split = np.concatenate(
+            [
+                np.full(row[2].size, constraint.penalty_split)
+                for row, constraint in zip(rows, elastic, strict=True)
+            ]
+        )
         A_list = (
             [row[0] for row in rows] if A is None else [A] + [row[0] for row in rows]
         )
@@ -131,7 +138,7 @@ def _compute_qp(
             [-row[1] for row in rows] if b is None else [b] + [-row[1] for row in rows]
         )
         A, b = np.concatenate(A_list), np.concatenate(b_list)
-    return qpsolvers.Problem(H, c, G, h, A, b), rho
+    return qpsolvers.Problem(H, c, G, h, A, b), rho, split
 
 
 ElasticStrategy = Literal["hard_first", "penalty"]
@@ -139,7 +146,7 @@ ElasticStrategy = Literal["hard_first", "penalty"]
 
 
 def _soften(
-    problem: qpsolvers.Problem, rho: np.ndarray, penalty_split: float
+    problem: qpsolvers.Problem, rho: np.ndarray, split: np.ndarray
 ) -> qpsolvers.Problem:
     r"""Replace the last ``len(rho)`` equality rows by their :math:`\ell_1` penalty.
 
@@ -159,8 +166,8 @@ def _soften(
     k = A.shape[0] - m
     H_x = np.zeros((nv + m, nv + m))
     H_x[:nv, :nv] = H
-    c_x = np.concatenate([c, rho ** (1.0 - penalty_split)])
-    scale = rho**penalty_split
+    c_x = np.concatenate([c, rho ** (1.0 - split)])
+    scale = rho**split
     scaled_A = scale[:, None] * A[k:]
     scaled_b = scale * b[k:]
     neg_eye = -np.eye(m)
@@ -183,7 +190,6 @@ def build_ik(
     damping: float = 1e-12,
     limits: Sequence[Limit] | None = None,
     constraints: Sequence[Task | Elastic] | None = None,
-    penalty_split: float = 0.5,
 ) -> qpsolvers.Problem:
     r"""Build the quadratic program given the current configuration and tasks.
 
@@ -200,8 +206,8 @@ def build_ik(
     where :math:`v = \Delta q / dt` is the velocity in tangent space.
 
     Each penalized component :math:`i` of an :class:`~mink.Elastic` constraint,
-    with residual :math:`r_i = J_i \Delta q + \alpha e_i` and penalty
-    :math:`\rho_i`, adds a slack :math:`s_i` with cost :math:`\rho_i^{1-p} s_i`
+    with residual :math:`r_i = J_i \Delta q + \alpha e_i`, penalty
+    :math:`\rho_i` and penalty split :math:`p` (see :class:`~mink.Elastic`), adds a slack :math:`s_i` with cost :math:`\rho_i^{1-p} s_i`
     and the rows :math:`-s_i \leq \rho_i^p r_i \leq s_i`. At the optimum
     :math:`s_i = \rho_i^p |r_i|`, so the added cost is the :math:`\ell_1`
     penalty :math:`\rho_i |r_i|` for any split :math:`p`. The decision variable
@@ -219,18 +225,15 @@ def build_ik(
         constraints: List of tasks to enforce as equality constraints. These tasks
             will be satisfied exactly rather than in a least-squares sense. Wrap a
             task in :class:`~mink.Elastic` to let it yield when it cannot be met.
-        penalty_split: Exponent :math:`p` that splits each elastic penalty
-            :math:`\rho` between the slack rows (:math:`\rho^p`) and the slack
-            cost (:math:`\rho^{1-p}`). It does not change the solution, only the
-            conditioning of the QP. The default of 0.5 keeps DAQP accurate for
-            penalties from about 1e-5 to 1e11.
 
     Returns:
         Quadratic program of the inverse kinematics problem. With elastic
         constraints, its first :math:`n_v` variables are :math:`\Delta q`.
     """
-    problem, rho = _compute_qp(configuration, tasks, dt, damping, limits, constraints)
-    return _soften(problem, rho, penalty_split) if rho.size else problem
+    problem, rho, split = _compute_qp(
+        configuration, tasks, dt, damping, limits, constraints
+    )
+    return _soften(problem, rho, split) if rho.size else problem
 
 
 def solve_ik(
@@ -243,7 +246,6 @@ def solve_ik(
     limits: Sequence[Limit] | None = None,
     constraints: Sequence[Task | Elastic] | None = None,
     elastic_strategy: ElasticStrategy = "hard_first",
-    penalty_split: float = 0.5,
     **kwargs,
 ) -> np.ndarray:
     r"""Solve the differential inverse kinematics problem.
@@ -279,8 +281,6 @@ def solve_ik(
             exactly and falls back to the penalized problem only when some
             constraint must yield: exact while held, but two QPs when yielding.
             ``"penalty"`` always solves the penalized problem: one QP per call.
-        penalty_split: Split of the elastic penalties between slack rows and
-            slack cost. See :func:`build_ik`.
         kwargs: Keyword arguments to forward to the backend QP solver.
 
     Raises:
@@ -299,9 +299,11 @@ def solve_ik(
             f"{elastic_strategy!r}"
         )
     configuration.check_limits(safety_break=safety_break)
-    problem, rho = _compute_qp(configuration, tasks, dt, damping, limits, constraints)
+    problem, rho, split = _compute_qp(
+        configuration, tasks, dt, damping, limits, constraints
+    )
     if rho.size and elastic_strategy == "penalty":
-        problem = _soften(problem, rho, penalty_split)
+        problem = _soften(problem, rho, split)
     result = qpsolvers.solve_problem(problem, solver=solver, **kwargs)
     if (
         rho.size
@@ -312,7 +314,7 @@ def solve_ik(
             and np.all(np.abs(result.y[-rho.size :]) < rho)
         )
     ):
-        softened = _soften(problem, rho, penalty_split)
+        softened = _soften(problem, rho, split)
         result = qpsolvers.solve_problem(softened, solver=solver, **kwargs)
     if not result.found:
         raise NoSolutionFound(solver)
