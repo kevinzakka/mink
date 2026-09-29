@@ -28,9 +28,10 @@ class Elastic:
     The penalty is the only per-component scale. A zero penalty leaves that
     component unconstrained.
 
-    While held, the constraint is solved as a hard one. When it yields, the
-    penalty is solved with slack variables, and with DAQP penalties of about 0.1
-    or less may then fail to solve.
+    By default :func:`~mink.solve_ik` solves the constraint as a hard one while
+    it holds, and solves the penalty with slack variables only when it yields.
+    Pass ``elastic_strategy="penalty"`` to always solve the penalty directly, in
+    a single QP.
 
     Example:
 
