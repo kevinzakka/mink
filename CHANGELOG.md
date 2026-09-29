@@ -9,6 +9,9 @@ All notable changes to this project will be documented in this file.
 - **Breaking**: `RelativeFrameTask.compute_error` and `compute_jacobian` now follow the `FrameTask` sign convention. IK solutions are unchanged, and a world-rooted relative task now matches `FrameTask` exactly.
 - `FrameTask` and `RelativeFrameTask` now use fused native error/Jacobian kernels, with expanded derivation and convention documentation. Task QP assembly is ~1.5x faster (~1.15x end-to-end on the G1 benchmark).
 - SE(3) Jacobian small-angle series now use Horner form, matching SO(3).
+- **Breaking**: `CollisionAvoidanceLimit` raises `LimitDefinitionError` when `collision_detection_distance` does not exceed `minimum_distance_from_collisions`. Such a limit activated only once the minimum distance was already violated, so it could not enforce it.
+- **Breaking**: `CollisionAvoidanceLimit` raises `LimitDefinitionError` when `gain` is outside (0, 1], matching `ConfigurationLimit`.
+- `CollisionAvoidanceLimit` default `collision_detection_distance` raised from 0.01 to 0.05. The old 5 mm band above the default minimum distance was narrower than a single step at moderate rates, letting geoms pass through undetected (UR5e at 50 Hz penetrated 18 mm).
 - `solve_ik` and `build_ik` with `limits=None` now reuse a `ConfigurationLimit` cached on the `Configuration` instead of rebuilding it every call (~2x faster on UR5e, ~5.6x on G1).
 
 ### Fixed

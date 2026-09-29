@@ -257,6 +257,7 @@ below with the geoms relevant to your robot:
        model,
        geom_pairs=[(["hand_capsule"], ["forearm", "upper_arm"])],
        minimum_distance_from_collisions=0.05,
+       collision_detection_distance=0.1,
    )
 
    limits = [ConfigurationLimit(model), collision_limit]
