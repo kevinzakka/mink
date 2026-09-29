@@ -7,7 +7,7 @@ import numpy as np
 from absl.testing import absltest
 from robot_descriptions.loaders.mujoco import load_robot_description
 
-from mink import Configuration
+from mink import SE3, Configuration, FrameTask, solve_ik
 from mink.limits import CollisionAvoidanceLimit
 from mink.limits.collision_avoidance_limit import compute_contact_normal_jacobian
 from mink.utils import get_body_geom_ids
@@ -237,13 +237,56 @@ class TestCollisionAvoidanceLimit(absltest.TestCase):
         G_if, h_if = limit_if.compute_qp_inequalities(cfg, dt)
         assert G_if is not None and h_if is not None
 
-        # h should be strictly larger than relaxation now (gain*dist/dt + relaxation)
+        # h should be strictly larger than relaxation now (gain*dist + relaxation)
         self.assertGreater(h_if.size, 0)
         self.assertTrue(np.any(h_if[np.isfinite(h_if)] > 1e-4 + 1e-12))
 
         # G should be identical for the same geometry, only h changes.
         self.assertEqual(G_else.shape, G_if.shape)
         np.testing.assert_allclose(G_else, G_if, atol=0, rtol=0)
+
+    def test_step_closes_gain_fraction_of_gap_independent_of_dt(self):
+        xml = """
+        <mujoco>
+          <worldbody>
+            <body>
+              <joint type="slide" axis="0 1 0"/>
+              <geom name="wall" type="sphere" size="0.1"/>
+            </body>
+            <body pos="0.25 0 0">
+              <joint type="slide" axis="1 0 0"/>
+              <geom name="ball" type="sphere" size="0.1"/>
+              <site name="center"/>
+            </body>
+          </worldbody>
+        </mujoco>
+        """
+        model = mujoco.MjModel.from_xml_string(xml)
+        wall, ball = model.geom("wall").id, model.geom("ball").id
+        gain, min_dist = 0.85, 0.005
+        limit = CollisionAvoidanceLimit(
+            model,
+            geom_pairs=[(["ball"], ["wall"])],
+            gain=gain,
+            minimum_distance_from_collisions=min_dist,
+            collision_detection_distance=0.1,
+        )
+        task = FrameTask("center", "site", position_cost=1.0, orientation_cost=0.0)
+        task.set_target(SE3.identity())
+        fromto = np.empty(6)
+        for dt in (1.0, 1e-1, 1e-2, 1e-3):
+            with self.subTest(dt=dt):
+                configuration = Configuration(model)
+                gap = mujoco.mj_geomDistance(
+                    model, configuration.data, ball, wall, 1.0, fromto
+                )
+                velocity = solve_ik(configuration, [task], dt, "daqp", limits=[limit])
+                configuration.integrate_inplace(velocity, dt)
+                gap_next = mujoco.mj_geomDistance(
+                    model, configuration.data, ball, wall, 1.0, fromto
+                )
+                expected = min_dist + (1.0 - gain) * (gap - min_dist)
+                np.testing.assert_allclose(gap_next, expected, atol=1e-9)
 
     def test_constraint_sign_logic_across_distances(self):
         """Verify constraint sign logic works correctly for separated, touching, and
