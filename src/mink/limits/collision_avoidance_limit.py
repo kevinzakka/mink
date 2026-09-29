@@ -85,7 +85,7 @@ def _is_pass_contype_conaffinity_check(
 
 
 class CollisionAvoidanceLimit(Limit):
-    """Normal velocity limit between geom pairs.
+    """Normal distance limit between geom pairs.
 
     Attributes:
         model: MuJoCo model.
@@ -96,9 +96,9 @@ class CollisionAvoidanceLimit(Limit):
             geom in the first geom group with every geom in the second geom group.
             Self collision is achieved by adding a collision pair with the same
             geom group in both pair fields.
-        gain: Gain factor in (0, 1] that determines how fast the geoms are
-            allowed to move towards each other at each iteration. Smaller values
-            are safer but may make the geoms move slower towards each other.
+        gain: Fraction in (0, 1] of the gap above the minimum distance that
+            the geoms may close in a single step. Smaller values are safer but
+            slow the approach.
         minimum_distance_from_collisions: The minimum distance to leave between
             any two geoms. A negative distance allows the geoms to penetrate by
             the specified amount.
@@ -135,9 +135,9 @@ class CollisionAvoidanceLimit(Limit):
                 geom in the first geom group with every geom in the second geom group.
                 Self collision is achieved by adding a collision pair with the same
                 geom group in both pair fields.
-            gain: Gain factor in (0, 1] that determines how fast the geoms are
-                allowed to move towards each other at each iteration. Smaller values
-                are safer but may make the geoms move slower towards each other.
+            gain: Fraction in (0, 1] of the gap above the minimum distance that
+                the geoms may close in a single step. Smaller values are safer but
+                slow the approach.
             minimum_distance_from_collisions: The minimum distance to leave between
                 any two geoms. A negative distance allows the geoms to penetrate by
                 the specified amount.
@@ -252,6 +252,33 @@ class CollisionAvoidanceLimit(Limit):
         configuration: Configuration,
         dt: float,
     ) -> Constraint:
+        r"""Compute the configuration-dependent collision avoidance limits.
+
+        For each geom pair within the detection distance, the limit is defined as:
+
+        .. math::
+
+            -\Delta d \leq \begin{cases}
+                \xi (d - d_{min}) + \epsilon & d > d_{min} \\
+                \epsilon & \text{otherwise}
+            \end{cases}
+
+        where :math:`d` is the signed distance between the geoms,
+        :math:`\Delta d = n^T J \Delta q` is its first-order change along the
+        contact normal :math:`n`, :math:`\xi` is the gain, :math:`d_{min}` is the
+        minimum distance, and :math:`\epsilon` is the bound relaxation. The limit
+        is a displacement bound and does not depend on :math:`dt`.
+
+        Args:
+            configuration: Robot configuration :math:`q`.
+            dt: Integration timestep in [s].
+
+        Returns:
+            Pair :math:`(G, h)` representing the inequality constraint as
+            :math:`G \Delta q \leq h`. Rows of inactive pairs have
+            :math:`h = \infty`.
+        """
+        del dt  # Unused.
         model = self.model
         data = configuration.data
         upper_bound = np.full((self.max_num_contacts,), np.inf)
@@ -279,7 +306,7 @@ class CollisionAvoidanceLimit(Limit):
                 model, data, geom1_id, geom2_id, fromto, normal, jac1, jac2
             )
             if dist > min_dist:
-                upper_bound[idx] = (gain * (dist - min_dist) / dt) + relaxation
+                upper_bound[idx] = gain * (dist - min_dist) + relaxation
             else:
                 upper_bound[idx] = relaxation
             sign = -1.0 if dist >= 0 else 1.0
