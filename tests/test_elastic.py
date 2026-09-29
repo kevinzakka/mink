@@ -177,7 +177,8 @@ class TestElastic(absltest.TestCase):
         problem = mink.build_ik(
             configuration, [posture_task], 0.01, constraints=[elastic]
         )
-        self.assertEqual(problem.P.shape, (configuration.nv + 6,) * 2)
+        # One slack per penalized component; the zero-penalty ones are dropped.
+        self.assertEqual(problem.P.shape, (configuration.nv + 3,) * 2)
         v = mink.solve_ik(
             configuration, [posture_task], 0.01, "daqp", constraints=[elastic]
         )
