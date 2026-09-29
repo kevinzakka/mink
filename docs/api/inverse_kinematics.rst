@@ -7,3 +7,9 @@ Inverse kinematics
 .. autofunction:: mink.solve_ik.solve_ik
 
 .. autofunction:: mink.solve_ik.build_ik
+
+Elastic constraints
+===================
+
+.. autoclass:: mink.elastic.Elastic
+    :members:

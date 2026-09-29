@@ -342,6 +342,75 @@ follow. Green target: the constraints are removed and tracking resumes.*
    algebra and for why soft penalties or zeroed Jacobian columns are not
    equivalent to exact freezing.
 
+Elastic Constraints
+===================
+
+Passing a :class:`~mink.FrameTask` through ``tasks`` makes it one quadratic
+objective among others: a posture regularizer pulling elsewhere leaves a small
+but persistent tracking error. Passing it through ``constraints`` removes that
+error, but a hard equality that conflicts with the limits (an unreachable
+target, a velocity limit that cannot cover the distance in one step) makes the
+QP infeasible and :func:`~mink.solve_ik` raises
+:class:`~mink.NoSolutionFound`.
+
+Wrapping the task in :class:`~mink.Elastic` gives a middle ground. The
+constraint :math:`J \Delta q = -\alpha e` is enforced through the exact
+:math:`\ell_1` penalty
+
+.. math::
+
+   \rho^T \left| J \Delta q + \alpha e \right|,
+
+where :math:`\rho` is the ``penalty`` (a scalar, or one value per component)
+and the absolute value is taken componentwise. Limits and plain
+``constraints`` stay hard.
+
+.. literalinclude:: ../../examples/docs/elastic.py
+   :language: python
+
+**Exact-penalty property.** Let :math:`\lambda` be the Lagrange multiplier the
+constraint would have as a hard constraint: the force needed to hold it against
+the tasks and the limits. If :math:`|\lambda_i| < \rho_i` for every component,
+the elastic solution *is* the hard-constrained solution. A component whose
+required force would exceed :math:`\rho_i` yields instead, pulling with a
+constant force :math:`\rho_i`, and the QP stays feasible.
+
+**Choosing the penalty.** ``penalty`` is a force budget. It should comfortably
+exceed what the tasks pull with: the default of :math:`10^3` is typically
+orders of magnitude above what a posture regularizer exerts. A zero penalty
+leaves that component unconstrained. Lower penalties decide which components
+give way first when the constraint cannot be met.
+
+**Sparse yielding.** Because the penalty is :math:`\ell_1`, the threshold is
+per component, so a given :math:`\rho` means the same thing for a 3-D and a 6-D
+task. On an unreachable target the solver keeps as many components exact as it
+can. In the example above the orientation penalty is lower, so orientation gives
+way first and position is held until the target leaves the workspace. See
+`arm_ur5e_elastic.py <https://github.com/kevinzakka/mink/blob/main/examples/arm_ur5e_elastic.py>`__
+for an interactive version.
+
+**Strategies.** By default (``elastic_strategy="hard_first"``),
+:func:`~mink.solve_ik` first solves with the elastic constraints held exactly,
+and keeps that solution when every :math:`|\lambda_i| < \rho_i`. Otherwise it
+solves the penalized problem, which adds one slack variable per component. This
+is exact while the constraint holds, at the price of a second QP when it
+yields. ``elastic_strategy="penalty"`` always solves the penalized problem: one
+QP per call, with the same solution up to solver accuracy.
+
+**Scaling.** In the penalized problem, each penalty is split between the slack
+rows and the slack cost, :math:`-s \leq \rho^p r \leq s` with cost
+:math:`\rho^{1-p} s`. Any split gives the same :math:`\ell_1` penalty. The
+default ``penalty_split=0.5`` keeps both scales within :math:`\sqrt{\rho}` of
+one, which keeps DAQP accurate for penalties from about :math:`10^{-5}` to
+:math:`10^{11}`.
+
+.. note::
+
+   As with hard constraints, the task's ``cost`` and ``lm_damping`` are ignored:
+   the penalty is the only per-component scale. Once a component yields, it
+   pulls with a constant force. For a pull that grows with the error after
+   yielding, also add the task itself to ``tasks``.
+
 Practical Guidelines
 ====================
 
@@ -361,6 +430,8 @@ When to Use What
   collision is possible.
 - :class:`~mink.DofFreezingTask` (via ``constraints``), when selected joints
   must not move.
+- :class:`~mink.Elastic` (via ``constraints``), when a task must be tracked
+  exactly despite regularization but may become infeasible.
 
 Complete Example
 ================
