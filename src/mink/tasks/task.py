@@ -179,8 +179,9 @@ class Task(BaseTask):
 
             The solver builds the objective from :meth:`compute_qp_residual`, so
             overriding this method alone has no effect. A subclass that customizes
-            the objective must also override :meth:`compute_qp_residual` to return
-            ``None``.
+            the objective must also override :meth:`compute_qp_residual`, either to
+            return a matching residual or to return ``None`` so the solver falls
+            back to this method.
 
         Args:
             configuration: Robot configuration :math:`q`.
