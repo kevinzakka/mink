@@ -155,23 +155,32 @@ def _soften(problem: qpsolvers.Problem, rho: np.ndarray) -> qpsolvers.Problem:
     H, c, G, h, A, b = problem.unpack_as_dense()[:6]
     assert A is not None and b is not None
     m, nv = rho.size, H.shape[0]
-    k = A.shape[0] - m
-    H_x = np.zeros((nv + m, nv + m))
+    n, k = nv + m, A.shape[0] - m
+    g = 0 if G is None else G.shape[0]
+    H_x = np.zeros((n, n))
     H_x[:nv, :nv] = H
-    c_x = np.concatenate([c, rho ** (1.0 - _PENALTY_SPLIT)])
+    c_x = np.empty(n)
+    c_x[:nv] = c
+    c_x[nv:] = rho ** (1.0 - _PENALTY_SPLIT)
     scale = rho**_PENALTY_SPLIT
-    scaled_A = scale[:, None] * A[k:]
-    scaled_b = scale * b[k:]
-    neg_eye = -np.eye(m)
-    G_x = np.block([[scaled_A, neg_eye], [-scaled_A, neg_eye]])
-    h_x = np.concatenate([scaled_b, -scaled_b])
-    if G is not None:
-        assert h is not None
-        G_x = np.vstack([np.hstack([G, np.zeros((G.shape[0], m))]), G_x])
-        h_x = np.concatenate([h, h_x])
+    G_x = np.zeros((g + 2 * m, n))
+    h_x = np.empty(g + 2 * m)
+    if G is not None and h is not None:
+        G_x[:g, :nv] = G
+        h_x[:g] = h
+    rows = scale[:, None] * A[k:]
+    G_x[g : g + m, :nv] = rows
+    G_x[g + m :, :nv] = -rows
+    i = np.arange(m)
+    G_x[g + i, nv + i] = -1.0
+    G_x[g + m + i, nv + i] = -1.0
+    h_x[g : g + m] = scale * b[k:]
+    h_x[g + m :] = -h_x[g : g + m]
     A_x, b_x = None, None
     if k:
-        A_x, b_x = np.hstack([A[:k], np.zeros((k, m))]), b[:k]
+        A_x = np.zeros((k, n))
+        A_x[:, :nv] = A[:k]
+        b_x = b[:k]
     return qpsolvers.Problem(H_x, c_x, G_x, h_x, A_x, b_x)
 
 
