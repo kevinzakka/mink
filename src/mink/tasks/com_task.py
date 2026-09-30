@@ -8,7 +8,7 @@ import numpy.typing as npt
 
 from ..configuration import Configuration
 from ..exceptions import InvalidTarget, TargetNotSet, TaskDefinitionError
-from .task import Task
+from .task import DEFAULT_ELASTIC_PENALTY, Task
 
 
 class ComTask(Task):
@@ -16,6 +16,10 @@ class ComTask(Task):
 
     Attributes:
         target_com: Target position of the CoM.
+        elastic: If True, the task is an exact L1 penalty that holds like a
+            constraint and yields when infeasible. See :class:`~mink.Task`.
+        penalty: Per-component L1 penalty of an elastic task, a scalar or a
+            vector of shape (3,).
 
     Example:
 
@@ -40,8 +44,16 @@ class ComTask(Task):
         cost: npt.ArrayLike,
         gain: float = 1.0,
         lm_damping: float = 0.0,
+        elastic: bool = False,
+        penalty: npt.ArrayLike = DEFAULT_ELASTIC_PENALTY,
     ):
-        super().__init__(cost=np.zeros((self.k,)), gain=gain, lm_damping=lm_damping)
+        super().__init__(
+            cost=np.zeros((self.k,)),
+            gain=gain,
+            lm_damping=lm_damping,
+            elastic=elastic,
+            penalty=penalty,
+        )
         self.target_com = None
 
         self.set_cost(cost)

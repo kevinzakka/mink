@@ -10,7 +10,7 @@ import numpy.typing as npt
 from ..configuration import Configuration
 from ..exceptions import TargetNotSet, TaskDefinitionError
 from ..lie import SE3
-from .task import Objective, Task
+from .task import DEFAULT_ELASTIC_PENALTY, Objective, Task
 
 try:
     if os.environ.get("MINK_DISABLE_NATIVE", ""):
@@ -28,6 +28,10 @@ class FrameTask(Task):
             or site in the robot model.
         frame_type: The frame type: `body`, `geom` or `site`.
         transform_target_to_world: Target pose of the frame in the world frame.
+        elastic: If True, the task is an exact L1 penalty that holds like a
+            constraint and yields when infeasible. See :class:`~mink.Task`.
+        penalty: Per-component L1 penalty of an elastic task, a scalar or a
+            vector of shape (6,).
 
     Example:
 
@@ -47,6 +51,23 @@ class FrameTask(Task):
         # Or from the current configuration. This will automatically compute the
         # target pose from the current configuration and update the task target.
         frame_task.set_target_from_configuration(configuration)
+
+    Passing ``elastic=True`` turns the task into an exact L1 penalty. It then tracks
+    the target exactly, like a hard constraint, even when other tasks such as a
+    posture regularizer pull elsewhere, and yields instead of making the QP
+    infeasible when the target is out of reach:
+
+    .. code-block:: python
+
+        frame_task = FrameTask(
+            frame_name="attachment_site",
+            frame_type="site",
+            position_cost=1.0,
+            orientation_cost=1.0,
+            elastic=True,
+            penalty=1e3,
+        )
+        solve_ik(configuration, [frame_task, posture_task], dt, "daqp")
     """
 
     k: int = 6
@@ -60,8 +81,16 @@ class FrameTask(Task):
         orientation_cost: npt.ArrayLike,
         gain: float = 1.0,
         lm_damping: float = 0.0,
+        elastic: bool = False,
+        penalty: npt.ArrayLike = DEFAULT_ELASTIC_PENALTY,
     ):
-        super().__init__(cost=np.zeros((self.k,)), gain=gain, lm_damping=lm_damping)
+        super().__init__(
+            cost=np.zeros((self.k,)),
+            gain=gain,
+            lm_damping=lm_damping,
+            elastic=elastic,
+            penalty=penalty,
+        )
         self.frame_name = frame_name
         self.frame_type = frame_type
         self.position_cost = position_cost

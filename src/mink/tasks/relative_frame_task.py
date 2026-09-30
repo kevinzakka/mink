@@ -10,7 +10,7 @@ import numpy.typing as npt
 from ..configuration import Configuration
 from ..exceptions import TargetNotSet, TaskDefinitionError
 from ..lie import SE3
-from .task import Objective, Task
+from .task import DEFAULT_ELASTIC_PENALTY, Objective, Task
 
 try:
     if os.environ.get("MINK_DISABLE_NATIVE", ""):
@@ -30,6 +30,10 @@ class RelativeFrameTask(Task):
         root_name: Name or id of the frame the task is relative to.
         root_type: The root frame type: `body`, `geom` or `site`.
         transform_target_to_root: Target pose in the root frame.
+        elastic: If True, the task is an exact L1 penalty that holds like a
+            constraint and yields when infeasible. See :class:`~mink.Task`.
+        penalty: Per-component L1 penalty of an elastic task, a scalar or a
+            vector of shape (6,).
     """
 
     k: int = 6
@@ -45,8 +49,16 @@ class RelativeFrameTask(Task):
         orientation_cost: npt.ArrayLike,
         gain: float = 1.0,
         lm_damping: float = 0.0,
+        elastic: bool = False,
+        penalty: npt.ArrayLike = DEFAULT_ELASTIC_PENALTY,
     ):
-        super().__init__(cost=np.zeros((self.k,)), gain=gain, lm_damping=lm_damping)
+        super().__init__(
+            cost=np.zeros((self.k,)),
+            gain=gain,
+            lm_damping=lm_damping,
+            elastic=elastic,
+            penalty=penalty,
+        )
         self.frame_name = frame_name
         self.frame_type = frame_type
         self.root_name = root_name

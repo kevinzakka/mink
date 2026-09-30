@@ -8,7 +8,7 @@ import numpy.typing as npt
 from ..configuration import Configuration
 from ..exceptions import InvalidTarget, TargetNotSet, TaskDefinitionError
 from ..lie.utils import get_epsilon, skew
-from .task import Objective, Task
+from .task import DEFAULT_ELASTIC_PENALTY, Objective, Task
 
 
 class AxisAlignTask(Task):
@@ -80,6 +80,8 @@ class AxisAlignTask(Task):
         cost: npt.ArrayLike = 1.0,
         gain: float = 1.0,
         lm_damping: float = 0.0,
+        elastic: bool = False,
+        penalty: npt.ArrayLike = DEFAULT_ELASTIC_PENALTY,
     ):
         """Constructor.
 
@@ -91,8 +93,18 @@ class AxisAlignTask(Task):
             cost: Cost of the axis-align task. A scalar or a vector of shape (1,).
             gain: Task gain in [0, 1] for additional low-pass filtering.
             lm_damping: Levenberg-Marquardt damping for ill-conditioned targets.
+            elastic: If True, the task is an exact L1 penalty that holds like a
+                constraint and yields when infeasible. See :class:`~mink.Task`.
+            penalty: Per-component L1 penalty of an elastic task, a scalar or a
+                vector of shape (3,).
         """
-        super().__init__(cost=np.zeros((self.k,)), gain=gain, lm_damping=lm_damping)
+        super().__init__(
+            cost=np.zeros((self.k,)),
+            gain=gain,
+            lm_damping=lm_damping,
+            elastic=elastic,
+            penalty=penalty,
+        )
         self.frame_name = frame_name
         self.frame_type = frame_type
         self.target_dir = None
