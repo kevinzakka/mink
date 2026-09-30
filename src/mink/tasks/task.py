@@ -52,7 +52,8 @@ class BaseTask(abc.ABC):
 
         Returns ``None`` (the default) for tasks whose objective is not of this form
         (e.g. an inertia-weighted Hessian); those fall back to
-        :meth:`compute_qp_objective`.
+        :meth:`compute_qp_objective`. When this method returns a residual, the solver
+        does not call :meth:`compute_qp_objective`.
         """
         return None
 
@@ -173,6 +174,14 @@ class Task(BaseTask):
         The weight matrix :math:`W \in \mathbb{R}^{k \times k}` weights and
         normalizes task coordinates to the same unit. The unit of the overall
         contribution is [cost]^2.
+
+        .. note::
+
+            The solver builds the objective from :meth:`compute_qp_residual`, so
+            overriding this method alone has no effect. A subclass that customizes
+            the objective must also override :meth:`compute_qp_residual`, either to
+            return a matching residual or to return ``None`` so the solver falls
+            back to this method.
 
         Args:
             configuration: Robot configuration :math:`q`.
