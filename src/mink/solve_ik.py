@@ -14,20 +14,10 @@ from .tasks import BaseTask, Objective, Task
 
 @functools.cache
 def _overrides_objective_only(task_type: type[BaseTask]) -> bool:
-    """Whether ``compute_qp_objective`` is overridden below ``compute_qp_residual``.
-
-    A subclass that customizes only the objective would otherwise have its override
-    bypassed, because the solver prefers the inherited residual.
-    """
-
-    def owner(name: str) -> type:
-        return next(cls for cls in task_type.__mro__ if name in vars(cls))
-
-    objective_owner = owner("compute_qp_objective")
-    residual_owner = owner("compute_qp_residual")
-    return objective_owner is not residual_owner and issubclass(
-        objective_owner, residual_owner
-    )
+    """Whether ``compute_qp_objective`` is overridden below ``compute_qp_residual``."""
+    names = {"compute_qp_objective", "compute_qp_residual"}
+    owner = next(cls for cls in task_type.__mro__ if names & vars(cls).keys())
+    return "compute_qp_residual" not in vars(owner)
 
 
 def _compute_qp_objective(
@@ -40,9 +30,8 @@ def _compute_qp_objective(
     :math:`\sum_i W_i^T W_i = W^T W` with a single matrix multiply rather than
     summing per-task Hessians. Per-task Levenberg-Marquardt terms :math:`\mu_i`
     sum into the diagonal alongside the global ``damping``. Any task that returns
-    no residual (e.g. an inertia-weighted Hessian), or whose subclass overrides
-    ``compute_qp_objective`` without also overriding ``compute_qp_residual``, is
-    added densely.
+    no residual (e.g. an inertia-weighted Hessian), or that overrides only
+    ``compute_qp_objective``, is added densely.
     """
     nv = configuration.model.nv
 

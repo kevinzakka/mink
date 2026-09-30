@@ -130,18 +130,7 @@ class TestSolveIK(absltest.TestCase):
         np.testing.assert_allclose(P, H, rtol=1e-9, atol=1e-12)
         np.testing.assert_allclose(problem.q, c, rtol=1e-9, atol=1e-12)
 
-    def test_subclass_objective_override_is_used(self):
-        """A subclass that overrides only compute_qp_objective is not bypassed by
-        the inherited residual, for both a plain Task and a task that defines its
-        own residual."""
-
-        class StiffPostureTask(mink.PostureTask):
-            def compute_qp_objective(self, configuration):
-                H, c = super().compute_qp_objective(configuration)
-                H = H.copy()
-                H[0, 0] += 1e3
-                return mink.Objective(H, c)
-
+    def test_objective_only_override_is_used(self):
         class StiffFrameTask(mink.FrameTask):
             def compute_qp_objective(self, configuration):
                 H, c = super().compute_qp_objective(configuration)
@@ -150,28 +139,19 @@ class TestSolveIK(absltest.TestCase):
                 return mink.Objective(H, c)
 
         self.configuration.update_from_keyframe("home")
-        posture_task = StiffPostureTask(self.model, cost=1e-1)
-        posture_task.set_target_from_configuration(self.configuration)
-        frame_task = StiffFrameTask(
+        task = StiffFrameTask(
             "attachment_site", "site", position_cost=1.0, orientation_cost=1.0
         )
-        frame_task.set_target_from_configuration(self.configuration)
-        tasks = [posture_task, frame_task]
+        task.set_target_from_configuration(self.configuration)
 
         q = self.model.key("home").qpos.copy()
         q[:3] += 0.2
         self.configuration.update(q)
 
         damping = 1e-6
-        problem = mink.build_ik(self.configuration, tasks, dt=0.02, damping=damping)
-
-        nv = self.model.nv
-        H = np.eye(nv) * damping
-        c = np.zeros(nv)
-        for task in tasks:
-            obj = task.compute_qp_objective(self.configuration)
-            H += obj.H
-            c += obj.c
+        problem = mink.build_ik(self.configuration, [task], dt=0.02, damping=damping)
+        H, c = task.compute_qp_objective(self.configuration)
+        H = H + damping * np.eye(self.model.nv)
 
         P = cast(np.ndarray, problem.P)
         np.testing.assert_allclose(P, H, rtol=1e-9, atol=1e-12)

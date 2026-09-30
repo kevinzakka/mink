@@ -52,9 +52,8 @@ class BaseTask(abc.ABC):
 
         Returns ``None`` (the default) for tasks whose objective is not of this form
         (e.g. an inertia-weighted Hessian); those fall back to
-        :meth:`compute_qp_objective`. The solver also uses
-        :meth:`compute_qp_objective` when a subclass overrides it without
-        overriding this method, so a custom objective is never bypassed.
+        :meth:`compute_qp_objective`, as do subclasses that override only
+        :meth:`compute_qp_objective`.
         """
         return None
 

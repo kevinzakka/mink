@@ -19,7 +19,7 @@ All notable changes to this project will be documented in this file.
 - `Configuration.update` now computes tendon kinematics. Previously, `mjEQ_TENDON` equality constraints in `EqualityConstraintTask` had zero error and Jacobian, and `get_inertia_matrix` dropped tendon armature.
 - Corrected Lie-group exponential, logarithm, and Jacobian calculations at small rotation angles and exactly 180°. Pose tasks now retain translation–rotation coupling when the orientation residual is zero or tiny.
 - `Objective.value` now includes the documented `1/2` factor on its quadratic term.
-- `solve_ik` and `build_ik` once again use a task's `compute_qp_objective` when a subclass overrides it without overriding `compute_qp_residual`. Since the fused objective assembly in 1.2.0, the solver took the inherited residual instead, silently bypassing custom objectives (for example, a `PostureTask` or `FrameTask` subclass that reshapes `H`). Built-in tasks are unaffected.
+- `solve_ik` and `build_ik` again honor task subclasses that override only `compute_qp_objective`. Since 1.2.0 the solver used the inherited `compute_qp_residual` instead, silently ignoring the override.
 - **Breaking**: `CollisionAvoidanceLimit` bounded the per-step displacement by a velocity, `gain * (d - d_min) / dt`, loosening the limit by a factor of `1/dt` and letting geoms penetrate in a single step. The bound is now `gain * (d - d_min)`, independent of `dt`. Approach near obstacles is slower at typical timesteps; retune `gain` if needed.
 
 ## [1.3.0] - 2026-08-17
