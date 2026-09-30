@@ -28,6 +28,13 @@ class Elastic:
     The penalty is the only per-component scale. A zero penalty leaves that
     component unconstrained.
 
+    Penalties carry the units of the task error. Each step minimizes the penalty
+    greedily, so with equal penalties on meters and radians a
+    :class:`~mink.FrameTask` stretched toward an unreachable target can stall
+    where any gain in position costs as much orientation error, and stay there
+    after the target returns within reach. A lower orientation penalty lets
+    orientation give way first.
+
     By default :func:`~mink.solve_ik` solves the constraint as a hard one while
     it holds, and solves the penalty with slack variables only when it yields.
     Pass ``elastic_strategy="penalty"`` to always solve the penalty directly, in
@@ -44,7 +51,7 @@ class Elastic:
             dt,
             "daqp",
             limits=limits,
-            constraints=[Elastic(frame_task, penalty=1e3)],
+            constraints=[Elastic(frame_task, penalty=[1e3] * 3 + [1e1] * 3)],
         )
 
     Attributes:

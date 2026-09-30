@@ -382,6 +382,14 @@ orders of magnitude above what a posture regularizer exerts. A zero penalty
 leaves that component unconstrained. Lower penalties decide which components
 give way first when the constraint cannot be met.
 
+**Mixed units.** Penalties carry the units of the task error, and each step
+minimizes the penalty greedily. With equal penalties on the position (meters)
+and orientation (radians) of a :class:`~mink.FrameTask`, an arm stretched toward
+an unreachable target can stall where any gain in position costs as much
+orientation error, and stay stuck after the target returns within reach. A
+lower orientation penalty, as in the example above, lets orientation give way
+first and avoids this.
+
 **Sparse yielding.** Because the penalty is :math:`\ell_1`, the threshold is
 per component, so a given :math:`\rho` means the same thing for a 3-D and a 6-D
 task. On an unreachable target the solver keeps as many components exact as it
