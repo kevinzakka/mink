@@ -21,8 +21,9 @@ class Elastic:
     with :math:`|\cdot|` taken componentwise. Let :math:`\lambda` be the
     multiplier the task would have as a hard constraint. If
     :math:`|\lambda_i| < \rho_i` for every component, the solution is that of the
-    hard constraint [SoftConstraintsMPC]_. A component that would need more force yields, pulling with
-    constant force :math:`\rho_i`, and the QP stays feasible.
+    hard constraint [SoftConstraintsMPC]_. A component that would need more force
+    yields, pulling with constant force :math:`\rho_i`, and the QP stays
+    feasible.
 
     As with hard constraints, the task's ``cost`` and ``lm_damping`` are ignored.
     The penalty is the only per-component scale. A zero penalty leaves that

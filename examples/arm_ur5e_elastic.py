@@ -4,11 +4,10 @@ The end-effector task is passed as an elastic constraint: instead of a quadratic
 that competes with the posture regularizer, it is an exact L1 penalty. While the
 target is reachable, the end effector tracks it exactly, as if the task were a hard
 constraint, even though the posture task keeps pulling toward the home
-configuration. Drag the target out of
-the workspace (or into a pose the joint limits cannot reach) and the task yields
-instead of making the QP infeasible. The orientation penalty is lower than the
-position penalty, so orientation gives way first and position is held as long as
-possible.
+configuration. Drag the target out of the workspace (or into a pose the joint limits
+cannot reach) and the task yields instead of making the QP infeasible. The
+orientation penalty is lower than the position penalty, so orientation gives way
+first and position is held as long as possible.
 
 The target turns green while the task is held exactly and red while it yields.
 
