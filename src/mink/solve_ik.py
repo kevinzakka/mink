@@ -1,5 +1,6 @@
 """Build and solve the inverse kinematics problem."""
 
+import functools
 from typing import Sequence
 
 import numpy as np
@@ -9,6 +10,24 @@ from .configuration import Configuration
 from .exceptions import NoSolutionFound
 from .limits import Limit
 from .tasks import BaseTask, Objective, Task
+
+
+@functools.cache
+def _overrides_objective_only(task_type: type[BaseTask]) -> bool:
+    """Whether ``compute_qp_objective`` is overridden below ``compute_qp_residual``.
+
+    A subclass that customizes only the objective would otherwise have its override
+    bypassed, because the solver prefers the inherited residual.
+    """
+
+    def owner(name: str) -> type:
+        return next(cls for cls in task_type.__mro__ if name in vars(cls))
+
+    objective_owner = owner("compute_qp_objective")
+    residual_owner = owner("compute_qp_residual")
+    return objective_owner is not residual_owner and issubclass(
+        objective_owner, residual_owner
+    )
 
 
 def _compute_qp_objective(
@@ -21,7 +40,9 @@ def _compute_qp_objective(
     :math:`\sum_i W_i^T W_i = W^T W` with a single matrix multiply rather than
     summing per-task Hessians. Per-task Levenberg-Marquardt terms :math:`\mu_i`
     sum into the diagonal alongside the global ``damping``. Any task that returns
-    no residual (e.g. an inertia-weighted Hessian) is added densely.
+    no residual (e.g. an inertia-weighted Hessian), or whose subclass overrides
+    ``compute_qp_objective`` without also overriding ``compute_qp_residual``, is
+    added densely.
     """
     nv = configuration.model.nv
 
@@ -31,7 +52,10 @@ def _compute_qp_objective(
     H_dense: np.ndarray | None = None
     c_dense: np.ndarray | None = None
     for task in tasks:
-        residual = task.compute_qp_residual(configuration)
+        if _overrides_objective_only(type(task)):
+            residual = None
+        else:
+            residual = task.compute_qp_residual(configuration)
         if residual is None:
             H_task, c_task = task.compute_qp_objective(configuration)
             H_dense = H_task if H_dense is None else H_dense + H_task
