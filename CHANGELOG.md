@@ -13,6 +13,7 @@ All notable changes to this project will be documented in this file.
 - **Breaking**: `CollisionAvoidanceLimit` raises `LimitDefinitionError` when `gain` is outside (0, 1], matching `ConfigurationLimit`.
 - `CollisionAvoidanceLimit` default `collision_detection_distance` raised from 0.01 to 0.05. The old 5 mm band above the default minimum distance was narrower than a single step at moderate rates, letting geoms pass through undetected (UR5e at 50 Hz penetrated 18 mm).
 - `solve_ik` and `build_ik` with `limits=None` now reuse a `ConfigurationLimit` cached on the `Configuration` instead of rebuilding it every call (~2x faster on UR5e, ~5.6x on G1).
+- Documented that `solve_ik` builds the objective from `compute_qp_residual` when a task provides one. A subclass that overrides only `compute_qp_objective` must also override `compute_qp_residual` to return `None`. Reported in #188.
 
 ### Fixed
 
