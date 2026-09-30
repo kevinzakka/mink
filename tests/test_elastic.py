@@ -1,5 +1,6 @@
 """Tests for elastic.py."""
 
+import importlib
 from unittest import mock
 
 import mujoco
@@ -9,6 +10,8 @@ from absl.testing import absltest
 
 import mink
 from mink.solve_ik import ElasticStrategy
+
+solve_ik_module = importlib.import_module("mink.solve_ik")
 
 # 6-dof floating tool plus a redundant roll joint about the tool z axis.
 _XML = """
@@ -227,34 +230,6 @@ class TestElastic(absltest.TestCase):
                     )
                 self.assertEqual(solve.call_count, expected)
 
-    def test_penalty_split_scales_rows_and_cost(self):
-        configuration, frame_task, posture_task = _setup([1.0, 0.2, -0.1])
-        rho = np.array([4.0, 9.0, 16.0, 25.0, 36.0, 49.0])
-        nv = configuration.nv
-        jacobian = frame_task.compute_jacobian(configuration)
-        solutions = []
-        for split in (0.0, 0.5, 1.0):
-            problem = mink.build_ik(
-                configuration,
-                [posture_task],
-                0.01,
-                limits=[],
-                constraints=[mink.Elastic(frame_task, rho, penalty_split=split)],
-            )
-            assert problem.G is not None
-            np.testing.assert_allclose(problem.q[nv:], rho ** (1.0 - split))
-            np.testing.assert_allclose(
-                problem.G[:6, :nv], rho[:, None] ** split * jacobian
-            )
-            np.testing.assert_array_equal(problem.G[:6, nv:], -np.eye(6))
-            np.testing.assert_array_equal(problem.G[6:, nv:], -np.eye(6))
-            self.assertIsNone(problem.A)
-            result = qpsolvers.solve_problem(problem, solver="daqp")
-            assert result.x is not None
-            solutions.append(result.x[:nv])
-        np.testing.assert_allclose(solutions[0], solutions[1], atol=1e-8)
-        np.testing.assert_allclose(solutions[2], solutions[1], atol=1e-8)
-
     def test_penalty_strategy_is_robust_to_extreme_penalties(self):
         """With the default split, the single QP matches a reference built with the
         split that is best conditioned for that penalty: rho on the cost for small
@@ -278,14 +253,13 @@ class TestElastic(absltest.TestCase):
                     np.testing.assert_allclose(r, 0.0, atol=1e-6)
                     continue
                 split = 0.0 if rho <= 1.0 else 1.0
-                reference = mink.build_ik(
-                    configuration,
-                    [posture_task],
-                    0.01,
-                    constraints=[
-                        mink.Elastic(frame_task, penalty=rho, penalty_split=split)
-                    ],
-                )
+                with mock.patch.object(solve_ik_module, "_PENALTY_SPLIT", split):
+                    reference = mink.build_ik(
+                        configuration,
+                        [posture_task],
+                        0.01,
+                        constraints=[mink.Elastic(frame_task, penalty=rho)],
+                    )
                 result = qpsolvers.solve_problem(reference, solver="daqp")
                 assert result.x is not None
                 np.testing.assert_allclose(v * 0.01, result.x[:nv], atol=1e-7)
@@ -324,40 +298,11 @@ class TestElastic(absltest.TestCase):
                 elastic_strategy="exact",  # type: ignore[arg-type]
             )
 
-    def test_penalty_split_is_per_constraint(self):
-        """Each elastic constraint scales its own rows and slack costs."""
-        configuration, frame_task, posture_task = _setup([0.1, 0.2, -0.1])
-        com_task = mink.ComTask(cost=1.0)
-        com_task.set_target_from_configuration(configuration)
-        problem = mink.build_ik(
-            configuration,
-            [posture_task],
-            0.01,
-            limits=[],
-            constraints=[
-                mink.Elastic(frame_task, penalty=4.0, penalty_split=1.0),
-                mink.Elastic(com_task, penalty=9.0, penalty_split=0.5),
-            ],
-        )
-        nv = configuration.nv
-        np.testing.assert_allclose(problem.q[nv : nv + 6], 1.0)
-        np.testing.assert_allclose(problem.q[nv + 6 :], 3.0)
-        assert problem.G is not None
-        np.testing.assert_allclose(
-            problem.G[:6, :nv], 4.0 * frame_task.compute_jacobian(configuration)
-        )
-        np.testing.assert_allclose(
-            problem.G[6:9, :nv], 3.0 * com_task.compute_jacobian(configuration)
-        )
-
     def test_invalid_penalty_raises(self):
         configuration, frame_task, posture_task = _setup([0.0, 0.0, 0.0])
         for penalty in (-1.0, np.nan, np.inf, np.ones((2, 3))):
             with self.assertRaises(mink.InvalidConstraint):
                 mink.Elastic(frame_task, penalty=penalty)
-        for split in (np.nan, np.inf):
-            with self.assertRaises(mink.InvalidConstraint):
-                mink.Elastic(frame_task, penalty_split=split)
         elastic = mink.Elastic(frame_task, penalty=[1.0, 1.0, 1.0])
         with self.assertRaises(mink.InvalidConstraint):
             mink.build_ik(configuration, [posture_task], 0.01, constraints=[elastic])
