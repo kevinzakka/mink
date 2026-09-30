@@ -95,6 +95,48 @@ class TestCollisionAvoidanceLimit(absltest.TestCase):
         self.assertListEqual(limit.geom_id_pairs, [(0, 2)])
         self.assertEqual(len(limit.geom_id_pairs), 1)
 
+    def test_world_geoms_pair_with_bodies_attached_to_world(self):
+        """World geoms are not parents: they pair with top-level bodies, as in MuJoCo.
+
+        The parent-child filter still drops genuine parent-child pairs.
+        """
+        xml_str = """
+        <mujoco>
+          <worldbody>
+            <geom name="floor" type="plane" size="5 5 .1"/>
+            <body name="torso" pos="0 0 .5">
+              <freejoint/>
+              <geom name="torso" type="sphere" size=".1"/>
+              <body pos=".3 0 0">
+                <joint type="hinge" axis="0 1 0"/>
+                <geom name="arm" type="sphere" size=".05"/>
+              </body>
+            </body>
+          </worldbody>
+        </mujoco>
+        """
+        model = mujoco.MjModel.from_xml_string(xml_str)
+        floor, torso, arm = (model.geom(n).id for n in ("floor", "torso", "arm"))
+        limit = CollisionAvoidanceLimit(
+            model,
+            geom_pairs=[(["torso", "arm"], ["floor"]), (["torso"], ["arm"])],
+            collision_detection_distance=1.0,
+        )
+        self.assertCountEqual(limit.geom_id_pairs, [(floor, torso), (floor, arm)])
+
+        # Pulling the torso below the floor stops at the minimum distance.
+        configuration = Configuration(model)
+        task = FrameTask("torso", "body", position_cost=1.0, orientation_cost=0.0)
+        task.set_target(SE3.from_translation(np.array([0.0, 0.0, -0.5])))
+        for _ in range(100):
+            velocity = solve_ik(configuration, [task], 0.02, "daqp", limits=[limit])
+            configuration.integrate_inplace(velocity, 0.02)
+        fromto = np.empty(6)
+        gap = mujoco.mj_geomDistance(
+            model, configuration.data, torso, floor, 1.0, fromto
+        )
+        self.assertGreaterEqual(gap, limit.minimum_distance_from_collisions - 1e-6)
+
     def test_dimensions(self):
         g1 = get_body_geom_ids(self.model, self.model.body("wrist_2_link").id)
         g2 = get_body_geom_ids(self.model, self.model.body("upper_arm_link").id)
@@ -452,12 +494,7 @@ class TestCollisionAvoidanceLimit(absltest.TestCase):
         self.assertTrue(culled_at_least_once)
 
     def test_broadphase_plane_pair_matches_unfiltered(self):
-        """Broadphase plane-geom culling yields the same (G, h) as the scan.
-
-        The sphere is nested two bodies deep so the geom-vs-plane pair survives
-        the parent-child filter (a plane lives in the world body, which would
-        otherwise be the weld parent of a top-level geom).
-        """
+        """Broadphase plane-geom culling yields the same (G, h) as the scan."""
         xml_str = """
         <mujoco>
           <worldbody>

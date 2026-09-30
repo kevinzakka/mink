@@ -19,6 +19,7 @@ All notable changes to this project will be documented in this file.
 - `Configuration.update` now computes tendon kinematics. Previously, `mjEQ_TENDON` equality constraints in `EqualityConstraintTask` had zero error and Jacobian, and `get_inertia_matrix` dropped tendon armature.
 - Corrected Lie-group exponential, logarithm, and Jacobian calculations at small rotation angles and exactly 180°. Pose tasks now retain translation–rotation coupling when the orientation residual is zero or tiny.
 - `Objective.value` now includes the documented `1/2` factor on its quadratic term.
+- `CollisionAvoidanceLimit` no longer drops pairs between world geoms (floors, walls, tables) and bodies attached directly to the world, such as a floating base or the first link of a fixed arm. The parent-child filter treated the world body as their parent; MuJoCo exempts the world from that filter, so these pairs collide in simulation but were silently excluded from the limit.
 - **Breaking**: `CollisionAvoidanceLimit` bounded the per-step displacement by a velocity, `gain * (d - d_min) / dt`, loosening the limit by a factor of `1/dt` and letting geoms penetrate in a single step. The bound is now `gain * (d - d_min)`, independent of `dt`. Approach near obstacles is slower at typical timesteps; retune `gain` if needed.
 
 ## [1.3.0] - 2026-08-17

@@ -55,7 +55,12 @@ def _is_welded_together(model: mujoco.MjModel, geom_id1: int, geom_id2: int) -> 
 def _are_geom_bodies_parent_child(
     model: mujoco.MjModel, geom_id1: int, geom_id2: int
 ) -> bool:
-    """Returns true if the geom bodies have a parent-child relationship."""
+    """Returns true if the geom bodies have a parent-child relationship.
+
+    Mirrors MuJoCo's parent filter: the world body is never treated as a parent, so
+    world geoms (floors, walls, tables) still pair with bodies attached directly to
+    the world.
+    """
     body_id1 = model.geom_bodyid[geom_id1]
     body_id2 = model.geom_bodyid[geom_id2]
 
@@ -71,6 +76,8 @@ def _are_geom_bodies_parent_child(
     weld_parent_weldid1 = model.body_weldid[weld_parent_id1]
     weld_parent_weldid2 = model.body_weldid[weld_parent_id2]
 
+    if body_weldid1 == 0 or body_weldid2 == 0:
+        return False
     cond1 = body_weldid1 == weld_parent_weldid2
     cond2 = body_weldid2 == weld_parent_weldid1
     return cond1 or cond2
