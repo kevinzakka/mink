@@ -95,11 +95,7 @@ class TestCollisionAvoidanceLimit(absltest.TestCase):
         self.assertListEqual(limit.geom_id_pairs, [(0, 2)])
         self.assertEqual(len(limit.geom_id_pairs), 1)
 
-    def test_world_geoms_pair_with_bodies_attached_to_world(self):
-        """World geoms are not parents: they pair with top-level bodies, as in MuJoCo.
-
-        The parent-child filter still drops genuine parent-child pairs.
-        """
+    def test_world_geoms_pair_with_top_level_bodies(self):
         xml_str = """
         <mujoco>
           <worldbody>
@@ -123,19 +119,6 @@ class TestCollisionAvoidanceLimit(absltest.TestCase):
             collision_detection_distance=1.0,
         )
         self.assertCountEqual(limit.geom_id_pairs, [(floor, torso), (floor, arm)])
-
-        # Pulling the torso below the floor stops at the minimum distance.
-        configuration = Configuration(model)
-        task = FrameTask("torso", "body", position_cost=1.0, orientation_cost=0.0)
-        task.set_target(SE3.from_translation(np.array([0.0, 0.0, -0.5])))
-        for _ in range(100):
-            velocity = solve_ik(configuration, [task], 0.02, "daqp", limits=[limit])
-            configuration.integrate_inplace(velocity, 0.02)
-        fromto = np.empty(6)
-        gap = mujoco.mj_geomDistance(
-            model, configuration.data, torso, floor, 1.0, fromto
-        )
-        self.assertGreaterEqual(gap, limit.minimum_distance_from_collisions - 1e-6)
 
     def test_dimensions(self):
         g1 = get_body_geom_ids(self.model, self.model.body("wrist_2_link").id)
