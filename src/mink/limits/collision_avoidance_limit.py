@@ -55,13 +55,19 @@ def _is_welded_together(model: mujoco.MjModel, geom_id1: int, geom_id2: int) -> 
 def _are_geom_bodies_parent_child(
     model: mujoco.MjModel, geom_id1: int, geom_id2: int
 ) -> bool:
-    """Returns true if the geom bodies have a parent-child relationship."""
+    """Returns true if the geom bodies have a parent-child relationship.
+
+    As in MuJoCo, the world body is exempt, so world geoms still pair with top-level
+    bodies.
+    """
     body_id1 = model.geom_bodyid[geom_id1]
     body_id2 = model.geom_bodyid[geom_id2]
 
     # body_weldid is the ID of the body's weld.
     body_weldid1 = model.body_weldid[body_id1]
     body_weldid2 = model.body_weldid[body_id2]
+    if body_weldid1 == 0 or body_weldid2 == 0:
+        return False
 
     # weld_parent_id is the ID of the parent of the body's weld.
     weld_parent_id1 = model.body_parentid[body_weldid1]
