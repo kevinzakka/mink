@@ -12,6 +12,7 @@ from pathlib import Path
 import mujoco
 import mujoco.viewer
 import numpy as np
+from _model_assets import load_example_spec
 from loop_rate_limiters import RateLimiter
 
 import mink
@@ -30,7 +31,7 @@ _GREEN_COLOR = (0.3, 0.6, 0.3, 0.2)
 
 
 def main():
-    model = mujoco.MjModel.from_xml_path(_XML.as_posix())
+    model = load_example_spec("franka_emika_panda", _XML).compile()
     data = mujoco.MjData(model)
 
     configuration = mink.Configuration(model)

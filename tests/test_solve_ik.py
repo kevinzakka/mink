@@ -1,11 +1,13 @@
 """Tests for solve_ik.py."""
 
 from typing import cast
+from unittest import mock
 
+import mujoco_menagerie as mm
 import numpy as np
+import qpsolvers
 from absl.testing import absltest
 from numpy.linalg import norm
-from robot_descriptions.loaders.mujoco import load_robot_description
 
 import mink
 
@@ -15,7 +17,7 @@ class TestSolveIK(absltest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.model = load_robot_description("ur5e_mj_description")
+        cls.model = mm.load("universal_robots_ur5e", "ur5e")
 
     def setUp(self):
         self.configuration = mink.Configuration(self.model)
@@ -214,11 +216,11 @@ class TestSolveIK(absltest.TestCase):
 
     def test_no_solution_found_throws(self):
         """When the QP solver fails to find a solution, an exception is raised."""
-        # Ask the end-effector to move to a far away target with a very large cost.
-        task = mink.FrameTask("attachment_site", "site", 1e6, 0)
-        task.set_target(mink.SE3.from_translation(np.array([100.0, 0, 0])))
-        with self.assertRaises(mink.NoSolutionFound) as cm:
-            mink.solve_ik(self.configuration, [task], dt=1e-3, solver="daqp")
+        problem = mink.build_ik(self.configuration, [], dt=1e-3)
+        solution = qpsolvers.Solution(problem, found=False)
+        with mock.patch.object(qpsolvers, "solve_problem", return_value=solution):
+            with self.assertRaises(mink.NoSolutionFound) as cm:
+                mink.solve_ik(self.configuration, [], dt=1e-3, solver="daqp")
         self.assertEqual(str(cm.exception), "QP solver daqp failed to find a solution.")
 
     def test_equality_constraints_freeze_dofs(self):

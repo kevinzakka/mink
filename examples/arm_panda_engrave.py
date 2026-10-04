@@ -21,6 +21,7 @@ import imageio.v3 as iio
 import mujoco
 import mujoco.viewer
 import numpy as np
+from _model_assets import load_example_spec
 from loop_rate_limiters import RateLimiter
 
 import mink
@@ -133,7 +134,7 @@ def _path_at(s: float) -> tuple[float, float, float]:
 
 def build_model() -> mujoco.MjModel:
     """No-hand Panda with an end mill on link7 and a domed block to engrave."""
-    spec = mujoco.MjSpec.from_file(_SCENE.as_posix())
+    spec = load_example_spec("franka_emika_panda", _SCENE)
 
     # Drop the gripper (the mill is the tool).
     spec.delete(spec.body("hand"))

@@ -5,13 +5,11 @@ on:
     branches: [ main ]
     paths-ignore:
       - '**.md'
-      - 'Makefile'
       - 'LICENSE'
   pull_request:
     branches: [ main ]
     paths-ignore:
       - '**.md'
-      - 'Makefile'
       - 'LICENSE'
 
 env:
@@ -84,6 +82,23 @@ jobs:
           cache-suffix: ${{ github.job }}
       - name: Test with python ${{ matrix.python-version }}
         run: uv run pytest
+
+  tests-latest-deps:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - name: Setup uv
+        uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8.2.0
+        with:
+          python-version: ${{ matrix.python-version }}
+          enable-cache: true
+          version: "0.9.14"
+          cache-suffix: ${{ github.job }}
+      - name: Test with latest compatible dependencies on python ${{ matrix.python-version }}
+        run: make test-latest
 
   build:
     runs-on: ubuntu-latest

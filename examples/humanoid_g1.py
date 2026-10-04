@@ -2,6 +2,7 @@ from pathlib import Path
 
 import mujoco
 import mujoco.viewer
+from _model_assets import load_example_spec
 from loop_rate_limiters import RateLimiter
 
 import mink
@@ -11,7 +12,7 @@ _XML = _HERE / "unitree_g1" / "scene_table.xml"
 
 
 if __name__ == "__main__":
-    model = mujoco.MjModel.from_xml_path(_XML.as_posix())
+    model = load_example_spec("unitree_g1", _XML).compile()
 
     configuration = mink.Configuration(model)
     feet = ["right_foot", "left_foot"]

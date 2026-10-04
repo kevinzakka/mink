@@ -26,6 +26,7 @@ import imageio.v3 as iio
 import mujoco
 import mujoco.viewer
 import numpy as np
+from _model_assets import load_example_spec
 from loop_rate_limiters import RateLimiter
 
 import mink
@@ -39,7 +40,7 @@ _HANDS = ["left_palm", "right_palm"]
 
 def build_model() -> mujoco.MjModel:
     """Load the Apollo gaze scene and add a gaze frame at the end of the neck."""
-    spec = mujoco.MjSpec.from_file(_XML.as_posix())
+    spec = load_example_spec("apptronik_apollo", _XML)
     spec.body("neck_pitch_link").add_site(
         name="gaze", pos=[0.08, 0.0, 0.0], size=[0.02] * 3, group=4
     )

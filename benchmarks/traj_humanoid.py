@@ -5,6 +5,7 @@ left hand traces torso-relative circle via RelativeFrameTask,
 collision avoidance between hands and hips.
 """
 
+import sys
 from pathlib import Path
 
 import mujoco
@@ -17,10 +18,11 @@ from mink.lie import SE3
 
 _HERE = Path(__file__).parent
 _XML = _HERE.parent / "examples" / "unitree_g1" / "scene.xml"
-
+sys.path.insert(0, str(_HERE.parent))
+from examples._model_assets import load_example_spec  # noqa: E402
 
 if __name__ == "__main__":
-    model = mujoco.MjModel.from_xml_path(_XML.as_posix())
+    model = load_example_spec("unitree_g1", _XML).compile()
 
     configuration = mink.Configuration(model)
     feet = ["right_foot", "left_foot"]

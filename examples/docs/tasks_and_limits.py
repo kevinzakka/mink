@@ -1,4 +1,6 @@
-import mujoco
+import sys
+from pathlib import Path
+
 import numpy as np
 
 from mink import (
@@ -12,8 +14,13 @@ from mink import (
     solve_ik,
 )
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from _model_assets import load_example_spec  # noqa: E402
+
 # Load and configure.
-model = mujoco.MjModel.from_xml_path("franka_emika_panda/mjx_scene.xml")
+model = load_example_spec(
+    "franka_emika_panda", Path("franka_emika_panda/mjx_scene.xml")
+).compile()
 configuration = Configuration(model)
 configuration.update_from_keyframe("home")
 

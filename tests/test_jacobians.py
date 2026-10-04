@@ -1,9 +1,9 @@
 """Test task jacobian matrices against finite differences."""
 
 import mujoco
+import mujoco_menagerie as mm
 import numpy as np
 from absl.testing import absltest
-from robot_descriptions.loaders.mujoco import load_robot_description
 
 import mink
 from mink import lie
@@ -19,7 +19,7 @@ class TestJacobians(absltest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.model = load_robot_description("talos_mj_description")
+        cls.model = mm.load("pal_talos", "talos_position")
 
     def setUp(self, nb_configs: int = 1):
         np.random.seed(42)

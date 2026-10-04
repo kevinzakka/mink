@@ -14,6 +14,7 @@ from typing import Deque
 import mujoco
 import mujoco.viewer
 import numpy as np
+from _model_assets import load_example_spec
 from loop_rate_limiters import RateLimiter
 
 import mink
@@ -52,7 +53,7 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    model = mujoco.MjModel.from_xml_path(_XML.as_posix())
+    model = load_example_spec("universal_robots_ur5e", _XML).compile()
     configuration = mink.Configuration(model)
 
     end_effector_task = mink.FrameTask(

@@ -3,9 +3,9 @@
 import unittest.mock
 
 import mujoco
+import mujoco_menagerie as mm
 import numpy as np
 from absl.testing import absltest
-from robot_descriptions.loaders.mujoco import load_robot_description
 
 import mink
 
@@ -15,7 +15,7 @@ class TestConfiguration(absltest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.model = load_robot_description("ur5e_mj_description")
+        cls.model = mm.load("universal_robots_ur5e", "ur5e")
 
     def setUp(self):
         self.q_ref = self.model.key("home").qpos
@@ -162,7 +162,7 @@ class TestConfiguration(absltest.TestCase):
         configuration.check_limits(safety_break=False)  # Should not raise.
 
     def test_check_limits_freejoint(self):
-        model = load_robot_description("g1_mj_description")
+        model = mm.load("unitree_g1", "g1")
         configuration = mink.Configuration(model)
         q = configuration.q.copy()
         q[0] = 1e4  # x-coordinate of freejoint.

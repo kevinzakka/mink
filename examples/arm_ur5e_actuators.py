@@ -3,6 +3,7 @@ from pathlib import Path
 import mujoco
 import mujoco.viewer
 import numpy as np
+from _model_assets import load_example_spec
 from loop_rate_limiters import RateLimiter
 
 import mink
@@ -13,7 +14,7 @@ _XML = _HERE / "universal_robots_ur5e" / "scene.xml"
 
 
 if __name__ == "__main__":
-    model = mujoco.MjModel.from_xml_path(_XML.as_posix())
+    model = load_example_spec("universal_robots_ur5e", _XML).compile()
     data = mujoco.MjData(model)
 
     ## =================== ##
