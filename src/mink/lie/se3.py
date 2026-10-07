@@ -56,7 +56,7 @@ class SE3(MatrixLieGroup):
 
     @classmethod
     def identity(cls) -> SE3:
-        return SE3(wxyz_xyz=_IDENTITY_WXYZ_XYZ)
+        return SE3(wxyz_xyz=_IDENTITY_WXYZ_XYZ.copy())
 
     @classmethod
     def from_rotation_and_translation(
