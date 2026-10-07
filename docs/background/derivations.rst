@@ -377,7 +377,17 @@ the implementation ignores floating-base coordinates. The task is
 
     e(q) = P\bigl(q \ominus q^*\bigr),
     \qquad
-    J(q) = P.
+    J(q) = P \quad \text{(scalar joint coordinates)}.
+
+For scalar hinge and slide coordinates, :math:`J=P`. For a controlled ball
+joint, the residual is :math:`\phi=\log(R^{*T}R)`. MuJoCo applies local
+angular increments on the right, so the corresponding Jacobian block is
+:math:`J_r^{-1}(\phi)`, rather than the identity. Its other blocks are zero.
+The selector continues to remove floating-base coordinates.
+
+Because :math:`J_r^{-1}(\phi)\phi=\phi`, the following isolated-task
+corrective law still holds, while the exact Jacobian matters when combining
+tasks or assigning unequal costs to the ball-joint residual coordinates.
 
 For a fixed-base configuration, :math:`P=I_{n_v}`. If every controlled
 coordinate has a nonzero cost and the posture task acts alone, its optimality

@@ -8,6 +8,7 @@ import numpy.typing as npt
 
 from ..configuration import Configuration
 from ..exceptions import InvalidTarget, TargetNotSet, TaskDefinitionError
+from ..lie import SO3
 from ..utils import get_freejoint_dims
 from .task import Task
 
@@ -61,6 +62,10 @@ class PostureTask(Task):
             self._v_ids = np.asarray(v_ids_or_none)
         else:
             self._v_ids = None
+
+        self._ball_dofadr = model.jnt_dofadr[
+            model.jnt_type == mujoco.mjtJoint.mjJNT_BALL
+        ].copy()
 
         self.k = model.nv
         self.nq = model.nq
@@ -136,11 +141,12 @@ class PostureTask(Task):
     def compute_jacobian(self, configuration: Configuration) -> np.ndarray:
         r"""Compute the posture task Jacobian.
 
-        The task Jacobian is defined as:
+        Hinge and slide coordinates have an identity Jacobian. For a ball
+        joint with error :math:`\phi = \log(R^{*T} R)`, MuJoCo integrates
+        a local angular displacement on the right, giving the block
+        :math:`J_r^{-1}(\phi)`. Floating-base columns remain zero.
 
-        .. math::
-
-            J(q) = I_{n_v}
+        Before a target is set, the identity projection is returned as before.
 
         Args:
             configuration: Robot configuration :math:`q`.
@@ -149,6 +155,11 @@ class PostureTask(Task):
             Posture task jacobian :math:`J(q)`.
         """
         jac = np.eye(configuration.nv)
+        if self.target_q is not None and len(self._ball_dofadr) > 0:
+            error = self.compute_error(configuration)
+            for dofadr in self._ball_dofadr:
+                block = slice(dofadr, dofadr + 3)
+                jac[block, block] = SO3.rjacinv(error[block])
         if self._v_ids is not None:
             jac[:, self._v_ids] = 0.0
         return jac
