@@ -2,7 +2,7 @@
 
 import mujoco
 import numpy as np
-from absl.testing import absltest
+from absl.testing import absltest, parameterized
 from robot_descriptions.loaders.mujoco import load_robot_description
 
 import mink
@@ -27,6 +27,14 @@ _NO_FREE = """
 </mujoco>
 """
 
+_ONE_FREE = """
+<mujoco>
+  <worldbody>
+    <body><freejoint/><geom type="sphere" size=".1"/></body>
+  </worldbody>
+</mujoco>
+"""
+
 
 def _rotated(configuration: Configuration, quat_wxyz) -> None:
     q = configuration.q.copy()
@@ -38,6 +46,67 @@ def _inequalities(limit, configuration, dt):
     G, h = limit.compute_qp_inequalities(configuration, dt)
     assert G is not None and h is not None
     return G, h
+
+
+class TestFreeJointVelocityLimitInputOwnership(parameterized.TestCase):
+    def setUp(self):
+        super().setUp()
+        self.model = mujoco.MjModel.from_xml_string(_ONE_FREE)
+        self.configuration = Configuration(self.model)
+
+    @parameterized.product(
+        linear=(False, True), use_view=(False, True), readonly=(False, True)
+    )
+    def test_array_input_is_copied(self, linear, use_view, readonly):
+        values = np.arange(1.0, 7.0)[::2] if use_view else np.array([1.0, 3.0, 5.0])
+        if readonly:
+            values.setflags(write=False)
+        limit = FreeJointVelocityLimit(
+            self.model,
+            max_linear_velocity=values if linear else None,
+            max_angular_velocity=None if linear else values,
+        )
+        bound = limit.linear_max if linear else limit.angular_max
+        assert bound is not None
+        self.assertEqual(values.flags.writeable, not readonly)
+        self.assertFalse(np.shares_memory(values, bound))
+        self.assertFalse(bound.flags.writeable)
+        np.testing.assert_array_equal(bound, [1.0, 3.0, 5.0])
+
+    @parameterized.parameters(False, True)
+    def test_qp_bounds_ignore_external_mutation(self, readonly):
+        storage = np.arange(1.0, 7.0)
+        linear, angular = storage[::2], storage[1::2]
+        if readonly:
+            linear.setflags(write=False)
+            angular.setflags(write=False)
+        limit = FreeJointVelocityLimit(self.model, linear, angular)
+        G_before, h_before = _inequalities(limit, self.configuration, dt=0.1)
+
+        # A read-only view does not stop its owner from modifying shared storage.
+        storage[:] = 100.0
+
+        G_after, h_after = _inequalities(limit, self.configuration, dt=0.1)
+        expected_h = 0.1 * np.tile([1.0, 3.0, 5.0, 2.0, 4.0, 6.0], 2)
+        np.testing.assert_array_equal(h_before, expected_h)
+        np.testing.assert_array_equal(h_after, expected_h)
+        np.testing.assert_array_equal(G_before, np.vstack([np.eye(6), -np.eye(6)]))
+        np.testing.assert_array_equal(G_after, G_before)
+
+    @parameterized.named_parameters(
+        ("scalar", 2.0),
+        ("scalar_array", np.array(2.0)),
+        ("list", [2.0, 2.0, 2.0]),
+        ("integer_array", np.array([2, 2, 2])),
+    )
+    def test_scalar_and_sequence_inputs(self, values):
+        limit = FreeJointVelocityLimit(self.model, values, values)
+        for bound in (limit.linear_max, limit.angular_max):
+            assert bound is not None
+            np.testing.assert_array_equal(bound, [2.0, 2.0, 2.0])
+            self.assertFalse(bound.flags.writeable)
+        _, h = _inequalities(limit, self.configuration, dt=0.1)
+        np.testing.assert_array_equal(h, np.full(12, 0.2))
 
 
 class TestFreeJointVelocityLimit(absltest.TestCase):
