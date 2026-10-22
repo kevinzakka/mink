@@ -71,8 +71,10 @@ def _compute_qp_inequalities(
         inequality = limit.compute_qp_inequalities(configuration, dt)
         if not inequality.inactive:
             assert inequality.G is not None and inequality.h is not None
-            G_list.append(inequality.G)
-            h_list.append(inequality.h)
+            active = np.isfinite(inequality.h)
+            if np.any(active):
+                G_list.append(inequality.G if np.all(active) else inequality.G[active])
+                h_list.append(inequality.h if np.all(active) else inequality.h[active])
     if not G_list:
         return None, None
     return np.vstack(G_list), np.hstack(h_list)
