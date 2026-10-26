@@ -49,6 +49,17 @@ class TestFreeJointVelocityLimit(absltest.TestCase):
         self.configuration = Configuration(self.model)
         self.configuration.update_from_keyframe("stand")
 
+    def test_does_not_alias_inputs(self):
+        model = mujoco.MjModel.from_xml_string(
+            "<mujoco><worldbody><body><freejoint/>"
+            '<geom type="sphere" size=".1"/></body></worldbody></mujoco>'
+        )
+        vel = np.ones(3)
+        limit = FreeJointVelocityLimit(model, vel)
+        self.assertTrue(vel.flags.writeable)
+        vel[:] = 5.0
+        np.testing.assert_array_equal(limit.linear_max, np.ones(3))
+
     def test_dimensions(self):
         limit = FreeJointVelocityLimit(self.model, 1.0, 2.0)
         G, h = _inequalities(limit, self.configuration, 1e-2)
