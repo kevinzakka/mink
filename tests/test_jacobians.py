@@ -155,6 +155,23 @@ class TestJacobians(absltest.TestCase):
         posture_task.set_target(target_q)
         self.check_jacobian_finite_diff(posture_task, tol=1e-5)
 
+    def test_posture_task_ball_joints(self):
+        model = mujoco.MjModel.from_xml_string(
+            '<mujoco><worldbody><body><joint type="ball"/>'
+            '<geom type="sphere" size=".1"/><body pos="0 0 1">'
+            '<joint type="ball"/><geom type="sphere" size=".1"/></body></body>'
+            "</worldbody></mujoco>"
+        )
+        quats = np.random.randn(3, model.nq)
+        for q in quats:
+            q[:4] /= np.linalg.norm(q[:4])
+            q[4:] /= np.linalg.norm(q[4:])
+        posture_task = mink.PostureTask(model=model, cost=np.arange(1.0, 7.0))
+        posture_task.set_target(quats[0])
+        self.check_jacobian_finite_diff(
+            posture_task, tol=1e-5, model=model, qs=quats[1:]
+        )
+
     def test_com_task(self):
         com_task = mink.ComTask(cost=1.0)
         com_task.set_target(np.zeros(3))

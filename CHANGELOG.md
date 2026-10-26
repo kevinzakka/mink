@@ -18,6 +18,7 @@ All notable changes to this project will be documented in this file.
 
 - `SO3.identity()` and `SE3.identity()` no longer share a parameter buffer, so mutating one cannot corrupt later identities.
 - `FreeJointVelocityLimit` no longer freezes the caller's velocity arrays or aliases them.
+- `PostureTask` now uses the correct Jacobian for ball joints, `Jr^-1(log(R*^T R))`, instead of the identity. This changes the solution only when ball-joint residual axes have unequal costs or compete with other tasks.
 - `Configuration.update` now computes tendon kinematics. Previously, `mjEQ_TENDON` equality constraints in `EqualityConstraintTask` had zero error and Jacobian, and `get_inertia_matrix` dropped tendon armature.
 - Corrected Lie-group exponential, logarithm, and Jacobian calculations at small rotation angles and exactly 180°. Pose tasks now retain translation–rotation coupling when the orientation residual is zero or tiny.
 - `Objective.value` now includes the documented `1/2` factor on its quadratic term.
