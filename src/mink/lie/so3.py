@@ -95,7 +95,7 @@ class SO3(MatrixLieGroup):
 
     @classmethod
     def identity(cls) -> SO3:
-        return SO3(wxyz=_IDENTITIY_WXYZ)
+        return SO3(wxyz=_IDENTITIY_WXYZ.copy())
 
     @classmethod
     def sample_uniform(cls) -> SO3:
