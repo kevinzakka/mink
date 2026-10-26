@@ -8,6 +8,7 @@ import numpy.typing as npt
 
 from ..configuration import Configuration
 from ..exceptions import InvalidTarget, TargetNotSet, TaskDefinitionError
+from ..lie import SO3
 from ..utils import get_freejoint_dims
 from .task import Task
 
@@ -61,6 +62,9 @@ class PostureTask(Task):
             self._v_ids = np.asarray(v_ids_or_none)
         else:
             self._v_ids = None
+
+        ball = model.jnt_type == mujoco.mjtJoint.mjJNT_BALL
+        self._ball_dofadr = model.jnt_dofadr[ball]
 
         self.k = model.nv
         self.nq = model.nq
@@ -136,11 +140,9 @@ class PostureTask(Task):
     def compute_jacobian(self, configuration: Configuration) -> np.ndarray:
         r"""Compute the posture task Jacobian.
 
-        The task Jacobian is defined as:
-
-        .. math::
-
-            J(q) = I_{n_v}
+        The Jacobian is the identity except on ball joints, where the error
+        :math:`\phi = \log(R^{*T} R)` has the right inverse Jacobian
+        :math:`J_r^{-1}(\phi)` as its block.
 
         Args:
             configuration: Robot configuration :math:`q`.
@@ -149,6 +151,10 @@ class PostureTask(Task):
             Posture task jacobian :math:`J(q)`.
         """
         jac = np.eye(configuration.nv)
+        if self.target_q is not None and len(self._ball_dofadr) > 0:
+            error = self.compute_error(configuration)
+            for adr in self._ball_dofadr:
+                jac[adr : adr + 3, adr : adr + 3] = SO3.rjacinv(error[adr : adr + 3])
         if self._v_ids is not None:
             jac[:, self._v_ids] = 0.0
         return jac

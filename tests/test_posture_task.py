@@ -1,5 +1,6 @@
 """Tests for posture_task.py."""
 
+import mujoco
 import numpy as np
 from absl.testing import absltest
 from robot_descriptions.loaders.mujoco import load_robot_description
@@ -56,6 +57,32 @@ class TestPostureTask(absltest.TestCase):
         with self.assertRaises(TargetNotSet) as cm:
             task.compute_error(self.configuration)
         self.assertEqual(str(cm.exception), "No target set for PostureTask")
+
+    def test_ball_joint_jacobian_matches_finite_differences(self):
+        model = mujoco.MjModel.from_xml_string(
+            '<mujoco><worldbody><body><joint type="ball"/>'
+            '<geom type="sphere" size=".1"/></body></worldbody></mujoco>'
+        )
+        target = np.zeros(4)
+        mujoco.mju_axisAngle2Quat(target, np.array([1.0, 0.0, 0.0]), 0.7)
+        q = np.zeros(4)
+        mujoco.mju_axisAngle2Quat(q, np.array([0.0, 1.0, 0.0]), 1.1)
+        configuration = Configuration(model, q)
+        task = PostureTask(model, cost=1.0)
+        task.set_target(target)
+        error = task.compute_error(configuration)
+        eps = 1e-6
+        expected = np.empty((3, 3))
+        for i in range(3):
+            dq = np.zeros(3)
+            dq[i] = eps
+            q_pert = q.copy()
+            mujoco.mj_integratePos(model, q_pert, dq, 1.0)
+            error_pert = task.compute_error(Configuration(model, q_pert))
+            expected[:, i] = (error_pert - error) / eps
+        np.testing.assert_allclose(
+            task.compute_jacobian(configuration), expected, atol=1e-5
+        )
 
     def test_jacobian_can_be_computed_without_target(self):
         task = PostureTask(model=self.model, cost=1.0)
