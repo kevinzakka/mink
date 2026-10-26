@@ -58,7 +58,7 @@ class FreeJointVelocityLimit(Limit):
             if value is None:
                 limits.append(None)
                 continue
-            arr = np.asarray(value, dtype=float)
+            arr = np.array(value, dtype=float)
             if arr.ndim == 0:
                 arr = np.full(3, arr)
             if arr.shape != (3,):
