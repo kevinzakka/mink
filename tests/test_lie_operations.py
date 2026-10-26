@@ -77,6 +77,10 @@ def _se3_ljac_power_series(tangent: np.ndarray) -> np.ndarray:
     ("SE3", SE3),
 )
 class TestOperations(parameterized.TestCase):
+    def test_identity_owns_parameters(self, group: Type[MatrixLieGroup]):
+        group.identity().parameters()[0] = 0.0
+        np.testing.assert_array_equal(group.identity().parameters()[0], 1.0)
+
     def test_inverse_bijective(self, group: Type[MatrixLieGroup]):
         """Check inverse of inverse."""
         transform = group.sample_uniform()
