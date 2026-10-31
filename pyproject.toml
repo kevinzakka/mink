@@ -17,7 +17,6 @@ classifiers = [
     "Framework :: Robot Framework :: Library",
     "Intended Audience :: Developers",
     "Intended Audience :: Science/Research",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
@@ -25,7 +24,7 @@ classifiers = [
     "Topic :: Scientific/Engineering",
 ]
 description = "Python inverse kinematics based on MuJoCo"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 dependencies = [
     "mujoco >= 3.10.0",
     "qpsolvers[daqp] >= 4.12.0",
@@ -94,7 +93,7 @@ lint.ignore = [
 ]
 
 [tool.pyright]
-pythonVersion = "3.10"
+pythonVersion = "3.11"
 ignore = ["typings", "scripts", "docs"]
 stubPath = "typings"
 
