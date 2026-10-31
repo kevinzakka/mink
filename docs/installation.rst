@@ -3,7 +3,7 @@
 Installation
 ============
 
-``mink`` is distributed on PyPI and supports Python 3.10 and above:
+``mink`` is distributed on PyPI and supports Python 3.11 and above:
 
 .. tab-set::
 

@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
+- **Breaking**: Dropped Python 3.10, which reached end-of-life in October 2026. mink now requires Python 3.11 or newer.
 - **Breaking**: `RelativeFrameTask.compute_error` and `compute_jacobian` now follow the `FrameTask` sign convention. IK solutions are unchanged, and a world-rooted relative task now matches `FrameTask` exactly.
 - `FrameTask` and `RelativeFrameTask` now use fused native error/Jacobian kernels, with expanded derivation and convention documentation. Task QP assembly is ~1.5x faster (~1.15x end-to-end on the G1 benchmark).
 - SE(3) Jacobian small-angle series now use Horner form, matching SO(3).
@@ -13,6 +14,7 @@ All notable changes to this project will be documented in this file.
 - **Breaking**: `CollisionAvoidanceLimit` raises `LimitDefinitionError` when `gain` is outside (0, 1], matching `ConfigurationLimit`.
 - `CollisionAvoidanceLimit` default `collision_detection_distance` raised from 0.01 to 0.05. The old 5 mm band above the default minimum distance was narrower than a single step at moderate rates, letting geoms pass through undetected (UR5e at 50 Hz penetrated 18 mm).
 - `solve_ik` and `build_ik` with `limits=None` now reuse a `ConfigurationLimit` cached on the `Configuration` instead of rebuilding it every call (~2x faster on UR5e, ~5.6x on G1).
+- Locked MuJoCo upgraded from 3.11.0 to 3.17.0, and Pillow, GitPython, certifi, fsspec, and urllib3 bumped to patched versions to resolve Dependabot security alerts.
 
 ### Fixed
 
