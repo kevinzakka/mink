@@ -3,6 +3,7 @@ from pathlib import Path
 import mujoco
 import mujoco.viewer
 import numpy as np
+from _model_assets import load_example_spec
 from loop_rate_limiters import RateLimiter
 
 import mink
@@ -12,7 +13,7 @@ _MODEL_PATH = _HERE / "franka_emika_panda" / "dual_panda_scene.xml"
 
 
 def initialize_model():
-    model = mujoco.MjModel.from_xml_path(_MODEL_PATH.as_posix())
+    model = load_example_spec("franka_emika_panda", _MODEL_PATH).compile()
     data = mujoco.MjData(model)
     mujoco.mj_forward(model, data)  # Force update after stepping
     configuration = mink.Configuration(model)

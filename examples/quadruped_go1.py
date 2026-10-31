@@ -3,6 +3,7 @@ from pathlib import Path
 import mujoco
 import mujoco.viewer
 import numpy as np
+from _model_assets import load_example_spec
 from loop_rate_limiters import RateLimiter
 
 import mink
@@ -28,7 +29,7 @@ def get_foot_z(phi: np.ndarray, swing_height: float = 0.08) -> np.ndarray:
 
 
 if __name__ == "__main__":
-    model = mujoco.MjModel.from_xml_path(_XML.as_posix())
+    model = load_example_spec("unitree_go1", _XML).compile()
 
     configuration = mink.Configuration(model)
 

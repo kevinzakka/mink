@@ -25,6 +25,7 @@ import imageio.v3 as iio
 import mujoco
 import mujoco.viewer
 import numpy as np
+from _model_assets import load_example_spec
 from loop_rate_limiters import RateLimiter
 
 import mink
@@ -50,7 +51,7 @@ _JOINTS = ["shoulder_pan", "shoulder_lift", "elbow", "wrist_1", "wrist_2", "wris
 
 def build_model() -> mujoco.MjModel:
     """Assemble the UR5e scene with a wrist-mounted camera."""
-    spec = mujoco.MjSpec.from_file(_UR5E.as_posix())
+    spec = load_example_spec("universal_robots_ur5e", _UR5E)
     wrist = spec.body("wrist_3_link")
 
     camera = mujoco.MjSpec.from_file(_CAMERA.as_posix())

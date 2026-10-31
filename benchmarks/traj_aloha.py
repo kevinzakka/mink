@@ -5,6 +5,7 @@ forcing collision avoidance between wrists. The paths dip near the table
 surface, activating arm-table and arm-frame collision avoidance.
 """
 
+import sys
 from pathlib import Path
 
 import mujoco
@@ -16,6 +17,8 @@ import mink
 
 _HERE = Path(__file__).parent
 _XML = _HERE.parent / "examples" / "aloha" / "scene.xml"
+sys.path.insert(0, str(_HERE.parent))
+from examples._model_assets import load_example_spec  # noqa: E402
 
 _JOINT_NAMES = [
     "waist",
@@ -29,7 +32,7 @@ _VELOCITY_LIMITS = {k: np.pi for k in _JOINT_NAMES}
 
 
 if __name__ == "__main__":
-    model = mujoco.MjModel.from_xml_path(str(_XML))
+    model = load_example_spec("aloha", _XML).compile()
     data = mujoco.MjData(model)
 
     joint_names: list[str] = []

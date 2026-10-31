@@ -4,8 +4,8 @@ Thanks for your interest in contributing to **mink**! Here are a few great ways
 to get involved:
 
 - Try out the [examples](examples) and report any issues.
-- Pick something you'd like to do with one of the many [robot
-  descriptions](https://github.com/robot-descriptions/robot_descriptions.py) and
+- Pick something you'd like to do with one of the many [MuJoCo Menagerie
+  models](https://github.com/google-deepmind/mujoco_menagerie) and
   write a new example.
 - Find a use case that isn’t covered yet and write a unit test for it.
 - Improve the documentation.

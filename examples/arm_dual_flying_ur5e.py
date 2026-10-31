@@ -3,6 +3,7 @@ from pathlib import Path
 import mujoco
 import mujoco.viewer
 import numpy as np
+from _model_assets import load_example_spec
 from loop_rate_limiters import RateLimiter
 
 import mink
@@ -33,12 +34,12 @@ def construct_model() -> mujoco.MjModel:
     left_site = base.add_site(name="l_attachment_site", pos=(0.3, 0, depth), group=5)
     right_site = base.add_site(name="r_attachment_site", pos=(-0.3, 0, depth), group=5)
 
-    left_ur5e = mujoco.MjSpec.from_file(_XML.as_posix())
+    left_ur5e = load_example_spec("universal_robots_ur5e", _XML)
     left_ur5e.modelname = "l_ur5e"
     left_ur5e.delete(left_ur5e.key("home"))
     root.attach(left_ur5e, prefix="l_ur5e/", site=left_site)
 
-    right_ur5e = mujoco.MjSpec.from_file(_XML.as_posix())
+    right_ur5e = load_example_spec("universal_robots_ur5e", _XML)
     right_ur5e.modelname = "r_ur5e"
     right_ur5e.delete(right_ur5e.key("home"))
     root.attach(right_ur5e, prefix="r_ur5e/", site=right_site)

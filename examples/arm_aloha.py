@@ -4,6 +4,7 @@ from typing import Sequence
 import mujoco
 import mujoco.viewer
 import numpy as np
+from _model_assets import load_example_spec
 from loop_rate_limiters import RateLimiter
 
 import mink
@@ -54,7 +55,7 @@ def compensate_gravity(
 
 
 if __name__ == "__main__":
-    model = mujoco.MjModel.from_xml_path(str(_XML))
+    model = load_example_spec("aloha", _XML).compile()
     data = mujoco.MjData(model)
 
     # Bodies for which to apply gravity compensation.

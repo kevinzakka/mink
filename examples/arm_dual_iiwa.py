@@ -5,6 +5,7 @@ from pathlib import Path
 import mujoco
 import mujoco.viewer
 import numpy as np
+from _model_assets import load_example_spec
 from loop_rate_limiters import RateLimiter
 
 import mink
@@ -30,14 +31,14 @@ def construct_model() -> mujoco.MjModel:
         name="r_attachment_site", pos=[0, -0.2, 0], group=5
     )
 
-    left_iiwa = mujoco.MjSpec.from_file(_XML.as_posix())
+    left_iiwa = load_example_spec("kuka_iiwa_14", _XML)
     left_iiwa.modelname = "l_iiwa"
     left_iiwa.delete(left_iiwa.key("home"))
     # for i in range(len(left_iiwa.geoms)):
     # left_iiwa.geoms[i].name = f"geom_{i}"
     root.attach(left_iiwa, site=left_site, prefix="l_iiwa/")
 
-    right_iiwa = mujoco.MjSpec.from_file(_XML.as_posix())
+    right_iiwa = load_example_spec("kuka_iiwa_14", _XML)
     right_iiwa.modelname = "r_iiwa"
     right_iiwa.delete(right_iiwa.key("home"))
     # for i in range(len(right_iiwa.geoms)):

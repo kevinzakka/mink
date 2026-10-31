@@ -18,17 +18,20 @@ robot arm's end-effector to a target pose.
 Setup
 =====
 
-The following example uses the Panda arm from the ``examples/`` directory in the
-mink repository. First, load the model and create a configuration:
+Run this code from the ``examples/`` directory in the mink repository. It uses
+the local Panda scene and Menagerie assets. First, load the model and create a
+configuration:
 
 .. code:: python
 
-   import mujoco
+   from pathlib import Path
    import numpy as np
 
+   from _model_assets import load_example_spec
    from mink import Configuration
 
-   model = mujoco.MjModel.from_xml_path("franka_emika_panda/mjx_scene.xml")
+   panda_scene = Path("franka_emika_panda/mjx_scene.xml")
+   model = load_example_spec("franka_emika_panda", panda_scene).compile()
    configuration = Configuration(model)
    configuration.update_from_keyframe("home")
 

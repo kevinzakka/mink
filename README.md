@@ -47,6 +47,14 @@ git clone https://github.com/kevinzakka/mink.git && cd mink
 uv sync
 ```
 
+Development dependencies require Python 3.10.12 or later. Tests and examples
+use the pinned `mujoco-menagerie` package for robot assets. Local example XML
+files preserve custom scenes, actuators, and robot combinations.
+
+The first use of a packaged model downloads its assets and requires network
+access. Later runs reuse the per-user cache and can run without network access.
+Set `MENAGERIE_CACHE_DIR` to select a different cache directory.
+
 ## Examples
 
 To run an example:

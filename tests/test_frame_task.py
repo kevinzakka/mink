@@ -3,9 +3,9 @@
 import unittest.mock
 
 import mujoco
+import mujoco_menagerie as mm
 import numpy as np
 from absl.testing import absltest
-from robot_descriptions.loaders.mujoco import load_robot_description
 
 from mink import SE3, SO3, Configuration
 from mink.exceptions import TargetNotSet, TaskDefinitionError
@@ -17,7 +17,7 @@ class TestFrameTask(absltest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.model = load_robot_description("g1_mj_description")
+        cls.model = mm.load("unitree_g1", "g1")
 
     def setUp(self):
         self.configuration = Configuration(self.model)
@@ -235,7 +235,7 @@ class TestFrameTaskNativeFallback(absltest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.model = load_robot_description("g1_mj_description")
+        cls.model = mm.load("unitree_g1", "g1")
 
     def setUp(self):
         self.configuration = Configuration(self.model)

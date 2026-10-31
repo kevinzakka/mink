@@ -6,6 +6,8 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
+- CI now tests the locked dependency set and the latest compatible runtime dependencies on Python 3.10 through 3.14.
+- Tests and examples now use the pinned MuJoCo Menagerie package for robot assets. Local XML files and custom assets preserve example behavior.
 - **Breaking**: `RelativeFrameTask.compute_error` and `compute_jacobian` now follow the `FrameTask` sign convention. IK solutions are unchanged, and a world-rooted relative task now matches `FrameTask` exactly.
 - `FrameTask` and `RelativeFrameTask` now use fused native error/Jacobian kernels, with expanded derivation and convention documentation. Task QP assembly is ~1.5x faster (~1.15x end-to-end on the G1 benchmark).
 - SE(3) Jacobian small-angle series now use Horner form, matching SO(3).

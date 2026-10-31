@@ -4,6 +4,7 @@ from pathlib import Path
 import mujoco
 import mujoco.viewer
 import numpy as np
+from _model_assets import load_example_spec
 from loop_rate_limiters import RateLimiter
 
 import mink
@@ -31,8 +32,8 @@ HOME_QPOS = [
 
 
 def construct_model() -> mujoco.MjModel:
-    arm = mujoco.MjSpec.from_file(_ARM_XML.as_posix())
-    hand = mujoco.MjSpec.from_file(_HAND_XML.as_posix())
+    arm = load_example_spec("stanford_tidybot", _ARM_XML)
+    hand = load_example_spec("leap_hand", _HAND_XML)
 
     palm = hand.body("palm_lower")
     palm.pos[:] = (0.03, 0.06, -0.0925)

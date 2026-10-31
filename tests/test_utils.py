@@ -1,9 +1,9 @@
 """Tests for utils.py."""
 
 import mujoco
+import mujoco_menagerie as mm
 import numpy as np
 from absl.testing import absltest
-from robot_descriptions.loaders.mujoco import load_robot_description
 
 from mink import utils
 from mink.exceptions import (
@@ -19,7 +19,7 @@ class TestUtils(absltest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.model = load_robot_description("g1_mj_description")
+        cls.model = mm.load("unitree_g1", "g1")
 
     def setUp(self):
         self.data = mujoco.MjData(self.model)

@@ -12,6 +12,7 @@ Adding a scenario (e.g. a recorded marionette trajectory) is a new setup/update
 pair plus one entry in SCENES.
 """
 
+import sys
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable
@@ -24,6 +25,8 @@ from mink.lie import SE3
 
 _HERE = Path(__file__).parent
 _EXAMPLES = _HERE.parent / "examples"
+sys.path.insert(0, str(_HERE.parent))
+from examples._model_assets import load_example_spec  # noqa: E402
 
 #: Default IK integration timestep [s] (500 Hz).
 DT = 1.0 / 500.0
@@ -52,7 +55,7 @@ _UR5E_XML = _EXAMPLES / "universal_robots_ur5e" / "scene.xml"
 
 
 def setup_ur5e() -> State:
-    model = mujoco.MjModel.from_xml_path(_UR5E_XML.as_posix())
+    model = load_example_spec("universal_robots_ur5e", _UR5E_XML).compile()
     configuration = mink.Configuration(model)
     model = configuration.model
     data = configuration.data
@@ -118,7 +121,7 @@ _G1_XML = _EXAMPLES / "unitree_g1" / "scene.xml"
 
 
 def setup_humanoid() -> State:
-    model = mujoco.MjModel.from_xml_path(_G1_XML.as_posix())
+    model = load_example_spec("unitree_g1", _G1_XML).compile()
     configuration = mink.Configuration(model)
     model = configuration.model
     data = configuration.data
@@ -251,7 +254,7 @@ _ALOHA_JOINT_NAMES = [
 
 
 def setup_aloha() -> State:
-    model = mujoco.MjModel.from_xml_path(_ALOHA_XML.as_posix())
+    model = load_example_spec("aloha", _ALOHA_XML).compile()
     data = mujoco.MjData(model)
     configuration = mink.Configuration(model)
 

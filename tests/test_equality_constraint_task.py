@@ -1,9 +1,9 @@
 """Tests for equality_constraint_task.py."""
 
 import mujoco
+import mujoco_menagerie as mm
 import numpy as np
 from absl.testing import absltest
-from robot_descriptions.loaders.mujoco import load_robot_description
 
 from mink import Configuration, solve_ik
 from mink.exceptions import InvalidConstraint, TaskDefinitionError
@@ -14,7 +14,7 @@ class TestEqualityConstraintTask(absltest.TestCase):
     """Test consistency of the equality constraint task."""
 
     def test_no_equality_constraint_throws(self):
-        model = load_robot_description("ur5e_mj_description")
+        model = mm.load("universal_robots_ur5e", "ur5e")
         with self.assertRaises(TaskDefinitionError) as cm:
             EqualityConstraintTask(model=model, cost=1.0)
         expected_error_message = (
@@ -23,7 +23,7 @@ class TestEqualityConstraintTask(absltest.TestCase):
         self.assertEqual(str(cm.exception), expected_error_message)
 
     def test_wrong_cost_dim_throws(self):
-        model = load_robot_description("cassie_mj_description")
+        model = mm.load("agility_cassie", "cassie")
         # Cassie has 4 equality constraints of type connect. The cost should
         # either be a scalar or a vector of shape (4,).
         with self.assertRaises(TaskDefinitionError) as cm:
@@ -35,7 +35,7 @@ class TestEqualityConstraintTask(absltest.TestCase):
         self.assertEqual(str(cm.exception), expected_error_message)
 
     def test_cost_correctly_broadcast(self):
-        model = load_robot_description("cassie_mj_description")
+        model = mm.load("agility_cassie", "cassie")
         # Each connect constraint has dimension 3, so the cost dimension should be 12.
         task = EqualityConstraintTask(model=model, cost=1.0)
         np.testing.assert_array_equal(task.cost, np.full((12,), 1.0))
@@ -44,14 +44,14 @@ class TestEqualityConstraintTask(absltest.TestCase):
         np.testing.assert_array_equal(task.cost, expected_cost)
 
     def test_cost_throws_if_negative(self):
-        model = load_robot_description("cassie_mj_description")
+        model = mm.load("agility_cassie", "cassie")
         with self.assertRaises(TaskDefinitionError) as cm:
             EqualityConstraintTask(model=model, cost=[-1, 2, 3, 4])
         expected_error_message = "EqualityConstraintTask cost must be >= 0"
         self.assertEqual(str(cm.exception), expected_error_message)
 
     def test_subset_of_constraints(self):
-        model = load_robot_description("cassie_mj_description")
+        model = mm.load("agility_cassie", "cassie")
         task = EqualityConstraintTask(
             model=model,
             cost=[23.0, 17.0],
@@ -64,7 +64,7 @@ class TestEqualityConstraintTask(absltest.TestCase):
 
     def test_subset_of_constraints_compute_uses_correct_costs(self):
         """Costs are looked up by position in the subset, not by equality id."""
-        model = load_robot_description("cassie_mj_description")
+        model = mm.load("agility_cassie", "cassie")
         configuration = Configuration(model)
         configuration.update_from_keyframe("home")
         task = EqualityConstraintTask(
@@ -84,7 +84,7 @@ class TestEqualityConstraintTask(absltest.TestCase):
 
     def test_subset_costs_follow_constraint_order(self):
         """Costs map to their equality even when the subset is not in id order."""
-        model = load_robot_description("cassie_mj_description")
+        model = mm.load("agility_cassie", "cassie")
         configuration = Configuration(model)
         configuration.update_from_keyframe("home")
         task = EqualityConstraintTask(
@@ -100,14 +100,14 @@ class TestEqualityConstraintTask(absltest.TestCase):
         np.testing.assert_array_equal(task.cost, expected)
 
     def test_duplicate_constraint_ids_throws(self):
-        model = load_robot_description("cassie_mj_description")
+        model = mm.load("agility_cassie", "cassie")
         with self.assertRaises(TaskDefinitionError) as cm:
             EqualityConstraintTask(model=model, cost=1.0, equalities=[0, 0])
         expected_error_message = "Duplicate equality constraint IDs provided: [0, 0]."
         self.assertEqual(str(cm.exception), expected_error_message)
 
     def test_inactive_init_constraints_throws_error(self):
-        model = load_robot_description("cassie_mj_description")
+        model = mm.load("agility_cassie", "cassie")
         model.eq_active0[0] = False
         with self.assertRaises(InvalidConstraint) as cm:
             EqualityConstraintTask(model=model, cost=[1.0, 1.0], equalities=[0, 1])
@@ -117,14 +117,14 @@ class TestEqualityConstraintTask(absltest.TestCase):
         self.assertEqual(str(cm.exception), expected_error_message)
 
     def test_subset_of_constraints_with_invalid_name_throws(self):
-        model = load_robot_description("cassie_mj_description")
+        model = mm.load("agility_cassie", "cassie")
         with self.assertRaises(InvalidConstraint) as cm:
             EqualityConstraintTask(model=model, cost=1.0, equalities=["invalid"])
         expected_error_message = "Equality constraint 'invalid' not found."
         self.assertEqual(str(cm.exception), expected_error_message)
 
     def test_subset_of_constraints_with_invalid_index_throws(self):
-        model = load_robot_description("cassie_mj_description")
+        model = mm.load("agility_cassie", "cassie")
         with self.assertRaises(InvalidConstraint) as cm:
             EqualityConstraintTask(model=model, cost=1.0, equalities=[5])
         expected_error_message = (
@@ -133,7 +133,7 @@ class TestEqualityConstraintTask(absltest.TestCase):
         self.assertEqual(str(cm.exception), expected_error_message)
 
     def test_zero_error_when_constraint_is_satisfied(self):
-        model = load_robot_description("cassie_mj_description")
+        model = mm.load("agility_cassie", "cassie")
         task = EqualityConstraintTask(model=model, cost=1.0)
         configuration = Configuration(model)
         configuration.update(model.qpos0)
@@ -141,7 +141,7 @@ class TestEqualityConstraintTask(absltest.TestCase):
         np.testing.assert_array_almost_equal(error, np.zeros_like(task.cost), decimal=8)
 
     def test_zero_cost_same_as_disabling_task(self):
-        model = load_robot_description("cassie_mj_description")
+        model = mm.load("agility_cassie", "cassie")
         task = EqualityConstraintTask(model=model, cost=0.0)
         configuration = Configuration(model)
         configuration.update_from_keyframe("home")
@@ -151,7 +151,7 @@ class TestEqualityConstraintTask(absltest.TestCase):
         self.assertAlmostEqual(cost, 0.0)
 
     def test_sparse_jacobian(self):
-        model = load_robot_description("cassie_mj_description")
+        model = mm.load("agility_cassie", "cassie")
         model.opt.jacobian = mujoco.mjtJacobian.mjJAC_SPARSE
         task = EqualityConstraintTask(model=model, cost=1.0)
         configuration = Configuration(model)
