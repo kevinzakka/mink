@@ -10,7 +10,7 @@ import numpy.typing as npt
 from ..configuration import Configuration
 from ..exceptions import TargetNotSet, TaskDefinitionError
 from ..lie import SE3
-from .task import Objective, Task
+from .task import Task
 
 try:
     if os.environ.get("MINK_DISABLE_NATIVE", ""):
@@ -217,15 +217,6 @@ class FrameTask(Task):
             jacobian = -E_inv.jlog() @ jac
 
         return error, jacobian
-
-    def compute_qp_objective(self, configuration: Configuration) -> Objective:
-        r"""Compute the matrix-vector pair :math:`(H, c)` of the QP objective.
-
-        Overrides the base implementation to compute the frame transform once
-        and reuse it for both error and Jacobian computation.
-        """
-        error, jacobian = self._error_and_jacobian(configuration)
-        return self._assemble_qp(error, jacobian, configuration._eye_nv)
 
     def compute_qp_residual(
         self, configuration: Configuration

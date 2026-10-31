@@ -52,7 +52,8 @@ class BaseTask(abc.ABC):
 
         Returns ``None`` (the default) for tasks whose objective is not of this form
         (e.g. an inertia-weighted Hessian); those fall back to
-        :meth:`compute_qp_objective`.
+        :meth:`compute_qp_objective`. When this method returns a residual, the solver
+        does not call :meth:`compute_qp_objective`.
         """
         return None
 
@@ -146,20 +147,6 @@ class Task(BaseTask):
         mu = self.lm_damping * float(weighted_error @ weighted_error)
         return weighted_jacobian, weighted_error, mu
 
-    def _assemble_qp(
-        self,
-        error: np.ndarray,
-        jacobian: np.ndarray,
-        eye_nv: np.ndarray,
-    ) -> Objective:
-        """Assemble QP objective from task error and Jacobian."""
-        weighted_jacobian, weighted_error, mu = self._weighted_residual(error, jacobian)
-        H = weighted_jacobian.T @ weighted_jacobian
-        if mu > 0.0:
-            H = H + mu * eye_nv
-        c = -weighted_error @ weighted_jacobian
-        return Objective(H, c)
-
     def compute_qp_objective(self, configuration: Configuration) -> Objective:
         r"""Compute the matrix-vector pair :math:`(H, c)` of the QP objective.
 
@@ -174,17 +161,28 @@ class Task(BaseTask):
         normalizes task coordinates to the same unit. The unit of the overall
         contribution is [cost]^2.
 
+        This pair is derived from :meth:`compute_qp_residual`.
+
+        .. note::
+
+            The solver builds the objective from :meth:`compute_qp_residual`, so
+            overriding this method alone has no effect. A subclass that customizes
+            the objective must also override :meth:`compute_qp_residual`, either to
+            return a matching residual or to return ``None`` so the solver falls
+            back to this method.
+
         Args:
             configuration: Robot configuration :math:`q`.
 
         Returns:
             Pair :math:`(H(q), c(q))`.
         """
-        return self._assemble_qp(
-            self.compute_error(configuration),
-            self.compute_jacobian(configuration),
-            configuration._eye_nv,
-        )
+        weighted_jacobian, weighted_error, mu = self.compute_qp_residual(configuration)
+        H = weighted_jacobian.T @ weighted_jacobian
+        if mu > 0.0:
+            H = H + mu * configuration._eye_nv
+        c = -weighted_error @ weighted_jacobian
+        return Objective(H, c)
 
     def compute_qp_residual(
         self, configuration: Configuration

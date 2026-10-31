@@ -8,7 +8,7 @@ import numpy.typing as npt
 from ..configuration import Configuration
 from ..exceptions import InvalidTarget, TargetNotSet, TaskDefinitionError
 from ..lie.utils import get_epsilon, skew
-from .task import Objective, Task
+from .task import Task
 
 
 class AxisAlignTask(Task):
@@ -207,15 +207,6 @@ class AxisAlignTask(Task):
         """
         _, jacobian = self._error_and_jacobian(configuration)
         return jacobian
-
-    def compute_qp_objective(self, configuration: Configuration) -> Objective:
-        r"""Compute the matrix-vector pair :math:`(H, c)` of the QP objective.
-
-        Overrides the base implementation to compute the frame transform and
-        Jacobian once and reuse them for both the error and the Jacobian.
-        """
-        error, jacobian = self._error_and_jacobian(configuration)
-        return self._assemble_qp(error, jacobian, configuration._eye_nv)
 
     def compute_qp_residual(
         self, configuration: Configuration
