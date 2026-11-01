@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Changed
+
+- README: new gallery of staged mink solutions, a rewritten introduction and quickstart, and a corrected feature list. Floating-base limits now point to `FreeJointVelocityLimit`, and broken example links are fixed.
+
 ## [1.4.0] - 2026-10-31
 
 ### Added
