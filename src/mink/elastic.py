@@ -27,19 +27,9 @@ class Elastic:
 
     As with hard constraints, the task's ``cost`` and ``lm_damping`` are ignored.
     The penalty is the only per-component scale. A zero penalty leaves that
-    component unconstrained.
-
-    Penalties carry the units of the task error. Each step minimizes the penalty
-    greedily, so with equal penalties on meters and radians a
-    :class:`~mink.FrameTask` stretched toward an unreachable target can stall
-    where any gain in position costs as much orientation error, and stay there
-    after the target returns within reach. A lower orientation penalty lets
+    component unconstrained. Penalties carry the units of the task error, so a
+    :class:`~mink.FrameTask` usually takes a lower orientation penalty, letting
     orientation give way first.
-
-    By default :func:`~mink.solve_ik` solves the constraint as a hard one while
-    it holds, and solves the penalty with slack variables only when it yields.
-    Pass ``elastic_strategy="penalty"`` to always solve the penalty directly, in
-    a single QP.
 
     Example:
 
@@ -62,11 +52,11 @@ class Elastic:
     """
 
     def __init__(self, task: Task, penalty: npt.ArrayLike = 1e3):
-        """Constructor.
+        r"""Constructor.
 
         Args:
             task: The task to constrain.
-            penalty: Non-negative, finite :math:`\\ell_1` penalty. A scalar, or a
+            penalty: Non-negative, finite :math:`\ell_1` penalty. A scalar, or a
                 vector with the dimension of the task error.
 
         Raises:
@@ -83,7 +73,7 @@ class Elastic:
         self.task = task
         self.penalty = penalty
 
-    def compute_penalized_rows(
+    def _penalized_rows(
         self, configuration: Configuration
     ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
         r"""Compute :math:`(J, \alpha e, \rho)` over components with :math:`\rho_i > 0`.

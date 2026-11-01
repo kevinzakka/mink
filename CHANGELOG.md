@@ -6,7 +6,7 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
-- `Elastic` constraints: wrap a task in `mink.Elastic(task, penalty=...)` and pass it through `constraints` to enforce it as an exact L1 penalty that holds like a hard constraint and yields gracefully when infeasible. `solve_ik` gains `elastic_strategy` (`"hard_first"`, the default, or `"penalty"` for a single QP). Includes the `arm_ur5e_elastic.py` and `arm_panda_elastic.py` examples and a tutorial section.
+- `Elastic` constraints: `constraints=[mink.Elastic(task, penalty)]` enforces `task` through an exact L1 penalty. It holds exactly like a hard constraint while it can, and yields instead of making the QP infeasible.
 
 ### Changed
 

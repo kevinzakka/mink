@@ -9,7 +9,6 @@ import qpsolvers
 from absl.testing import absltest
 
 import mink
-from mink.solve_ik import ElasticStrategy
 
 solve_ik_module = importlib.import_module("mink.solve_ik")
 
@@ -190,33 +189,55 @@ class TestElastic(absltest.TestCase):
         np.testing.assert_allclose(r[:3], 0.0, atol=1e-8)
         self.assertGreater(np.linalg.norm(r[3:]), 1e-4)
 
-    def test_penalty_strategy_matches_hard_first(self):
-        for target in ([0.1, 0.2, -0.1], [1.0, 0.2, -0.1]):  # Held, then yielding.
-            with self.subTest(target=target):
-                configuration, frame_task, posture_task = _setup(target)
-                constraints = [mink.Elastic(frame_task)]
-                v_hard_first = mink.solve_ik(
-                    configuration, [posture_task], 0.01, "daqp", constraints=constraints
-                )
-                v_penalty = mink.solve_ik(
-                    configuration,
-                    [posture_task],
-                    0.01,
-                    "daqp",
-                    constraints=constraints,
-                    elastic_strategy="penalty",
-                )
-                np.testing.assert_allclose(v_penalty, v_hard_first, atol=1e-6)
+    def test_yielding_at_singularity_does_not_chatter(self):
+        xml = """
+        <mujoco>
+          <compiler angle="radian"/>
+          <worldbody>
+            <body name="upper">
+              <joint name="shoulder" type="hinge" axis="0 0 1" range="-3 3"/>
+              <geom type="capsule" fromto="0 0 0 .5 0 0" size=".02"/>
+              <body name="lower" pos=".5 0 0">
+                <joint name="elbow" type="hinge" axis="0 0 1" range="-3 3"/>
+                <geom type="capsule" fromto="0 0 0 .5 0 0" size=".02"/>
+                <site name="tip" pos=".5 0 0"/>
+              </body>
+            </body>
+          </worldbody>
+        </mujoco>
+        """
+        model = mujoco.MjModel.from_xml_string(xml)
+        configuration = mink.Configuration(model)
+        configuration.update(np.array([0.3, 0.6]))
+        task = mink.FrameTask("tip", "site", 1.0, 0.0)
+        task.set_target(mink.SE3.from_translation(np.array([2.0, 0.5, 0.0])))
+        posture_task = mink.PostureTask(model, cost=0.1)
+        posture_task.set_target(np.zeros(2))
+        limits = [
+            mink.ConfigurationLimit(model),
+            mink.VelocityLimit(model, {"shoulder": 3.0, "elbow": 3.0}),
+        ]
+        constraints = [mink.Elastic(task, penalty=[1e3, 1e3, 1e3, 0.0, 0.0, 0.0])]
+        velocities = []
+        for _ in range(200):
+            v = mink.solve_ik(
+                configuration,
+                [posture_task],
+                0.01,
+                "daqp",
+                limits=limits,
+                constraints=constraints,
+            )
+            configuration.integrate_inplace(v, 0.01)
+            velocities.append(v)
+        # The unreachable target stretches the arm to its elbow singularity.
+        self.assertLess(abs(configuration.q[1]), 0.1)
+        self.assertLess(np.abs(np.diff(velocities[-50:], axis=0)).max(), 1e-6)
 
     def test_number_of_qp_solves(self):
-        configuration, frame_task, posture_task = _setup([1.0, 0.2, -0.1])
-        constraints = [mink.Elastic(frame_task)]
-        cases: tuple[tuple[ElasticStrategy, int], ...] = (
-            ("hard_first", 2),
-            ("penalty", 1),
-        )
-        for strategy, expected in cases:
-            with self.subTest(strategy=strategy):
+        for target, expected in (([0.1, 0.2, -0.1], 1), ([1.0, 0.2, -0.1], 2)):
+            with self.subTest(target=target):
+                configuration, frame_task, posture_task = _setup(target)
                 with mock.patch.object(
                     qpsolvers, "solve_problem", wraps=qpsolvers.solve_problem
                 ) as solve:
@@ -225,46 +246,40 @@ class TestElastic(absltest.TestCase):
                         [posture_task],
                         0.01,
                         "daqp",
-                        constraints=constraints,
-                        elastic_strategy=strategy,
+                        constraints=[mink.Elastic(frame_task)],
                     )
                 self.assertEqual(solve.call_count, expected)
 
-    def test_penalty_strategy_is_robust_to_extreme_penalties(self):
-        """With the default split, the single QP matches a reference built with the
-        split that is best conditioned for that penalty: rho on the cost for small
-        penalties, rho on the rows for large ones."""
+    def test_penalized_qp_is_robust_to_extreme_penalties(self):
+        """With the default split, the penalized QP matches a reference built with
+        the split that is best conditioned for that penalty: rho on the cost for
+        small penalties, rho on the rows for large ones."""
         configuration, frame_task, posture_task = _setup([0.1, 0.2, -0.1])
         nv = configuration.nv
         for rho in (1e-5, 1e-3, 1.0, 1e3, 1e7, 1e11):
             with self.subTest(rho=rho):
                 constraints = [mink.Elastic(frame_task, penalty=rho)]
-                v = mink.solve_ik(
-                    configuration,
-                    [posture_task],
-                    0.01,
-                    "daqp",
-                    constraints=constraints,
-                    elastic_strategy="penalty",
+                problem = mink.build_ik(
+                    configuration, [posture_task], 0.01, constraints=constraints
                 )
+                result = qpsolvers.solve_problem(problem, solver="daqp")
+                assert result.x is not None
+                dq = result.x[:nv]
                 if rho > 1e7:
                     # No reference split solves this; the constraint must hold.
-                    r = _residual(configuration, frame_task, v, 0.01)
+                    r = _residual(configuration, frame_task, dq / 0.01, 0.01)
                     np.testing.assert_allclose(r, 0.0, atol=1e-6)
                     continue
                 split = 0.0 if rho <= 1.0 else 1.0
                 with mock.patch.object(solve_ik_module, "_PENALTY_SPLIT", split):
                     reference = mink.build_ik(
-                        configuration,
-                        [posture_task],
-                        0.01,
-                        constraints=[mink.Elastic(frame_task, penalty=rho)],
+                        configuration, [posture_task], 0.01, constraints=constraints
                     )
-                result = qpsolvers.solve_problem(reference, solver="daqp")
-                assert result.x is not None
-                np.testing.assert_allclose(v * 0.01, result.x[:nv], atol=1e-7)
+                expected = qpsolvers.solve_problem(reference, solver="daqp")
+                assert expected.x is not None
+                np.testing.assert_allclose(dq, expected.x[:nv], atol=1e-7)
 
-    def test_penalty_strategy_with_hard_constraints(self):
+    def test_penalized_qp_keeps_hard_constraints(self):
         configuration, frame_task, posture_task = _setup([1.0, 0.2, -0.1])
         freeze = mink.DofFreezingTask(configuration.model, dof_indices=[6])
         constraints = [freeze, mink.Elastic(frame_task)]
@@ -275,28 +290,11 @@ class TestElastic(absltest.TestCase):
         self.assertEqual(problem.A.shape, (1, configuration.nv + 6))
         np.testing.assert_array_equal(problem.A[:, configuration.nv :], 0.0)
         v = mink.solve_ik(
-            configuration,
-            [posture_task],
-            0.01,
-            "daqp",
-            constraints=constraints,
-            elastic_strategy="penalty",
+            configuration, [posture_task], 0.01, "daqp", constraints=constraints
         )
         self.assertAlmostEqual(v[6], 0.0, places=8)
         r = _residual(configuration, frame_task, v, 0.01)
         self.assertGreater(abs(r[0]), 0.1)
-
-    def test_invalid_strategy_raises(self):
-        configuration, frame_task, posture_task = _setup([0.0, 0.0, 0.0])
-        with self.assertRaises(ValueError):
-            mink.solve_ik(
-                configuration,
-                [posture_task],
-                0.01,
-                "daqp",
-                constraints=[mink.Elastic(frame_task)],
-                elastic_strategy="exact",  # type: ignore[arg-type]
-            )
 
     def test_invalid_penalty_raises(self):
         configuration, frame_task, posture_task = _setup([0.0, 0.0, 0.0])

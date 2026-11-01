@@ -346,77 +346,76 @@ follow. Green target: the constraints are removed and tracking resumes.*
 Elastic Constraints
 ===================
 
-Passing a :class:`~mink.FrameTask` through ``tasks`` makes it one quadratic
-objective among others: a posture regularizer pulling elsewhere leaves a small
-but persistent tracking error. Passing it through ``constraints`` removes that
-error, but a hard equality that conflicts with the limits (an unreachable
-target, a velocity limit that cannot cover the distance in one step) makes the
-QP infeasible and :func:`~mink.solve_ik` raises
-:class:`~mink.NoSolutionFound`.
+The warning above applies to every hard constraint. A :class:`~mink.FrameTask`
+passed through ``constraints`` tracks its target exactly, but when the target
+leaves the workspace, or moves faster than the velocity limits allow, the QP is
+infeasible and :func:`~mink.solve_ik` raises :class:`~mink.NoSolutionFound`.
+Passed through ``tasks`` instead, the same task never fails, but the posture
+regularizer pulls the end-effector away from the target.
 
-Wrapping the task in :class:`~mink.Elastic` gives a middle ground. The
-constraint :math:`J \Delta q = -\alpha e` is enforced through the exact
-:math:`\ell_1` penalty
+:class:`~mink.Elastic` combines the two. A task wrapped in it and passed through
+``constraints`` holds exactly while it can, and gives way when it cannot:
 
-.. math::
+.. code:: python
 
-   \rho^T \left| J \Delta q + \alpha e \right|,
+   from mink import Elastic
 
-where :math:`\rho` is the ``penalty`` (a scalar, or one value per component)
-and the absolute value is taken componentwise. Limits and plain
-``constraints`` stay hard.
+   # Penalties for position (x, y, z), then orientation (roll, pitch, yaw).
+   elastic_task = Elastic(task, penalty=[1e3, 1e3, 1e3, 1e1, 1e1, 1e1])
 
-.. literalinclude:: ../../examples/docs/elastic.py
-   :language: python
+   for _ in range(steps):
+       vel = solve_ik(
+           configuration,
+           [posture_task],
+           dt,
+           "daqp",
+           limits=limits,
+           constraints=[elastic_task],
+       )
+       configuration.integrate_inplace(vel, dt)
 
-**Exact-penalty property.** Let :math:`\lambda` be the Lagrange multiplier the
-constraint would have as a hard constraint: the force needed to hold it against
-the tasks and the limits. If :math:`|\lambda_i| < \rho_i` for every component,
-the elastic solution *is* the hard-constrained solution. A component whose
-required force would exceed :math:`\rho_i` yields instead, pulling with a
-constant force :math:`\rho_i`, and the QP stays feasible.
+The ``penalty`` bounds how hard each component of the task can pull. While
+holding the task takes less than that, the solution is exactly that of the hard
+constraint, and the posture task cannot move the end-effector. When holding it
+would take more, that component yields: it keeps pulling toward the target with
+constant strength, and tracking resumes once the target is reachable again.
+Limits and plain ``constraints`` stay hard.
 
-**Choosing the penalty.** ``penalty`` is a force budget. It should comfortably
-exceed what the tasks pull with: the default of :math:`10^3` is typically
-orders of magnitude above what a posture regularizer exerts. A zero penalty
-leaves that component unconstrained. Lower penalties decide which components
-give way first when the constraint cannot be met.
+Penalties carry the units of the task error: meters for position, radians for
+orientation. A lower orientation penalty, as above, lets orientation give way
+first so that position is held as long as possible. With equal penalties, an arm
+stretched toward an unreachable target can stall where any gain in position
+costs as much orientation error. A zero penalty leaves a component free. See
+`arm_panda_elastic.py <https://github.com/kevinzakka/mink/blob/main/examples/arm_panda_elastic.py>`__
+for three arms tracking the same target with a task, a hard constraint, and an
+elastic constraint.
 
-**Mixed units.** Penalties carry the units of the task error, and each step
-minimizes the penalty greedily. With equal penalties on the position (meters)
-and orientation (radians) of a :class:`~mink.FrameTask`, an arm stretched toward
-an unreachable target can stall where any gain in position costs as much
-orientation error, and stay stuck after the target returns within reach. A
-lower orientation penalty, as in the example above, lets orientation give way
-first and avoids this.
+.. raw:: html
 
-**Sparse yielding.** Because the penalty is :math:`\ell_1`, the threshold is
-per component, so a given :math:`\rho` means the same thing for a 3-D and a 6-D
-task. On an unreachable target the solver keeps as many components exact as it
-can. In the example above the orientation penalty is lower, so orientation gives
-way first and position is held until the target leaves the workspace. See
-`arm_ur5e_elastic.py <https://github.com/kevinzakka/mink/blob/main/examples/arm_ur5e_elastic.py>`__
-for an interactive version.
+   <video width="600" controls>
+     <source src="https://raw.githubusercontent.com/kevinzakka/mink/assets/docs/elastic.mp4" type="video/mp4">
+   </video>
 
-**Strategies.** By default (``elastic_strategy="hard_first"``),
-:func:`~mink.solve_ik` first solves with the elastic constraints held exactly,
-and keeps that solution when every :math:`|\lambda_i| < \rho_i`. Otherwise it
-solves the penalized problem, which adds one slack variable per component. This
-is exact while the constraint holds, at the price of a second QP when it
-yields. ``elastic_strategy="penalty"`` always solves the penalized problem: one
-QP per call, with the same solution up to solver accuracy.
+*Left: a task, held short of the target by the posture task. Middle: a hard
+constraint, which fails (red) once the target pose is unreachable. Right: an
+elastic constraint, exact (blue) while it can be, yielding (orange) while it
+cannot.*
 
-**Scaling.** In the penalized problem, each penalty is split evenly between
-the slack rows and the slack cost, :math:`-s \leq \sqrt{\rho}\, r \leq s` with
-cost :math:`\sqrt{\rho}\, s`, which gives the same :math:`\ell_1` penalty while
-keeping both scales within :math:`\sqrt{\rho}` of one.
+While anything yields, the solver damps all joint motion in proportion to the
+largest elastic penalty, which keeps yielding smooth near singularities. A
+component with a much smaller penalty therefore yields slowly, so keep elastic
+penalties within an order or two of each other, and pass anything that must
+never yield, such as planted feet, as a plain constraint rather than an elastic
+one with a huge penalty. A yielding constraint can also stretch an arm to full
+extension, where it may lag briefly before following the target back.
 
 .. note::
 
-   As with hard constraints, the task's ``cost`` and ``lm_damping`` are ignored:
-   the penalty is the only per-component scale. Once a component yields, it
-   pulls with a constant force. For a pull that grows with the error after
-   yielding, also add the task itself to ``tasks``.
+   As with hard constraints, the task's ``cost`` and ``lm_damping`` are ignored.
+   :func:`~mink.solve_ik` first solves with elastic constraints held exactly, and
+   solves a second, penalized QP only when one must yield. See
+   :class:`~mink.Elastic` for the penalty and the exact condition under which it
+   matches the hard constraint.
 
 Practical Guidelines
 ====================
@@ -437,8 +436,8 @@ When to Use What
   collision is possible.
 - :class:`~mink.DofFreezingTask` (via ``constraints``), when selected joints
   must not move.
-- :class:`~mink.Elastic` (via ``constraints``), when a task must be tracked
-  exactly despite regularization but may become infeasible.
+- :class:`~mink.Elastic` (via ``constraints``), when a task should be tracked
+  exactly but may become infeasible.
 
 Complete Example
 ================
