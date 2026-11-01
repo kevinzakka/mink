@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [1.4.0] - 2026-10-31
+
 ### Added
 
 - `Elastic` constraints: `constraints=[mink.Elastic(task, penalty)]` enforces `task` through an exact L1 penalty. It holds exactly like a hard constraint while it can, and yields instead of making the QP infeasible.
