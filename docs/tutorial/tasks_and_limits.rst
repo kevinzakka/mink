@@ -343,6 +343,80 @@ follow. Green target: the constraints are removed and tracking resumes.*
    algebra and for why soft penalties or zeroed Jacobian columns are not
    equivalent to exact freezing.
 
+Elastic Constraints
+===================
+
+The warning above applies to every hard constraint. A :class:`~mink.FrameTask`
+passed through ``constraints`` tracks its target exactly, but when the target
+leaves the workspace, or moves faster than the velocity limits allow, the QP is
+infeasible and :func:`~mink.solve_ik` raises :class:`~mink.NoSolutionFound`.
+Passed through ``tasks`` instead, the same task never fails, but the posture
+regularizer pulls the end-effector away from the target.
+
+:class:`~mink.Elastic` combines the two. A task wrapped in it and passed through
+``constraints`` holds exactly while it can, and gives way when it cannot:
+
+.. code:: python
+
+   from mink import Elastic
+
+   # Penalties for position (x, y, z), then orientation (roll, pitch, yaw).
+   elastic_task = Elastic(task, penalty=[1e3, 1e3, 1e3, 1e1, 1e1, 1e1])
+
+   for _ in range(steps):
+       vel = solve_ik(
+           configuration,
+           [posture_task],
+           dt,
+           "daqp",
+           limits=limits,
+           constraints=[elastic_task],
+       )
+       configuration.integrate_inplace(vel, dt)
+
+The ``penalty`` bounds how hard each component of the task can pull. While
+holding the task takes less than that, the solution is exactly that of the hard
+constraint, and the posture task cannot move the end-effector. When holding it
+would take more, that component yields: it keeps pulling toward the target with
+constant strength, and tracking resumes once the target is reachable again.
+Limits and plain ``constraints`` stay hard.
+
+Penalties carry the units of the task error: meters for position, radians for
+orientation. A lower orientation penalty, as above, lets orientation give way
+first so that position is held as long as possible. With equal penalties, an arm
+stretched toward an unreachable target can stall where any gain in position
+costs as much orientation error. A zero penalty leaves a component free. See
+`arm_panda_elastic.py <https://github.com/kevinzakka/mink/blob/main/examples/arm_panda_elastic.py>`__
+for three arms tracking the same target with a task, a hard constraint, and an
+elastic constraint.
+
+.. raw:: html
+
+   <video width="600" controls>
+     <source src="https://raw.githubusercontent.com/kevinzakka/mink/assets/docs/elastic.mp4" type="video/mp4">
+   </video>
+
+*Left: a task, held short of the target by the posture task. Middle: a hard
+constraint, which fails (red) once the target pose is unreachable. Right: an
+elastic constraint, exact (blue) while it can be, yielding (orange) while it
+cannot.*
+
+While anything yields, the solver damps all joint motion in proportion to the
+largest elastic penalty, which keeps yielding smooth near singularities. A
+component with a much smaller penalty therefore yields slowly, so keep elastic
+penalties within an order or two of each other, and pass anything that must
+never yield, such as planted feet, as a plain constraint rather than an elastic
+one with a huge penalty. A yielding constraint can also stretch an arm to full
+extension, where it may lag briefly before following the target back.
+
+.. note::
+
+   As with hard constraints, the task's ``cost`` and ``lm_damping`` are ignored.
+   :func:`~mink.solve_ik` first solves with elastic constraints held exactly, and
+   solves a second, penalized QP only when one must yield. See
+   :class:`~mink.Elastic` for the penalty and the exact condition under which it
+   matches the hard constraint.
+
 Practical Guidelines
 ====================
 
@@ -362,6 +436,8 @@ When to Use What
   collision is possible.
 - :class:`~mink.DofFreezingTask` (via ``constraints``), when selected joints
   must not move.
+- :class:`~mink.Elastic` (via ``constraints``), when a task should be tracked
+  exactly but may become infeasible.
 
 Complete Example
 ================

@@ -6,6 +6,7 @@ import numpy as np
 import qpsolvers
 
 from .configuration import Configuration
+from .elastic import Elastic
 from .exceptions import NoSolutionFound
 from .limits import Limit
 from .tasks import BaseTask, Objective, Task
@@ -94,13 +95,102 @@ def _compute_qp_equalities(
     return np.vstack(A_list), np.hstack(b_list)
 
 
+def _compute_qp(
+    configuration: Configuration,
+    tasks: Sequence[BaseTask],
+    dt: float,
+    damping: float,
+    limits: Sequence[Limit] | None,
+    constraints: Sequence[Task | Elastic] | None,
+) -> tuple[qpsolvers.Problem, np.ndarray]:
+    r"""Assemble the QP with every constraint held exactly.
+
+    Rows of elastic constraints come last in :math:`(A, b)`. Returns the problem
+    and the penalty :math:`\rho` of those rows.
+    """
+    hard: list[Task] = []
+    elastic: list[Elastic] = []
+    for constraint in constraints or ():
+        if isinstance(constraint, Elastic):
+            elastic.append(constraint)
+        else:
+            hard.append(constraint)
+    H, c = _compute_qp_objective(configuration, tasks, damping)
+    G, h = _compute_qp_inequalities(configuration, limits, dt)
+    A, b = _compute_qp_equalities(configuration, hard)
+    if not elastic:
+        return qpsolvers.Problem(H, c, G, h, A, b), np.empty(0)
+    A_rows = [] if A is None else [A]
+    b_rows = [] if b is None else [b]
+    rhos = []
+    for constraint in elastic:
+        jacobian, error, rho = constraint._penalized_rows(configuration)
+        A_rows.append(jacobian)
+        b_rows.append(-error)
+        rhos.append(rho)
+    A, b = np.vstack(A_rows), np.concatenate(b_rows)
+    return qpsolvers.Problem(H, c, G, h, A, b), np.concatenate(rhos)
+
+
+# Exponent p splitting each elastic penalty between slack rows (rho^p) and slack
+# cost (rho^(1-p)). p = 1/2 keeps both within sqrt(rho) of unit scale.
+_PENALTY_SPLIT = 0.5
+
+
+def _soften(problem: qpsolvers.Problem, rho: np.ndarray) -> qpsolvers.Problem:
+    r"""Replace the last ``len(rho)`` equality rows by their :math:`\ell_1` penalty.
+
+    Each row :math:`J_i \Delta q = -\alpha e_i`, with residual
+    :math:`r_i = J_i \Delta q + \alpha e_i`, gets a slack :math:`s_i` with cost
+    :math:`\rho_i^{1-p} s_i` and the rows
+    :math:`-s_i \leq \rho_i^p r_i \leq s_i`, over :math:`x = [\Delta q; s]`. At
+    the optimum :math:`s_i = \rho_i^p |r_i|`, so the cost is
+    :math:`\rho_i |r_i|` for any split :math:`p`, here ``_PENALTY_SPLIT``.
+
+    The penalty is linear in :math:`\Delta q` away from :math:`r_i = 0`, so a
+    yielding component would otherwise step to the edge of the feasible set and
+    chatter at singularities. The trust region :math:`\tfrac{1}{2} \max(\rho)
+    \|\Delta q\|^2` bounds that step.
+    """
+    H, c, G, h, A, b = problem.unpack_as_dense()[:6]
+    assert A is not None and b is not None
+    m, nv = rho.size, H.shape[0]
+    n, k = nv + m, A.shape[0] - m
+    g = 0 if G is None else G.shape[0]
+    H_x = np.zeros((n, n))
+    H_x[:nv, :nv] = H + rho.max() * np.eye(nv)
+    c_x = np.empty(n)
+    c_x[:nv] = c
+    c_x[nv:] = rho ** (1.0 - _PENALTY_SPLIT)
+    scale = rho**_PENALTY_SPLIT
+    G_x = np.zeros((g + 2 * m, n))
+    h_x = np.empty(g + 2 * m)
+    if G is not None and h is not None:
+        G_x[:g, :nv] = G
+        h_x[:g] = h
+    rows = scale[:, None] * A[k:]
+    G_x[g : g + m, :nv] = rows
+    G_x[g + m :, :nv] = -rows
+    i = np.arange(m)
+    G_x[g + i, nv + i] = -1.0
+    G_x[g + m + i, nv + i] = -1.0
+    h_x[g : g + m] = scale * b[k:]
+    h_x[g + m :] = -h_x[g : g + m]
+    A_x, b_x = None, None
+    if k:
+        A_x = np.zeros((k, n))
+        A_x[:, :nv] = A[:k]
+        b_x = b[:k]
+    return qpsolvers.Problem(H_x, c_x, G_x, h_x, A_x, b_x)
+
+
 def build_ik(
     configuration: Configuration,
     tasks: Sequence[BaseTask],
     dt: float,
     damping: float = 1e-12,
     limits: Sequence[Limit] | None = None,
-    constraints: Sequence[Task] | None = None,
+    constraints: Sequence[Task | Elastic] | None = None,
 ) -> qpsolvers.Problem:
     r"""Build the quadratic program given the current configuration and tasks.
 
@@ -116,6 +206,18 @@ def build_ik(
 
     where :math:`v = \Delta q / dt` is the velocity in tangent space.
 
+    Each penalized component :math:`i` of an :class:`~mink.Elastic` constraint,
+    with residual :math:`r_i = J_i \Delta q + \alpha e_i` and penalty
+    :math:`\rho_i`, adds a slack :math:`s_i` with cost :math:`\rho_i^{1/2} s_i`
+    and the rows :math:`-s_i \leq \rho_i^{1/2} r_i \leq s_i`. At the optimum
+    :math:`s_i = \rho_i^{1/2} |r_i|`, so the added cost is the :math:`\ell_1`
+    penalty :math:`\rho_i |r_i|`. The decision variable is then
+    :math:`x = [\Delta q; s]`. The penalty is linear in :math:`\Delta q` away
+    from :math:`r_i = 0`, so the objective also gains the trust region
+    :math:`\tfrac{1}{2} \max(\rho) \|\Delta q\|^2`. Without it, a yielding
+    component would step to the edge of the feasible set and chatter near
+    singularities.
+
     Args:
         configuration: Robot configuration.
         tasks: List of kinematic tasks.
@@ -126,15 +228,15 @@ def build_ik(
         limits: List of limits to enforce. Set to empty list to disable. If None,
             defaults to a configuration limit.
         constraints: List of tasks to enforce as equality constraints. These tasks
-            will be satisfied exactly rather than in a least-squares sense.
+            will be satisfied exactly rather than in a least-squares sense. Wrap a
+            task in :class:`~mink.Elastic` to let it yield when it cannot be met.
 
     Returns:
-        Quadratic program of the inverse kinematics problem.
+        Quadratic program of the inverse kinematics problem. With elastic
+        constraints, its first :math:`n_v` variables are :math:`\Delta q`.
     """
-    H, c = _compute_qp_objective(configuration, tasks, damping)
-    G, h = _compute_qp_inequalities(configuration, limits, dt)
-    A, b = _compute_qp_equalities(configuration, constraints)
-    return qpsolvers.Problem(H, c, G, h, A, b)
+    problem, rho = _compute_qp(configuration, tasks, dt, damping, limits, constraints)
+    return _soften(problem, rho) if rho.size else problem
 
 
 def solve_ik(
@@ -145,13 +247,19 @@ def solve_ik(
     damping: float = 1e-12,
     safety_break: bool = False,
     limits: Sequence[Limit] | None = None,
-    constraints: Sequence[Task] | None = None,
+    constraints: Sequence[Task | Elastic] | None = None,
     **kwargs,
 ) -> np.ndarray:
     r"""Solve the differential inverse kinematics problem.
 
     Computes a velocity tangent to the current robot configuration. The computed
     velocity satisfies at (weighted) best the set of provided kinematic tasks.
+
+    :class:`~mink.Elastic` constraints are first held exactly. If every multiplier
+    satisfies :math:`|\lambda_i| < \rho_i`, that solution is also the elastic
+    one. Otherwise the penalized problem of :func:`build_ik` is solved, as in the
+    elastic mode of [SNOPT]_. A step therefore costs one QP while the elastic
+    constraints hold and two while one yields.
 
     Args:
         configuration: Robot configuration.
@@ -167,7 +275,8 @@ def solve_ik(
         limits: List of limits to enforce. Set to empty list to disable. If None,
             defaults to a configuration limit.
         constraints: List of tasks to enforce as equality constraints. These tasks
-            will be satisfied exactly rather than in a least-squares sense.
+            will be satisfied exactly rather than in a least-squares sense. Wrap a
+            task in :class:`~mink.Elastic` to let it yield when it cannot be met.
         kwargs: Keyword arguments to forward to the backend QP solver.
 
     Raises:
@@ -179,11 +288,18 @@ def solve_ik(
         Velocity :math:`v` in tangent space.
     """
     configuration.check_limits(safety_break=safety_break)
-    problem = build_ik(configuration, tasks, dt, damping, limits, constraints)
+    problem, rho = _compute_qp(configuration, tasks, dt, damping, limits, constraints)
     result = qpsolvers.solve_problem(problem, solver=solver, **kwargs)
+    if rho.size:
+        y = result.y
+        held = result.found and y is not None and np.all(np.abs(y[-rho.size :]) < rho)
+        if not held:
+            result = qpsolvers.solve_problem(
+                _soften(problem, rho), solver=solver, **kwargs
+            )
     if not result.found:
         raise NoSolutionFound(solver)
-    delta_q = result.x
-    assert delta_q is not None
+    assert result.x is not None
+    delta_q = result.x[: configuration.nv]
     v: np.ndarray = delta_q / dt
     return v

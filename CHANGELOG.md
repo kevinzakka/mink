@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+
+- `Elastic` constraints: `constraints=[mink.Elastic(task, penalty)]` enforces `task` through an exact L1 penalty. It holds exactly like a hard constraint while it can, and yields instead of making the QP infeasible.
+
 ### Changed
 
 - **Breaking**: Dropped Python 3.10, which reached end-of-life in October 2026. mink now requires Python 3.11 or newer.
