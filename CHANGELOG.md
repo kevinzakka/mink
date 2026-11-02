@@ -4,7 +4,15 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+
+- `humanoid_h2_bookshelf.py`: a Unitree H2 with Sharpa Wave hands braces on a shelf, looks at a book and reaches for it, with a floating base, planted feet and a center-of-mass task.
+- `arm_aloha_pour.py`: an ALOHA pours from a bottle into a cup, with the bottle placed by a `RelativeFrameTask` relative to the cup's gripper.
+
 ### Changed
+
+- README: the gallery reflows on narrow screens instead of shrinking, and each image carries its own caption.
+- Docs: a new banner, made from four gallery images.
 
 - README: new gallery of staged mink solutions, a rewritten introduction and quickstart, and a corrected feature list. Floating-base limits now point to `FreeJointVelocityLimit`, and broken example links are fixed.
 

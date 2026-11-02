@@ -9,20 +9,16 @@ mink is a Python library for differential inverse kinematics, built on [MuJoCo](
 
 You give mink **tasks** (objectives, such as a target pose for a frame), **limits** (inequalities, such as a joint range), and **constraints** (equalities that must hold, such as a foot that stays flat on the floor). At each step, mink solves a quadratic program for a velocity: the one that best reduces the task errors while it satisfies every limit and constraint. Integrate it over a short time step to get the next configuration, and repeat to move the robot toward the goal. mink works with any MuJoCo model, from a single arm to a humanoid with a floating base.
 
-<table>
-  <tr>
-    <td align="center" width="33%"><a href="https://github.com/kevinzakka/mink/blob/main/examples/arm_ur5e_wrist_cam_lookat.py"><img src="https://raw.githubusercontent.com/kevinzakka/mink/main/docs/_static/gallery/h2_gaze.jpg" alt="Unitree H2 + Sharpa: whole body and fingers"></a><br><b>Unitree H2 + Sharpa</b><br><sub>whole body and fingers</sub></td>
-    <td align="center" width="33%"><a href="https://github.com/kevinzakka/mink/blob/main/examples/arm_aloha.py"><img src="https://raw.githubusercontent.com/kevinzakka/mink/main/docs/_static/gallery/aloha_bimanual.jpg" alt="ALOHA 2: pouring with two hand tasks"></a><br><b>ALOHA 2</b><br><sub>pouring with two hand tasks</sub></td>
-    <td align="center" width="33%"><a href="https://github.com/kevinzakka/mink/blob/main/examples/quadruped_spot.py"><img src="https://raw.githubusercontent.com/kevinzakka/mink/main/docs/_static/gallery/spot_reach.jpg" alt="Spot: pick from the ground"></a><br><b>Spot</b><br><sub>pick from the ground</sub></td>
-  </tr>
-  <tr>
-    <td align="center"><a href="https://github.com/kevinzakka/mink/blob/main/examples/mobile_tidybot.py"><img src="https://raw.githubusercontent.com/kevinzakka/mink/main/docs/_static/gallery/tidybot_reach.jpg" alt="TidyBot: base task and arm task"></a><br><b>TidyBot</b><br><sub>base task and arm task</sub></td>
-    <td align="center"><a href="https://github.com/kevinzakka/mink/blob/main/examples/arm_panda_engrave.py"><img src="https://raw.githubusercontent.com/kevinzakka/mink/main/docs/_static/gallery/panda_engrave.jpg" alt="Franka Panda: axis alignment"></a><br><b>Franka Panda</b><br><sub>axis alignment</sub></td>
-    <td align="center"><a href="https://github.com/kevinzakka/mink/blob/main/examples/arm_ur5e.py"><img src="https://raw.githubusercontent.com/kevinzakka/mink/main/docs/_static/gallery/ur5e_collision.jpg" alt="UR5e: collision avoidance (red: without it)"></a><br><b>UR5e</b><br><sub>collision avoidance (red: without it)</sub></td>
-  </tr>
-</table>
+<p align="center">
+  <a href="https://github.com/kevinzakka/mink/blob/main/examples/humanoid_h2_bookshelf.py"><img src="https://raw.githubusercontent.com/kevinzakka/mink/main/docs/_static/gallery/h2_gaze.jpg" width="260" alt="Unitree H2 + Sharpa: whole body and fingers"></a>
+  <a href="https://github.com/kevinzakka/mink/blob/main/examples/arm_aloha_pour.py"><img src="https://raw.githubusercontent.com/kevinzakka/mink/main/docs/_static/gallery/aloha_bimanual.jpg" width="260" alt="ALOHA 2: pouring with a relative task"></a>
+  <a href="https://github.com/kevinzakka/mink/blob/main/examples/quadruped_spot.py"><img src="https://raw.githubusercontent.com/kevinzakka/mink/main/docs/_static/gallery/spot_reach.jpg" width="260" alt="Spot: pick from the ground"></a>
+  <a href="https://github.com/kevinzakka/mink/blob/main/examples/mobile_tidybot.py"><img src="https://raw.githubusercontent.com/kevinzakka/mink/main/docs/_static/gallery/tidybot_reach.jpg" width="260" alt="TidyBot: base task and arm task"></a>
+  <a href="https://github.com/kevinzakka/mink/blob/main/examples/arm_panda_engrave.py"><img src="https://raw.githubusercontent.com/kevinzakka/mink/main/docs/_static/gallery/panda_engrave.jpg" width="260" alt="Franka Panda: axis alignment"></a>
+  <a href="https://github.com/kevinzakka/mink/blob/main/examples/arm_ur5e.py"><img src="https://raw.githubusercontent.com/kevinzakka/mink/main/docs/_static/gallery/ur5e_collision.jpg" width="260" alt="UR5e: collision avoidance (red: without it)"></a>
+</p>
 
-<sub>The images show staged scenes. Each image links to a related example.</sub>
+<p align="center"><sub>Each image links to a related example.</sub></p>
 
 ## Installation
 

@@ -8,7 +8,7 @@ mink (**M**\ uJoCo **in**\ verse **k**\ inematics) is a library for differential
 inverse kinematics built on top of the
 `MuJoCo <https://github.com/google-deepmind/mujoco>`_ physics engine.
 
-.. image:: https://github.com/kevinzakka/mink/blob/assets/banner.png?raw=true
+.. image:: _static/banner.jpg
    :alt: Banner for mink
    :align: center
    :width: 600px
