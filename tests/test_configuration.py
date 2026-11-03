@@ -64,7 +64,9 @@ class TestConfiguration(absltest.TestCase):
     def test_site_transform_raises_error_if_frame_type_is_invalid(self):
         """Raise an error when the requested frame type is invalid."""
         configuration = mink.Configuration(self.model)
-        with self.assertRaises(mink.UnsupportedFrame):
+        with self.assertRaisesRegex(
+            mink.UnsupportedFrame, r"joint is not supported\. Supported frame types"
+        ):
             configuration.get_transform_frame_to_world("name_does_not_matter", "joint")
 
     def test_site_jacobian_raises_error_if_frame_name_is_invalid(self):
