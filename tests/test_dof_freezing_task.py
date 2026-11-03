@@ -45,6 +45,18 @@ class TestDofFreezingTask(absltest.TestCase):
         expected_error_message = "Duplicate DOF indices found: [0, 1, 0]."
         self.assertEqual(str(cm.exception), expected_error_message)
 
+    def test_accepts_numpy_dof_indices(self):
+        # A 1-element array holding index 0 is falsy, and a longer array has an
+        # ambiguous truth value; both must still be accepted.
+        for dof_indices in (np.array([0]), np.arange(3), np.array([4, 2], np.int32)):
+            task = DofFreezingTask(model=self.model, dof_indices=dof_indices)
+            self.assertEqual(task.dof_indices, sorted(dof_indices.tolist()))
+            self.assertEqual(task.k, len(dof_indices))
+
+    def test_task_raises_error_if_dof_index_not_integer(self):
+        with self.assertRaises(TypeError):
+            DofFreezingTask(model=self.model, dof_indices=[1.5])  # type: ignore[arg-type]
+
     def test_dof_indices_are_sorted(self):
         task = DofFreezingTask(model=self.model, dof_indices=[3, 1, 2])
         np.testing.assert_array_equal(task.dof_indices, [1, 2, 3])
