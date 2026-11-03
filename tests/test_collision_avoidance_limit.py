@@ -531,6 +531,54 @@ class TestCollisionAvoidanceLimit(absltest.TestCase):
 
         self.assertTrue(box_culled)
 
+    def test_broadphase_box_stage_keeps_pair_near_offset_mesh(self):
+        """The box stage accounts for a mesh whose geom_aabb is off-center: a
+        sphere within range of the far end of an L-shaped mesh is not culled."""
+        L = np.array([[0, 0, 0], [0.4, 0, 0], [0.4, 0.05, 0]])
+        L = np.vstack([L, [[0.05, 0.05, 0], [0.05, 0.4, 0], [0, 0.4, 0]]])
+        L = np.vstack([L, L + [0, 0, 0.05]])
+        xml_str = f"""
+        <mujoco>
+          <asset><mesh name="L" vertex="{" ".join(map(str, L.ravel()))}"/></asset>
+          <worldbody>
+            <body><freejoint/><geom type="mesh" mesh="L"/></body>
+            <body><freejoint/><geom type="sphere" size=".01"/></body>
+          </worldbody>
+        </mujoco>
+        """
+        model = mujoco.MjModel.from_xml_string(xml_str)
+        self.assertGreater(np.abs(model.geom_aabb[0, :3]).max(), 0.04)
+
+        # Align the mesh geom frame with the world, then put the sphere 0.04 above
+        # the vertex farthest along +y: 0.03 from the mesh surface.
+        q = np.zeros(model.nq)
+        mujoco.mju_negQuat(q[3:7], model.geom_quat[0])
+        q[10] = 1.0
+        configuration = Configuration(model, q)
+        data = configuration.data
+        mesh = model.geom_dataid[0]
+        start, count = model.mesh_vertadr[mesh], model.mesh_vertnum[mesh]
+        vertices = model.mesh_vert[start : start + count] + data.geom_xpos[0]
+        q[7:10] = vertices[np.argmax(vertices[:, 1])] + [0.0, 0.04, 0.0]
+        configuration.update(q)
+
+        limit = CollisionAvoidanceLimit(
+            model=model,
+            geom_pairs=[([0], [1])],
+            minimum_distance_from_collisions=0.0,
+            collision_detection_distance=0.05,
+        )
+        limit.broadphase_min_pairs = 0
+        limit.broadphase = False
+        ref = limit.compute_qp_inequalities(configuration, dt=1e-2)
+        limit.broadphase = True
+        opt = limit.compute_qp_inequalities(configuration, dt=1e-2)
+
+        assert ref.h is not None
+        self.assertTrue(np.isfinite(ref.h).all())
+        np.testing.assert_array_equal(ref.G, opt.G)
+        np.testing.assert_array_equal(ref.h, opt.h)
+
     def test_broadphase_plane_pair_matches_unfiltered(self):
         """Broadphase plane-geom culling yields the same (G, h) as the scan."""
         xml_str = """

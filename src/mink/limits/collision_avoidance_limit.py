@@ -204,8 +204,8 @@ class CollisionAvoidanceLimit(Limit):
         world-aligned bounding box test built from geom_aabb. Plane-geom
         pairs, where one geom is a plane and the other is bounded, are culled by
         the signed distance of the other geom's center to the plane. Everything
-        else (e.g. a non-plane geom with rbound == 0, such as a height field) is
-        never culled, to stay conservative.
+        else (a non-plane geom with rbound == 0) is never culled, to stay
+        conservative.
 
         The stored indices point back into geom_id_pairs so survivors map to the
         correct constraint rows.
