@@ -23,7 +23,7 @@ class UnsupportedFrame(MinkError):
 
     def __init__(self, frame_type: str, supported_types: Sequence[str]):
         message = (
-            f"{frame_type} is not supported."
+            f"{frame_type} is not supported. "
             f"Supported frame types are: {supported_types}"
         )
         super().__init__(message)
