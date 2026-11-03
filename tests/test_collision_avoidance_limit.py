@@ -476,6 +476,109 @@ class TestCollisionAvoidanceLimit(absltest.TestCase):
         # Ensure the test actually exercised the culling branch (not vacuously equal).
         self.assertTrue(culled_at_least_once)
 
+    def test_broadphase_box_stage_matches_unfiltered(self):
+        """Elongated geoms that pass the sphere test but whose bounding boxes are out
+        of range are culled, and (G, h) still match the unfiltered scan."""
+        xml_str = """
+        <mujoco>
+          <asset>
+            <mesh name="wedge" vertex="0 0 0  .4 0 0  0 .05 0  0 0 .08  .4 .05 .02"/>
+          </asset>
+          <worldbody>
+            <body><freejoint/><geom type="capsule" size=".01 .3"/></body>
+            <body><freejoint/><geom type="capsule" size=".02 .2" euler="0 1 0"/></body>
+            <body><freejoint/><geom type="box" size=".3 .02 .01" pos=".1 0 0"/></body>
+            <body><freejoint/><geom type="ellipsoid" size=".03 .25 .02"/></body>
+            <body><freejoint/><geom type="mesh" mesh="wedge"/></body>
+          </worldbody>
+        </mujoco>
+        """
+        model = mujoco.MjModel.from_xml_string(xml_str)
+        configuration = Configuration(model)
+        geoms = list(range(model.ngeom))
+        limit = CollisionAvoidanceLimit(
+            model=model,
+            geom_pairs=[(geoms, geoms)],
+            collision_detection_distance=0.05,
+        )
+        limit.broadphase_min_pairs = 0
+
+        rng = np.random.RandomState(0)
+        box_culled = False
+        for _ in range(200):
+            q = np.zeros((model.nbody - 1, 7))
+            q[:, :3] = rng.uniform(-0.3, 0.3, size=(model.nbody - 1, 3))
+            q[:, 3:] = rng.normal(size=(model.nbody - 1, 4))
+            q[:, 3:] /= np.linalg.norm(q[:, 3:], axis=1, keepdims=True)
+            configuration.update(q.ravel())
+
+            limit.broadphase = False
+            ref = limit.compute_qp_inequalities(configuration, dt=1e-2)
+            limit.broadphase = True
+            opt = limit.compute_qp_inequalities(configuration, dt=1e-2)
+
+            np.testing.assert_array_equal(ref.G, opt.G)
+            np.testing.assert_array_equal(ref.h, opt.h)
+
+            # All pairs are in the sphere-sphere group: count those that pass the
+            # sphere test and compare against the survivors of both stages.
+            xpos = configuration.data.geom_xpos
+            diff = xpos[limit._ss_g1] - xpos[limit._ss_g2]
+            bound = limit._ss_rsum + limit.collision_detection_distance
+            sphere_kept = np.sum(np.einsum("ij,ij->i", diff, diff) <= bound * bound)
+            survivors = limit._broadphase_survivors(configuration.data)
+            box_culled |= survivors.size < sphere_kept
+
+        self.assertTrue(box_culled)
+
+    def test_broadphase_box_stage_keeps_pair_near_offset_mesh(self):
+        """The box stage accounts for a mesh whose geom_aabb is off-center: a
+        sphere within range of the far end of an L-shaped mesh is not culled."""
+        L = np.array([[0, 0, 0], [0.4, 0, 0], [0.4, 0.05, 0]])
+        L = np.vstack([L, [[0.05, 0.05, 0], [0.05, 0.4, 0], [0, 0.4, 0]]])
+        L = np.vstack([L, L + [0, 0, 0.05]])
+        xml_str = f"""
+        <mujoco>
+          <asset><mesh name="L" vertex="{" ".join(map(str, L.ravel()))}"/></asset>
+          <worldbody>
+            <body><freejoint/><geom type="mesh" mesh="L"/></body>
+            <body><freejoint/><geom type="sphere" size=".01"/></body>
+          </worldbody>
+        </mujoco>
+        """
+        model = mujoco.MjModel.from_xml_string(xml_str)
+        self.assertGreater(np.abs(model.geom_aabb[0, :3]).max(), 0.04)
+
+        # Align the mesh geom frame with the world, then put the sphere 0.04 above
+        # the vertex farthest along +y: 0.03 from the mesh surface.
+        q = np.zeros(model.nq)
+        mujoco.mju_negQuat(q[3:7], model.geom_quat[0])
+        q[10] = 1.0
+        configuration = Configuration(model, q)
+        data = configuration.data
+        mesh = model.geom_dataid[0]
+        start, count = model.mesh_vertadr[mesh], model.mesh_vertnum[mesh]
+        vertices = model.mesh_vert[start : start + count] + data.geom_xpos[0]
+        q[7:10] = vertices[np.argmax(vertices[:, 1])] + [0.0, 0.04, 0.0]
+        configuration.update(q)
+
+        limit = CollisionAvoidanceLimit(
+            model=model,
+            geom_pairs=[([0], [1])],
+            minimum_distance_from_collisions=0.0,
+            collision_detection_distance=0.05,
+        )
+        limit.broadphase_min_pairs = 0
+        limit.broadphase = False
+        ref = limit.compute_qp_inequalities(configuration, dt=1e-2)
+        limit.broadphase = True
+        opt = limit.compute_qp_inequalities(configuration, dt=1e-2)
+
+        assert ref.h is not None
+        self.assertTrue(np.isfinite(ref.h).all())
+        np.testing.assert_array_equal(ref.G, opt.G)
+        np.testing.assert_array_equal(ref.h, opt.h)
+
     def test_broadphase_plane_pair_matches_unfiltered(self):
         """Broadphase plane-geom culling yields the same (G, h) as the scan."""
         xml_str = """

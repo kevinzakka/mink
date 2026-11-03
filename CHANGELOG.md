@@ -15,6 +15,7 @@ All notable changes to this project will be documented in this file.
 - Docs: a new banner, made from four gallery images.
 
 - README: new gallery of staged mink solutions, a rewritten introduction and quickstart, and a corrected feature list. Floating-base limits now point to `FreeJointVelocityLimit`, and broken example links are fixed.
+- `CollisionAvoidanceLimit` broadphase: pairs that pass the bounding-sphere test are now also culled by their world-aligned bounding boxes (from `geom_aabb`) before the narrow-phase `mj_geomDistance`. Spheres are loose around elongated links: on the ALOHA benchmark (1104 pairs) a median of 182 pairs per step reached the narrow phase with none in range, versus 6 now. The constraint is unchanged; the median step is ~1.4x faster on that scene.
 
 ## [1.4.0] - 2026-10-31
 
