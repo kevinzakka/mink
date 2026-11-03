@@ -20,7 +20,7 @@ All notable changes to this project will be documented in this file.
 
 - `DofFreezingTask` accepts NumPy index arrays. `np.array([0])` was rejected as empty, and longer arrays raised NumPy's ambiguous truth value error.
 - `FrameTask.set_position_cost` and `set_orientation_cost` (and the `RelativeFrameTask` setters) now update the `position_cost` and `orientation_cost` attributes, which kept their constructor values. A negative orientation cost is now reported as such, not as a position cost.
-- `EqualityConstraintTask` raises `TaskDefinitionError` naming the constraint for equality types it does not support (flex), instead of a bare `KeyError`.
+- `EqualityConstraintTask` raises `TaskDefinitionError` naming the constraint for equality types other than connect, weld, joint and tendon (the flex types), instead of a bare `KeyError`.
 - `UnsupportedFrame` messages have a space between their two sentences.
 
 ## [1.4.0] - 2026-10-31
