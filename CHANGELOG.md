@@ -13,6 +13,7 @@ All notable changes to this project will be documented in this file.
 
 - README: the gallery reflows on narrow screens instead of shrinking, and each image carries its own caption.
 - Docs: a new banner, made from four gallery images.
+- Tests pass with daqp 0.9 and later. `test_penalized_qp_is_robust_to_extreme_penalties` solves its small-penalty reference QP to a tight proximal tolerance, and `test_no_solution_found_throws` uses an infeasible QP instead of one that only older daqp failed to solve.
 
 - README: new gallery of staged mink solutions, a rewritten introduction and quickstart, and a corrected feature list. Floating-base limits now point to `FreeJointVelocityLimit`, and broken example links are fixed.
 

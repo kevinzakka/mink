@@ -275,7 +275,11 @@ class TestElastic(absltest.TestCase):
                     reference = mink.build_ik(
                         configuration, [posture_task], 0.01, constraints=constraints
                     )
-                expected = qpsolvers.solve_problem(reference, solver="daqp")
+                # From daqp 0.9 on, the default proximal tolerance leaves a reference
+                # with rho on the cost 1e-4 off for small penalties, while the default
+                # split under test stays exact; solve that reference tightly.
+                settings = {"eta_prox": 1e-12} if split == 0.0 else {}
+                expected = qpsolvers.solve_problem(reference, solver="daqp", **settings)
                 assert expected.x is not None
                 np.testing.assert_allclose(dq, expected.x[:nv], atol=1e-7)
 
