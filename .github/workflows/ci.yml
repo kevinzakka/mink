@@ -27,7 +27,7 @@ jobs:
         uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8.2.0
         with:
           enable-cache: true
-          version: "0.9.14"
+          version: "0.13.7"
           cache-suffix: ${{ github.job }}
       - name: Run lint
         run: uvx ruff@0.14.7 check --diff
@@ -38,7 +38,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.11", "3.12", "3.13", "3.14"]
+        python-version: ["3.11", "3.12", "3.13", "3.14", "3.15"]
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
       - name: Setup uv
@@ -46,7 +46,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           enable-cache: true
-          version: "0.9.14"
+          version: "0.13.7"
           cache-suffix: ${{ github.job }}
       - name: Test with python ${{ matrix.python-version }}
         run: uv run pyright
@@ -55,7 +55,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.11", "3.12", "3.13", "3.14"]
+        python-version: ["3.11", "3.12", "3.13", "3.14", "3.15"]
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
       - name: Setup uv
@@ -63,7 +63,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           enable-cache: true
-          version: "0.9.14"
+          version: "0.13.7"
           cache-suffix: ${{ github.job }}
       - name: Test with python ${{ matrix.python-version }}
         run: uv run ty check
@@ -72,7 +72,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.11", "3.12", "3.13", "3.14"]
+        python-version: ["3.11", "3.12", "3.13", "3.14", "3.15"]
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
       - name: Setup uv
@@ -80,7 +80,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           enable-cache: true
-          version: "0.9.14"
+          version: "0.13.7"
           cache-suffix: ${{ github.job }}
       - name: Test with python ${{ matrix.python-version }}
         run: uv run pytest
@@ -94,7 +94,7 @@ jobs:
         with:
           python-version: "3.13"
           enable-cache: true
-          version: "0.9.14"
+          version: "0.13.7"
           cache-suffix: ${{ github.job }}
       - name: Build wheel and sdist
         run: uv build
@@ -108,7 +108,7 @@ jobs:
         with:
           python-version: "3.13"
           enable-cache: true
-          version: "0.9.14"
+          version: "0.13.7"
           cache-suffix: ${{ github.job }}
       - name: Run coverage
         run: uv run coverage run --source=src -m pytest .

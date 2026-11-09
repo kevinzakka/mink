@@ -28,7 +28,7 @@ jobs:
         with:
           python-version: "3.13"
           enable-cache: true
-          version: "0.9.14"
+          version: "0.13.7"
           cache-suffix: docs
       - name: Build documentation
         run: uv run --group doc sphinx-build docs _build -W
