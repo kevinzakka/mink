@@ -64,6 +64,14 @@ Changelog = "https://github.com/kevinzakka/mink/blob/main/CHANGELOG.md"
 Homepage = "https://kevinzakka.github.io/mink/"
 Documentation = "https://kevinzakka.github.io/mink/"
 
+[tool.uv]
+# The first numpy and scipy with CPython 3.15 wheels require Python >= 3.12, so the
+# lock forks for 3.15 and keeps the versions it resolves for 3.11-3.14.
+constraint-dependencies = [
+    "numpy>=2.5.2; python_version >= '3.15'",
+    "scipy>=1.18.1; python_version >= '3.15'",
+]
+
 [tool.ruff]
 src = ["src"]  # Helpful for recognizing first-party imports.
 exclude = [
