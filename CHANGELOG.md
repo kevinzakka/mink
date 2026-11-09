@@ -12,6 +12,7 @@ All notable changes to this project will be documented in this file.
 ### Changed
 
 - README: the gallery reflows on narrow screens instead of shrinking, and each image carries its own caption.
+- Wheels: cibuildwheel 4.3.5 builds CPython 3.15 wheels, and the package lists Python 3.15.
 - Docs: a new banner, made from four gallery images.
 
 - README: new gallery of staged mink solutions, a rewritten introduction and quickstart, and a corrected feature list. Floating-base limits now point to `FreeJointVelocityLimit`, and broken example links are fixed.
