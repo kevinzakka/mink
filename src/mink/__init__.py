@@ -30,6 +30,7 @@ from .limits import ConfigurationLimit as ConfigurationLimit
 from .limits import Constraint as Constraint
 from .limits import FreeJointVelocityLimit as FreeJointVelocityLimit
 from .limits import Limit as Limit
+from .limits import SupportPolygonLimit as SupportPolygonLimit
 from .limits import VelocityLimit as VelocityLimit
 from .solve_ik import build_ik as build_ik
 from .solve_ik import solve_ik as solve_ik

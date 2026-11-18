@@ -9,4 +9,5 @@ from .free_joint_velocity_limit import (
 )
 from .limit import Constraint as Constraint
 from .limit import Limit as Limit
+from .support_polygon_limit import SupportPolygonLimit as SupportPolygonLimit
 from .velocity_limit import VelocityLimit as VelocityLimit
