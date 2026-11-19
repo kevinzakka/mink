@@ -214,11 +214,17 @@ class TestSolveIK(absltest.TestCase):
 
     def test_no_solution_found_throws(self):
         """When the QP solver fails to find a solution, an exception is raised."""
-        # Ask the end-effector to move to a far away target with a very large cost.
-        task = mink.FrameTask("attachment_site", "site", 1e6, 0)
-        task.set_target(mink.SE3.from_translation(np.array([100.0, 0, 0])))
+        # Two hard constraints put the end-effector at two places at once, so the QP
+        # is infeasible for any solver version.
+        constraints = []
+        for x in (0.3, 0.6):
+            task = mink.FrameTask("attachment_site", "site", 1.0, 0.0)
+            task.set_target(mink.SE3.from_translation(np.array([x, 0.0, 0.5])))
+            constraints.append(task)
         with self.assertRaises(mink.NoSolutionFound) as cm:
-            mink.solve_ik(self.configuration, [task], dt=1e-3, solver="daqp")
+            mink.solve_ik(
+                self.configuration, [], dt=1e-2, solver="daqp", constraints=constraints
+            )
         self.assertEqual(str(cm.exception), "QP solver daqp failed to find a solution.")
 
     def test_equality_constraints_freeze_dofs(self):
