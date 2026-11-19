@@ -16,6 +16,10 @@ All notable changes to this project will be documented in this file.
 
 - README: new gallery of staged mink solutions, a rewritten introduction and quickstart, and a corrected feature list. Floating-base limits now point to `FreeJointVelocityLimit`, and broken example links are fixed.
 
+### Fixed
+
+- `CollisionAvoidanceLimit` now honors `<flag filterparent="disable"/>`. As in MuJoCo, it then keeps geom pairs between parent and child bodies instead of filtering them out (#210).
+
 ## [1.4.0] - 2026-10-31
 
 ### Added

@@ -120,6 +120,42 @@ class TestCollisionAvoidanceLimit(absltest.TestCase):
         )
         self.assertCountEqual(limit.geom_id_pairs, [(floor, torso), (floor, arm)])
 
+    def test_parent_child_filter_follows_filterparent_flag(self):
+        xml_str = """
+        <mujoco>
+          <worldbody>
+            <body name="base">
+              <geom name="base" type="box" size=".05 .05 .05"/>
+              <body name="link1" pos="0 0 .1">
+                <joint axis="0 1 0"/>
+                <geom name="link1" type="capsule" fromto="0 0 0 0 0 .3" size=".03"/>
+                <body name="link2" pos="0 0 .3">
+                  <joint axis="0 1 0"/>
+                  <geom name="link2" type="capsule" fromto="0 0 0 0 0 .3" size=".03"/>
+                  <body pos="0 0 .3">
+                    <geom name="tool" type="box" size=".08 .02 .02"/>
+                  </body>
+                </body>
+              </body>
+            </body>
+          </worldbody>
+        </mujoco>
+        """
+        model = mujoco.MjModel.from_xml_string(xml_str)
+        base, link1, link2, tool = (
+            model.geom(n).id for n in ("base", "link1", "link2", "tool")
+        )
+        geom_pairs = [(["link1"], ["link2", "tool"]), (["base"], ["tool"])]
+
+        limit = CollisionAvoidanceLimit(model, geom_pairs)
+        self.assertCountEqual(limit.geom_id_pairs, [(base, tool)])
+
+        model.opt.disableflags |= mujoco.mjtDisableBit.mjDSBL_FILTERPARENT
+        limit = CollisionAvoidanceLimit(model, geom_pairs)
+        self.assertCountEqual(
+            limit.geom_id_pairs, [(base, tool), (link1, link2), (link1, tool)]
+        )
+
     def test_dimensions(self):
         g1 = get_body_geom_ids(self.model, self.model.body("wrist_2_link").id)
         g2 = get_body_geom_ids(self.model, self.model.body("upper_arm_link").id)

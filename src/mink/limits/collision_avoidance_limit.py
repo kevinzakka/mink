@@ -356,19 +356,24 @@ class CollisionAvoidanceLimit(Limit):
         The contacts are added based on the following heuristics:
             1) Geoms that are part of the same body or weld are not included.
             2) Geoms where the body of one geom is a parent of the body of the other
-                geom are not included.
+                geom are not included, unless the model disables the filterparent
+                flag.
             3) Geoms that fail the contype-conaffinity check are ignored.
 
         Note:
             1) If two bodies are kinematically welded together (no joints between them)
                 they are considered to be the same body within this function.
         """
+        filter_parent = not (
+            self.model.opt.disableflags & mujoco.mjtDisableBit.mjDSBL_FILTERPARENT
+        )
         geom_id_pairs = []
         for id_pair in self._collision_pairs_to_geom_id_pairs(geom_pairs):
             for geom_a, geom_b in itertools.product(*id_pair):
                 weld_body_cond = not _is_welded_together(self.model, geom_a, geom_b)
-                parent_child_cond = not _are_geom_bodies_parent_child(
-                    self.model, geom_a, geom_b
+                parent_child_cond = not (
+                    filter_parent
+                    and _are_geom_bodies_parent_child(self.model, geom_a, geom_b)
                 )
                 contype_conaffinity_cond = _is_pass_contype_conaffinity_check(
                     self.model, geom_a, geom_b
