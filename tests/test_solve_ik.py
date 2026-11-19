@@ -67,6 +67,21 @@ class TestSolveIK(absltest.TestCase):
         self.assertIsNone(problem.G)
         self.assertIsNone(problem.h)
 
+    def test_inactive_collision_limit_rows_are_pruned(self):
+        """Inactive collision avoidance rows (h = inf) are pruned from the QP."""
+        g1 = mink.get_body_geom_ids(self.model, self.model.body("wrist_2_link").id)
+        g2 = mink.get_body_geom_ids(self.model, self.model.body("upper_arm_link").id)
+        self.configuration.update_from_keyframe("home")
+        limit = mink.CollisionAvoidanceLimit(
+            self.model,
+            geom_pairs=[(g1, g2)],
+            minimum_distance_from_collisions=1e-4,
+            collision_detection_distance=1e-3,
+        )
+        problem = mink.build_ik(self.configuration, [], limits=[limit], dt=1.0)
+        self.assertIsNone(problem.G)
+        self.assertIsNone(problem.h)
+
     def test_default_limits(self):
         """limits=None uses a cached ConfigurationLimit, built once per configuration."""
         explicit = [mink.ConfigurationLimit(self.model)]
