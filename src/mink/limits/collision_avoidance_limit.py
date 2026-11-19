@@ -158,11 +158,11 @@ class CollisionAvoidanceLimit(Limit):
             bound_relaxation: An offset on the upper bound of each collision avoidance
                 constraint.
             broadphase: If True (default), cheaply skip geom pairs whose bounding
-                spheres (or plane half-spaces) are farther apart than the collision
-                detection distance before invoking the expensive narrow-phase
-                mj_geomDistance. This is a strict pre-filter: it only discards pairs
-                that would not produce a constraint, so the resulting constraint is
-                identical to the unfiltered computation.
+                spheres, bounding boxes, or plane half-spaces are farther apart than
+                the collision detection distance before invoking the expensive
+                narrow-phase mj_geomDistance. This is a strict pre-filter: it only
+                discards pairs that would not produce a constraint, so the resulting
+                constraint is identical to the unfiltered computation.
         """
         if not 0.0 < gain <= 1.0:
             raise LimitDefinitionError(
@@ -200,11 +200,12 @@ class CollisionAvoidanceLimit(Limit):
         mj_filterSphere (engine_collision_driver.c):
 
         Sphere-sphere pairs, where both geoms have a finite bounding sphere
-        (rbound > 0), are culled by a sphere-sphere distance test. Plane-geom
+        (rbound > 0), are culled by a sphere-sphere distance test, then by a
+        world-aligned bounding box test built from geom_aabb. Plane-geom
         pairs, where one geom is a plane and the other is bounded, are culled by
         the signed distance of the other geom's center to the plane. Everything
-        else (e.g. a non-plane geom with rbound == 0, such as a height field) is
-        never culled, to stay conservative.
+        else (a non-plane geom with rbound == 0) is never culled, to stay
+        conservative.
 
         The stored indices point back into geom_id_pairs so survivors map to the
         correct constraint rows.
@@ -230,6 +231,16 @@ class CollisionAvoidanceLimit(Limit):
         self._ss_g2 = g2[ss]
         self._ss_rsum = rbound[g1[ss]] + rbound[g2[ss]]
 
+        # Local bounding boxes (geom_aabb: center, half-size in the geom frame) of
+        # the sphere-sphere geoms, for the box stage that follows the sphere test.
+        self._box_geoms, box_ids = np.unique(
+            np.concatenate([g1[ss], g2[ss]]), return_inverse=True
+        )
+        self._ss_box1 = box_ids[: ss.size]
+        self._ss_box2 = box_ids[ss.size :]
+        self._box_center = model.geom_aabb[self._box_geoms, :3, None]
+        self._box_half = model.geom_aabb[self._box_geoms, 3:, None]
+
         # Plane-geom group: identify the plane geom and the bounded "other" geom.
         plane_is_g1 = plane1[pg]
         self._pg_idx = pg
@@ -254,7 +265,13 @@ class CollisionAvoidanceLimit(Limit):
             diff = xpos[self._ss_g1] - xpos[self._ss_g2]
             dist_sq = np.einsum("ij,ij->i", diff, diff)
             bound = self._ss_rsum + margin
-            survivors.append(self._ss_idx[dist_sq <= bound * bound])
+            near = np.flatnonzero(dist_sq <= bound * bound)
+            # Bounding spheres are loose for elongated geoms (capsules, links), so
+            # many pairs pass the sphere test yet are out of range. Cull those by
+            # their world-aligned bounding boxes.
+            if near.size and near.size >= self.broadphase_min_pairs:
+                near = near[self._boxes_within(data, near, margin)]
+            survivors.append(self._ss_idx[near])
 
         if self._pg_idx.size:
             # Plane normal is the z-axis of the plane frame: columns 2, 5, 8 of xmat.
@@ -266,6 +283,25 @@ class CollisionAvoidanceLimit(Limit):
         # Row order is irrelevant (each survivor writes an independent row), so no
         # sort is needed.
         return np.concatenate(survivors)
+
+    def _boxes_within(
+        self, data: mujoco.MjData, near: np.ndarray, margin: float
+    ) -> np.ndarray:
+        """Return a mask over the sphere-sphere pairs `near`, False where the
+        world-aligned bounding boxes of the two geoms are farther apart than margin.
+
+        Each geom lies inside its oriented local box, which in turn lies inside the
+        world-aligned box with center ``xpos + R c`` and half-size ``|R| h``. A gap
+        larger than margin along any world axis bounds the geom distance from below,
+        so a False pair would not produce a constraint.
+        """
+        xmat = data.geom_xmat[self._box_geoms].reshape(-1, 3, 3)
+        center = data.geom_xpos[self._box_geoms] + (xmat @ self._box_center)[..., 0]
+        half = (np.abs(xmat) @ self._box_half)[..., 0]
+        b1 = self._ss_box1[near]
+        b2 = self._ss_box2[near]
+        gap = np.abs(center[b1] - center[b2]) - half[b1] - half[b2]
+        return gap.max(axis=1) <= margin
 
     def compute_qp_inequalities(
         self,
