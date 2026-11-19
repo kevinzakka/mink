@@ -36,3 +36,9 @@ Collision avoidance limits
 
 .. automodule:: mink.limits.collision_avoidance_limit
    :members:
+
+Support polygon limits
+======================
+
+.. automodule:: mink.limits.support_polygon_limit
+   :members:

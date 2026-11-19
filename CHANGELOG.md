@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+- `SupportPolygonLimit`: a static stability limit that keeps the center of mass at least a margin inside a convex support polygon given in a body, geom or site frame's xy plane (the formulation of Drake's `StaticStabilityConstraint`). By default a violated edge asks the center of mass back inside; `clamp_violated=True` only forbids it from getting worse, so the QP stays feasible.
 - `humanoid_h2_bookshelf.py`: a Unitree H2 with Sharpa Wave hands braces on a shelf, looks at a book and reaches for it, with a floating base, planted feet and a center-of-mass task.
 - `arm_aloha_pour.py`: an ALOHA pours from a bottle into a cup, with the bottle placed by a `RelativeFrameTask` relative to the cup's gripper.
 

@@ -81,6 +81,7 @@ The [documentation](https://kevinzakka.github.io/mink/) explains tasks, limits, 
 * Joint position and velocity limits (`ConfigurationLimit`, `VelocityLimit`)
 * Velocity limits on a floating base (`FreeJointVelocityLimit`)
 * Collision avoidance between pairs of geoms (`CollisionAvoidanceLimit`)
+* Static stability, keeping the center of mass over a support polygon (`SupportPolygonLimit`)
 
 **Constraints.** mink applies constraints as equalities.
 
