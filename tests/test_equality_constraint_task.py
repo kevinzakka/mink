@@ -116,6 +116,39 @@ class TestEqualityConstraintTask(absltest.TestCase):
         )
         self.assertEqual(str(cm.exception), expected_error_message)
 
+    def test_unsupported_equality_type_throws(self):
+        xml_str = """
+        <mujoco>
+          <worldbody>
+            <body>
+              <joint name="j1" type="hinge"/>
+              <geom size=".05"/>
+              <body pos=".2 0 0">
+                <joint name="j2" type="hinge"/>
+                <geom size=".05"/>
+              </body>
+            </body>
+            <flexcomp name="cloth" type="grid" count="3 3 1" spacing=".1 .1 .1"
+                      dim="2" radius=".01" pos="0 0 1">
+              <edge equality="true"/>
+            </flexcomp>
+          </worldbody>
+          <equality>
+            <joint joint1="j1" joint2="j2"/>
+          </equality>
+        </mujoco>
+        """
+        model = mujoco.MjModel.from_xml_string(xml_str)
+        flex_id = int(np.flatnonzero(model.eq_type == mujoco.mjtEq.mjEQ_FLEX)[0])
+        joint_id = int(np.flatnonzero(model.eq_type == mujoco.mjtEq.mjEQ_JOINT)[0])
+        with self.assertRaisesRegex(
+            TaskDefinitionError, f"constraint {flex_id} of type mjEQ_FLEX"
+        ):
+            EqualityConstraintTask(model=model, cost=1.0)
+        # The supported constraints can still be selected explicitly.
+        task = EqualityConstraintTask(model=model, cost=1.0, equalities=[joint_id])
+        np.testing.assert_array_equal(task.cost, [1.0])
+
     def test_subset_of_constraints_with_invalid_name_throws(self):
         model = load_robot_description("cassie_mj_description")
         with self.assertRaises(InvalidConstraint) as cm:

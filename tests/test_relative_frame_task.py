@@ -65,6 +65,23 @@ class TestRelativeFrameTask(absltest.TestCase):
                 orientation_cost=[2.0, 5.0],
             )
 
+    def test_cost_setters_update_cost_attributes(self):
+        task = RelativeFrameTask(
+            frame_name="pelvis",
+            frame_type="body",
+            root_name="torso_link",
+            root_type="body",
+            position_cost=1.0,
+            orientation_cost=5.0,
+        )
+        task.set_position_cost([1.0, 2.0, 3.0])
+        task.set_orientation_cost(0.5)
+        np.testing.assert_array_equal(task.position_cost, [1.0, 2.0, 3.0])
+        self.assertEqual(task.orientation_cost, 0.5)
+        np.testing.assert_array_equal(task.cost, [1, 2, 3, 0.5, 0.5, 0.5])
+        with self.assertRaisesRegex(TaskDefinitionError, "orientation cost"):
+            task.set_orientation_cost(-1.0)
+
     def test_task_raises_error_if_cost_negative(self):
         with self.assertRaises(TaskDefinitionError):
             RelativeFrameTask(

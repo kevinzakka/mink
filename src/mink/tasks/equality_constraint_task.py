@@ -14,6 +14,13 @@ from ..constants import constraint_width
 from ..exceptions import InvalidConstraint, TaskDefinitionError
 from .task import Task
 
+_SUPPORTED_EQ_TYPES = (
+    mujoco.mjtEq.mjEQ_CONNECT,
+    mujoco.mjtEq.mjEQ_WELD,
+    mujoco.mjtEq.mjEQ_JOINT,
+    mujoco.mjtEq.mjEQ_TENDON,
+)
+
 
 def _get_dense_constraint_jacobian(
     model: mujoco.MjModel, data: mujoco.MjData
@@ -218,5 +225,17 @@ class EqualityConstraintTask(Task):
                 f"{self.__class__.__name__} no equality constraints found in this "
                 "model."
             )
+
+        # Other types (e.g. flex) depend on kinematics that Configuration.update
+        # does not compute.
+        for eq_id in eq_ids:
+            eq_type = mujoco.mjtEq(model.eq_type[eq_id])
+            if eq_type not in _SUPPORTED_EQ_TYPES:
+                raise TaskDefinitionError(
+                    f"{self.__class__.__name__} does not support equality constraint "
+                    f"{eq_id} of type {eq_type.name}. Supported types are "
+                    f"{[t.name for t in _SUPPORTED_EQ_TYPES]}; pass `equalities` to "
+                    "select a subset."
+                )
 
         return np.array(eq_ids)

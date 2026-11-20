@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import operator
+from typing import Sequence
+
 import mujoco
 import numpy as np
 
@@ -64,7 +67,7 @@ class DofFreezingTask(Task):
     def __init__(
         self,
         model: mujoco.MjModel,
-        dof_indices: list[int],
+        dof_indices: Sequence[int] | np.ndarray,
         gain: float = 1.0,
     ):
         """Initialize the DOF freezing task.
@@ -74,6 +77,8 @@ class DofFreezingTask(Task):
             dof_indices: List of DOF indices to freeze.
             gain: Task gain (typically 1.0 for equality constraints).
         """
+        # Accept any integer sequence, e.g. a NumPy array sliced from model fields.
+        dof_indices = [operator.index(dof_idx) for dof_idx in dof_indices]
         if not dof_indices:
             raise TaskDefinitionError(
                 f"{self.__class__.__name__} requires at least one DOF index."

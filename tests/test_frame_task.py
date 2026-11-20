@@ -59,6 +59,24 @@ class TestFrameTask(absltest.TestCase):
         )
         np.testing.assert_array_equal(task.cost, np.array([1, 2, 3, 5, 6, 7]))
 
+    def test_cost_setters_update_cost_attributes(self):
+        task = FrameTask(
+            frame_name="pelvis",
+            frame_type="body",
+            position_cost=1.0,
+            orientation_cost=5.0,
+        )
+        task.set_position_cost([1.0, 2.0, 3.0])
+        task.set_orientation_cost(0.5)
+        np.testing.assert_array_equal(task.position_cost, [1.0, 2.0, 3.0])
+        self.assertEqual(task.orientation_cost, 0.5)
+        np.testing.assert_array_equal(task.cost, [1, 2, 3, 0.5, 0.5, 0.5])
+
+    def test_negative_orientation_cost_error_names_orientation(self):
+        task = FrameTask("pelvis", "body", position_cost=1.0, orientation_cost=1.0)
+        with self.assertRaisesRegex(TaskDefinitionError, "orientation cost"):
+            task.set_orientation_cost(-1.0)
+
     def test_task_raises_error_if_cost_dim_invalid(self):
         with self.assertRaises(TaskDefinitionError):
             FrameTask(
